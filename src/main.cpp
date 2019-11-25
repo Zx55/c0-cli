@@ -3,6 +3,8 @@
  * Copyright (c) zx5. All rights reserved.
  */
 
+#include "lexer/lexer.h"
+
 #include "argparse.hpp"
 
 #include <iostream>
@@ -12,6 +14,10 @@ int main(int argc, char* argv[]) {
     argparse::ArgumentParser program("cc0");
     program.add_argument("input")
         .help("Specify the file to be compiled.");
+    program.add_argument("-l")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Perform lexical analyse based on the input c0 source code");
     program.add_argument("-s")
         .default_value(false)
         .implicit_value(true)
@@ -38,12 +44,17 @@ int main(int argc, char* argv[]) {
         std::cerr << "File error: file not exists" << std::endl;
         return 1;
     }
-    std::cin.rdbuf(in_file.rdbuf());
+
 
     auto out_fn = program.get<std::string>("-o");
     auto out_file = std::ofstream(out_fn);
 
-    if (program["-s"] == true && program["-c"] == true) {
+    int cnt = 0;
+    (program["-s"] == true) ? ++cnt : cnt;
+    (program["-c"] == true) ? ++cnt : cnt;
+    (program["-l"] == true) ? ++cnt : cnt;
+
+    if (cnt > 1) {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;
     }
@@ -52,6 +63,16 @@ int main(int argc, char* argv[]) {
         std::cout << "ssss" << std::endl;
     } else if (program["-c"] == true) {
         std::cout << "cccc" << std::endl;
+    } else if (program["-l"] == true) {
+        auto lexer = cc0::Lexer(in_file);
+        auto res = lexer.all_tokens();
+
+        std::cout << "Tokens: " << std::endl;
+        for (const auto &tk: res.first)
+            std::cout << tk << std::endl;
+        std::cout << "Errors: " << std::endl;
+        // for (const auto &err: res.second)
+        //    std::cout << err << std::endl;
     } else {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;

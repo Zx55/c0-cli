@@ -16,10 +16,12 @@ set(LIB "lib${PROJECT_NAME}")
 set(LIB_SRC
         src/lexer/lexer.cpp
         src/lexer/lexer.h
+        src/lexer/token.h
+        src/lexer/utils.h
         src/analyser/analyser.cpp
         src/analyser/analyser.h
         src/error/error.h
-        src/core.h src/lexer/token.h)
+        src/core.h)
 add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE ./src)
 
