@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
 
 add_subdirectory(3rd_party/fmt)
+add_subdirectory(3rd_party/argparse)
 
 # Build libc0
 set(LIB "lib${PROJECT_NAME}")
@@ -18,7 +19,7 @@ set(LIB_SRC
         src/analyser/analyser.cpp
         src/analyser/analyser.h
         src/error/error.h
-        src/core.h)
+        src/core.h src/lexer/token.h)
 add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE ./src)
 
@@ -37,7 +38,7 @@ else()
     target_compile_options(${LIB} PRIVATE -Wall -Wextra -pedantic)
 endif()
 
-target_link_libraries(${EXE} ${LIB} fmt)
+target_link_libraries(${EXE} ${LIB} fmt argparse)
 
 # Test
 add_subdirectory(3rd_party/catch2)

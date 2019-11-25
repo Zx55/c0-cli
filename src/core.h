@@ -6,7 +6,10 @@
 #ifndef C0_CORE_H
 #define C0_CORE_H
 
-#include "lexer/lexer.h"
-#include "analyser/analyser.h"
+#include <iostream>
+
+namespace cc0 {
+
+}
 
 #endif //C0_CORE_H
