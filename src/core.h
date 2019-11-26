@@ -6,7 +6,9 @@
 #ifndef C0_CORE_H
 #define C0_CORE_H
 
-#include "tools/ctx.h"
 #include "lexer/lexer.h"
+
+#include "ctx/rt_ctx.h"
+#include "ctx/src_ctx.h"
 
 #endif //C0_CORE_H

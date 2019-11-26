@@ -18,10 +18,6 @@ int main(int argc, char* argv[]) {
         .default_value(false)
         .implicit_value(true)
         .help("Perform lexical analyse based on the input c0 source code.");
-    program.add_argument("-g")
-        .nargs(1)
-        .default_value(false)
-        .help("Specify the file contains OPG grammar.");
     program.add_argument("-s")
         .default_value(false)
         .implicit_value(true)
@@ -43,7 +39,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto in_fn = program.get<std::string>("input");
-    if (!cc0::Context::set_ctx(in_fn)) {
+    if (!cc0::SourceContext::set_ctx(in_fn)) {
         std::cerr << "File error: file not exist." << std::endl;
         return 1;
     }
@@ -67,12 +63,12 @@ int main(int argc, char* argv[]) {
         std::cout << "cccc" << std::endl;
     } else if (program["-l"] == true) {
         auto lexer = cc0::Lexer();
-        auto res = lexer.all_tokens();
+        lexer.all_tokens();
 
         std::cout << "Tokens: " << std::endl;
-        std::cout << res.first << std::endl;
+        std::cout << cc0::RuntimeContext::get_tokens() << std::endl;
         std::cout << "Errors: " << std::endl;
-        std::cout << res.second << std::endl;
+        std::cout << cc0::RuntimeContext::get_errs() << std::endl;
     } else {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;

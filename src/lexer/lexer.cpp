@@ -67,7 +67,7 @@ namespace cc0 {
         }
     }
 
-    [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> Lexer::next_token() {
+    [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> Lexer::_next() {
         auto current = DFAState::INIT;
         pos_t pos;
         _ss.clear();
@@ -438,14 +438,27 @@ namespace cc0 {
         }
     }
 
-    [[nodiscard]] std::pair<std::vector<Token>, std::vector<C0Err>> Lexer::all_tokens() {
+    void Lexer::next_token() {
+        const auto [tk, err] = _next();
+        if (err.has_value()) {
+            if (err.value().get_code() == ErrCode::ErrEOF)
+                return;
+            RuntimeContext::put_err(err.value());
+        }
+        RuntimeContext::put_token(tk.value());
+    }
+
+    void Lexer::all_tokens() {
         auto tks = std::vector<Token>();
         auto errs = std::vector<C0Err>();
 
         while (true) {
-            if (const auto [tk, err] = next_token(); err.has_value()) {
-                if (err.value().get_code() == ErrCode::ErrEOF)
-                    return { tks, errs };
+            if (const auto [tk, err] = _next(); err.has_value()) {
+                if (err.value().get_code() == ErrCode::ErrEOF) {
+                    RuntimeContext::set_tokens(tks);
+                    RuntimeContext::set_errs(errs);
+                    break;
+                }
                 else
                     errs.push_back(err.value());
             } else

@@ -6,7 +6,7 @@
 #ifndef C0_ERROR_H
 #define C0_ERROR_H
 
-#include "ctx.h"
+#include "ctx/src_ctx.h"
 
 #include "fmt/format.h"
 
@@ -73,7 +73,7 @@ namespace cc0 {
 
     public:
         C0Err(ErrCode code, range_t range):
-            _code(code), _ctx(Context::get_line(range.first.first), range) { }
+            _code(code), _ctx(SourceContext::get_line(range.first.first), range) { }
         C0Err(ErrCode code, pos_t start, pos_t end):
             C0Err(code, { start, end }) { }
         C0Err(ErrCode code, int64_t start_row, int64_t start_col, int64_t end_row, int64_t end_col):
@@ -122,7 +122,7 @@ namespace fmt {
             // TODO: change console color using ASNI escape
             auto row = err.get_start().first + 1;
             return format_to(ctx.out(), "In file {}:{:d}:{:d}: error: {:s}\n {:4d} | {:s}{:s}\n",
-                    cc0::Context::get_absolute(), row, err.get_start().second + 1,
+                    cc0::SourceContext::get_absolute(), row, err.get_start().second + 1,
                     error_printable[static_cast<int>(err.get_code())], row, err.get_err_line(),
                     std::string(err.get_start().second + 8, ' ') + std::string(err.get_len(), '^'));
         }

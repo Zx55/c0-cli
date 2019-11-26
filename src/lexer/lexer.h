@@ -7,8 +7,9 @@
 #define C0_LEXER_H
 
 #include "token.h"
-#include "tools/ctx.h"
 #include "tools/error.h"
+#include "ctx/src_ctx.h"
+#include "ctx/rt_ctx.h"
 
 #include <sstream>
 #include <string>
@@ -57,15 +58,15 @@ namespace cc0 {
         pos_t _ptr;
 
     public:
-        Lexer(): _in(Context::get_source()), _ch('0'), _ptr({ 0, -1 }) { }
+        Lexer(): _in(SourceContext::get_source()), _ch('0'), _ptr({ 0, -1 }) { }
         Lexer(const Lexer&) = delete;
         Lexer(Lexer&&) = delete;
         Lexer& operator=(Lexer) = delete;
 
         [[nodiscard]] std::vector<std::string> get_input() { return _in; }
         [[nodiscard]] std::string get_line(int64_t row) { return _in.at(row); }
-        [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> next_token();
-        [[nodiscard]] std::pair<std::vector<Token>, std::vector<C0Err>> all_tokens();
+        void next_token();
+        void all_tokens();
 
     private:
         inline void _get();
@@ -74,6 +75,8 @@ namespace cc0 {
             _parse_int(pos_t p, int base) const;
         [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
             _parse_float(pos_t p) const;
+
+        [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> _next();
     };
 }
 

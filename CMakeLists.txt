@@ -20,11 +20,16 @@ set(LIB_SRC
         src/lexer/utils.h
         src/analyser/analyser.cpp
         src/analyser/analyser.h
-        src/tools/alias.h
-        src/tools/ctx.cpp
-        src/tools/ctx.h
+        src/ast/ast.cpp
+        src/ast/ast.h
+        src/ctx/src_ctx.cpp
+        src/ctx/src_ctx.h
+        src/ctx/rt_ctx.cpp
+        src/ctx/rt_ctx.h
         src/tools/error.h
-        src/core.h )
+        src/tools/warning.h
+        src/tools/alias.h
+        src/core.h)
 add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE ./src ./3rd_party/fmt/include)
 
