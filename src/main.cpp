@@ -3,7 +3,7 @@
  * Copyright (c) zx5. All rights reserved.
  */
 
-#include "lexer/lexer.h"
+#include "core.h"
 
 #include "argparse.hpp"
 
@@ -43,9 +43,8 @@ int main(int argc, char* argv[]) {
     }
 
     auto in_fn = program.get<std::string>("input");
-    auto in_file = std::ifstream(in_fn, std::ios::in);
-    if (!in_file) {
-        std::cerr << "File error: file not exists" << std::endl;
+    if (!cc0::Context::set_ctx(in_fn)) {
+        std::cerr << "File error: file not exist." << std::endl;
         return 1;
     }
 
@@ -67,7 +66,7 @@ int main(int argc, char* argv[]) {
     } else if (program["-c"] == true) {
         std::cout << "cccc" << std::endl;
     } else if (program["-l"] == true) {
-        auto lexer = cc0::Lexer(in_file);
+        auto lexer = cc0::Lexer();
         auto res = lexer.all_tokens();
 
         std::cout << "Tokens: " << std::endl;

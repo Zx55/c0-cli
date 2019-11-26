@@ -20,10 +20,11 @@ set(LIB_SRC
         src/lexer/utils.h
         src/analyser/analyser.cpp
         src/analyser/analyser.h
-        src/analyser/opg.cpp
-        src/analyser/opg.h
-        src/error/error.h
-        src/core.h src/analyser/opg.cpp)
+        src/tools/alias.h
+        src/tools/ctx.cpp
+        src/tools/ctx.h
+        src/tools/error.h
+        src/core.h )
 add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE ./src ./3rd_party/fmt/include)
 
@@ -54,7 +55,7 @@ set(TEST_SRC
         tests/test_lexer.cpp
         tests/test_analyser.cpp)
 add_executable(${TEST} ${TEST_SRC})
-target_include_directories(${TEST} PRIVATE .)
+target_include_directories(${TEST} PRIVATE ./src)
 target_link_libraries(${TEST} Catch2 ${LIB} fmt::fmt)
 add_test(all_test ${TEST})
 find_program(OPEN_CPP_COVERAGE OpenCppCoverage.exe)

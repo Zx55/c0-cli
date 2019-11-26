@@ -6,29 +6,31 @@
 #include "lexer.h"
 #include "utils.h"
 
-#define _pend { (_row), ((_col) + 1) }
-#define _token(_type) { Token(_type, _ss.str(), pos, _pend), {} }
-#define _err(_type) { {}, C0Err(_type, _row, _col) }
+#define _pos_end { (_ptr.first), ((_ptr.second) + 1) }
+#define _token(_type) { Token(_type, _ss.str(), pos, _pos_end), {} }
+#define _err(_type) { {}, C0Err(_type, pos, _pos_end) }
 #define _eof '\0'
 
 namespace cc0 {
     inline void Lexer::_get() {
         if (_ch == _eof)
             return;
-        if (_row >= static_cast<int64_t >(_in.size()) || _col >= static_cast<int64_t>(_in[_row].size())) {
+
+        if (_ptr.first >= static_cast<int64_t >(_in.size())
+            || _ptr.second >= static_cast<int64_t>(_in[_ptr.first].size())) {
             // some errors happen
             _ch = _eof;
             return;
         }
 
         if (_ch == '\n') {
-            ++_row;
-            _col = 0;
+            ++_ptr.first;
+            _ptr.second = 0;
         } else
-            ++_col;
-        _ch = _in[_row][_col];
+            ++_ptr.second;
+        _ch = _in[_ptr.first][_ptr.second];
 
-        if (_ch == '\n' && _row == static_cast<int64_t>(_in.size()) - 1)
+        if (_ch == '\n' && _ptr.first == static_cast<int64_t>(_in.size()) - 1)
             _ch = _eof;
     }
 
@@ -36,30 +38,30 @@ namespace cc0 {
         if (_ch == '\0')
             return;
 
-        if (!_col) {
+        if (!_ptr.second) {
             // return previous line
-            --_row;
-            _col = _in[_row].size() - 1;
+            --_ptr.first;
+            _ptr.second = _in[_ptr.first].size() - 1;
         } else
-            --_col;
+            --_ptr.second;
     }
 
     [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
-    Lexer::_parse_int(pos_t p, int base = 10) const {
+    Lexer::_parse_int(pos_t pos, int base = 10) const {
         try {
             auto res = std::stoi(_ss.str(), nullptr, base);
             auto type = (base == 10) ? TokenType::DECIMAL : TokenType::HEXADECIMAL;
-            return { Token(type, res, p, _pend), {} };
+            return { Token(type, res, pos, _pos_end), {} };
         } catch (const std::out_of_range &) {
             return _err(ErrCode::ErrInt32Overflow);
         }
     }
 
     [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
-    Lexer::_parse_float(pos_t p) const {
+    Lexer::_parse_float(pos_t pos) const {
         try {
             auto res = std::stod(_ss.str());
-            return { Token(TokenType::FLOAT, res, p, _pend), {} };
+            return { Token(TokenType::FLOAT, res, pos, _pos_end), {} };
         } catch (const std::out_of_range &) {
             return _err(ErrCode::ErrFloatOverflow);
         }
@@ -137,9 +139,10 @@ namespace cc0 {
                                 break;
                             // <float-literal> ::= '.'<digit-seq>[<exp>]
                             case '.': {
-                                if (_ss << _ch, _get(); isdigit(_ch)) {
+                                if (pos = _ptr, _ss << _ch, _get(); isdigit(_ch)) {
+                                    _ss << _ch;
                                     current = DFAState::FLOAT_DOT;
-                                    break;
+                                    goto L_START;
                                 }
                                 return _err(ErrCode::ErrInvalidFloat);
                             }
@@ -153,7 +156,7 @@ namespace cc0 {
                     }
 
                     _ss << _ch;
-                    pos.first = _row, pos.second = _col;
+                    pos = _ptr;
                     break;
                 }
                 case DFAState::ZERO: {
@@ -179,7 +182,7 @@ namespace cc0 {
                         // <digit> ::= '0'
                         default:
                             _unget();
-                            return { Token(TokenType::DECIMAL, 0, pos, _pend), {} };
+                            return { Token(TokenType::DECIMAL, 0, pos, _pos_end), {} };
                     }
 
                     _ss << _ch;
@@ -222,8 +225,8 @@ namespace cc0 {
                     _unget();
 
                     auto id_str = _ss.str();
-                    if (auto it = reserved.find(id_str); it != reserved.end())
-                        return { Token(it->second, it->first, pos, _pend), {} };
+                    if (auto res = Token::get_reserved(id_str); res.has_value())
+                        return { Token(res.value(), id_str, pos, _pos_end), {} };
                     else
                         return _token(TokenType::IDENTIFIER);
                 }

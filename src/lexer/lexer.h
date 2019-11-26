@@ -7,7 +7,8 @@
 #define C0_LEXER_H
 
 #include "token.h"
-#include "error/error.h"
+#include "tools/ctx.h"
+#include "tools/error.h"
 
 #include <sstream>
 #include <string>
@@ -48,22 +49,17 @@ namespace cc0 {
         };
 
         // 输入缓冲
-        std::vector<std::string> _in;
+        std::vector<std::string>& _in;
         // 存储读到的字符来拼接成_token.value
         std::stringstream _ss;
         char _ch;
-        // 输入流的状态记录
-        int64_t _row;
-        int64_t _col;
+        // 输入流的行列记录
+        pos_t _ptr;
 
     public:
-        Lexer(std::istream& in): _ch('0'), _row(0), _col(-1) {
-            std::string line;
-            while (std::getline(in, line))
-                _in.push_back(line + '\n');
-        }
-        Lexer(const Lexer &) = delete;
-        Lexer(Lexer &&) = delete;
+        Lexer(): _in(Context::get_source()), _ch('0'), _ptr({ 0, -1 }) { }
+        Lexer(const Lexer&) = delete;
+        Lexer(Lexer&&) = delete;
         Lexer& operator=(Lexer) = delete;
 
         [[nodiscard]] std::vector<std::string> get_input() { return _in; }
