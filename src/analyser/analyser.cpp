@@ -5,6 +5,6 @@
 
 #include "analyser.h"
 
-std::string analyse() {
-    return std::string("analyser\n");
+namespace cc0 {
+
 }

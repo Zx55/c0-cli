@@ -6,6 +6,8 @@
 #ifndef C0_TOKEN_H
 #define C0_TOKEN_H
 
+#include "fmt/format.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -18,10 +20,7 @@ namespace cc0 {
     using uint32_t = std::uint32_t;
     using int64_t = std::int64_t;
     using uint64_t = std::uint64_t;
-
     using pos_t = std::pair<uint64_t, uint64_t>;
-
-
 
     // 类别表
     enum class TokenType: char {
@@ -78,8 +77,6 @@ namespace cc0 {
         STRING_LITERAL,
     };
 
-
-
     // 保留字表
     const auto reserved = std::unordered_map<std::string, TokenType>{
         { "const",      TokenType::CONST },
@@ -105,63 +102,21 @@ namespace cc0 {
 
     class Token final {
         friend std::ostream& operator<<(std::ostream& out, const Token& token) {
-            auto tks_printable = std::vector<std::string>({
-                "UNDEFINED",
+            out << fmt::format("{}", token);
+            return out;
+        }
 
-                "CONST",
-                "VOID",
-                "INT",
-                "CHAR",
-                "DOUBLE",
-                "STRUCT",
-                "IF",
-                "ELSE",
-                "SWITCH",
-                "CASE",
-                "DEFAULT",
-                "WHILE",
-                "FOR",
-                "DO",
-                "RETURN",
-                "BREAK",
-                "CONTINUE",
-                "PRINT",
-                "SCAN",
+        friend std::ostream& operator<<(std::ostream& out, const std::vector<Token>& tks) {
+            if (tks.empty()) {
+                out << "Bad bad - no token :(" << std::endl;
+                return out;
+            }
 
-                "DECIMAL",
-                "HEXADECIMAL",
-                "FLOAT",
-                "IDENTIFIER",
-                "PLUS",
-                "MINUS",
-                "MULTIPLY",
-                "DIVISION",
-                "COMMENT",
-                "ASSIGN",
+            out << fmt::format("|{:<15s}|{:<10s}|{:<11s}|{:<11s}|\n", "token", "value", "start", "end");
+            out << std::string(52, '-') << std::endl;
 
-                "EQUAL",
-                "GREATER",
-                "GREATER_EQUAL",
-                "LESS",
-                "LESS_EQUAL",
-                "NEQUAL",
-
-                "SEMI",
-                "COLON",
-                "COMMA",
-
-                "LPARENTHESIS",
-                "RPARENTHESIS",
-                "LBRACE",
-                "RBRACE",
-
-                "CHAR_LITERAL",
-                "STRING_LITERAL",
-            });
-
-            out << "Type: " << tks_printable[static_cast<int>(token._type)] << "  Value: " << token.get_value_string()
-                << "  Start: (" << token._start.first << ", " << token._start.second << ")  End: ("
-                << token._end.first << ", " << token._end.second << ")";
+            for (const auto &tk: tks)
+                out << tk << std::endl;
             return out;
         }
 
@@ -193,7 +148,7 @@ namespace cc0 {
             swap(*this, t);
             return *this;
         }
-        bool operator==(Token rhs) {
+        bool operator==(const Token& rhs) {
             return _type == rhs._type && get_value_string() == rhs.get_value_string()
                 && _start == rhs._start && _end == rhs._end;
         }
@@ -217,6 +172,82 @@ namespace cc0 {
                 return std::string(1, std::any_cast<char>(_value));
             } catch (const std::bad_any_cast &) { }
             return "Invalid";
+        }
+    };
+}
+
+namespace fmt {
+    template<>
+    struct formatter<cc0::Token> {
+        std::vector<std::string> tks_printable = std::vector<std::string>({
+            "UNDEFINED",
+
+            "CONST",
+            "VOID",
+            "INT",
+            "CHAR",
+            "DOUBLE",
+            "STRUCT",
+            "IF",
+            "ELSE",
+            "SWITCH",
+            "CASE",
+            "DEFAULT",
+            "WHILE",
+            "FOR",
+            "DO",
+            "RETURN",
+            "BREAK",
+            "CONTINUE",
+            "PRINT",
+            "SCAN",
+
+            "DECIMAL",
+            "HEXADECIMAL",
+            "FLOAT",
+            "IDENTIFIER",
+            "PLUS",
+            "MINUS",
+            "MULTIPLY",
+            "DIVISION",
+            "COMMENT",
+            "ASSIGN",
+
+            "EQUAL",
+            "GREATER",
+            "GREATER_EQUAL",
+            "LESS",
+            "LESS_EQUAL",
+            "NEQUAL",
+
+            "SEMI",
+            "COLON",
+            "COMMA",
+
+            "LPARENTHESIS",
+            "RPARENTHESIS",
+            "LBRACE",
+            "RBRACE",
+
+            "CHAR_LITERAL",
+            "STRING_LITERAL",
+        });
+
+        constexpr auto parse(format_parse_context& ctx) {
+            return ctx.begin();
+        }
+
+        template<typename FormatContext>
+        auto format(const cc0::Token& token, FormatContext& ctx) {
+            auto value_str = token.get_value_string();
+            if (value_str.size() > 10) {
+                value_str = value_str.substr(0, 7) + "...";
+            }
+
+            return format_to(ctx.out(), "|{:<15s}|{:<10s}| ({:>3d},{:>3d}) | ({:>3d},{:3d}) |",
+                    tks_printable[static_cast<int>(token.get_type())], value_str,
+                    token.get_start().first, token.get_start().second, token.get_end().first,
+                    token.get_end().second);
         }
     };
 }

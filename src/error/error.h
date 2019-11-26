@@ -6,6 +6,8 @@
 #ifndef C0_ERROR_H
 #define C0_ERROR_H
 
+#include "fmt/format.h"
+
 #include <utility>
 
 namespace cc0 {
@@ -36,6 +38,26 @@ namespace cc0 {
             std::swap(lhs._code, rhs._code);
             std::swap(lhs._pos, rhs._pos);
         }
+
+        friend std::ostream& operator<<(std::ostream& out, const C0Err& err) {
+            out << fmt::format("{}", err);
+            return out;
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const std::vector<C0Err>& errs) {
+            if (errs.empty()) {
+                out << "No errors :)" << std::endl;
+                return out;
+            }
+
+            out << fmt::format("|{:>5s}|{:>11s}|\n", "code", "pos");
+            out << std::string(19, '-') << std::endl;
+
+            for (const auto &err: errs)
+                out << err << std::endl;
+            return out;
+        }
+
     public:
         C0Err(ErrCode code, pos_t pos): _code(code), _pos(std::move(pos)) { }
         C0Err(ErrCode code, uint64_t row, uint64_t col): _code(code), _pos({ row, col }) { }
@@ -50,6 +72,21 @@ namespace cc0 {
     private:
         ErrCode _code;
         pos_t _pos;
+    };
+}
+
+namespace fmt {
+    template<>
+    struct formatter<cc0::C0Err> {
+        constexpr auto parse(format_parse_context& ctx) {
+            return ctx.begin();
+        }
+
+        template <typename FormatContext>
+        auto format(const cc0::C0Err& err, FormatContext &ctx) {
+            return format_to(ctx.out(), "|{:>5d}| ({:>3d},{:3d}) |", static_cast<int>(err.get_code()),
+                    err.get_pos().first, err.get_pos().second);
+        }
     };
 }
 

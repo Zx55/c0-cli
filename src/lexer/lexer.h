@@ -25,7 +25,6 @@ namespace cc0 {
             HEXADECIMAL,
             IDENTIFIER,
             FLOAT_DOT,
-            FLOAT_NO_INT, // .123 => FLOAT_NO_INT
             FLOAT_EXP,
             PLUS,
             MINUS,
@@ -48,23 +47,27 @@ namespace cc0 {
             RBRACE,
         };
 
-        // FIXME: 重写缓冲 1) row和col有bug  2) 留备份，报错能有详细信息
-        // 输入流 默认是std::cin
-        std::istream &_in;
+        // 输入缓冲
+        std::vector<std::string> _in;
         // 存储读到的字符来拼接成_token.value
         std::stringstream _ss;
         char _ch;
         // 输入流的状态记录
-        uint64_t _row;
-        uint64_t _col;
-        std::vector<uint64_t> _line_size;
+        int64_t _row;
+        int64_t _col;
 
     public:
-        Lexer(std::istream &in = std::cin): _in(in), _ch('\0'), _row(0), _col(0) { }
+        Lexer(std::istream& in): _ch('0'), _row(0), _col(-1) {
+            std::string line;
+            while (std::getline(in, line))
+                _in.push_back(line + '\n');
+        }
         Lexer(const Lexer &) = delete;
         Lexer(Lexer &&) = delete;
         Lexer& operator=(Lexer) = delete;
 
+        [[nodiscard]] std::vector<std::string> get_input() { return _in; }
+        [[nodiscard]] std::string get_line(int64_t row) { return _in.at(row); }
         [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> next_token();
         [[nodiscard]] std::pair<std::vector<Token>, std::vector<C0Err>> all_tokens();
 

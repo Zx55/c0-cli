@@ -6,43 +6,42 @@
 #include "lexer.h"
 #include "utils.h"
 
-#define _pend { (_row), (_col) }
+#define _pend { (_row), ((_col) + 1) }
 #define _token(_type) { Token(_type, _ss.str(), pos, _pend), {} }
 #define _err(_type) { {}, C0Err(_type, _row, _col) }
-#define _eof(_token) { Token(_token, _ss.str(), pos, _pend), {} }
+#define _eof '\0'
 
 namespace cc0 {
     inline void Lexer::_get() {
-        auto _old = _ch;
-
-        if (_ch = _in.get(); _in.eof()) {
-            _ch = '\0';
+        if (_ch == _eof)
+            return;
+        if (_row >= static_cast<int64_t >(_in.size()) || _col >= static_cast<int64_t>(_in[_row].size())) {
+            // some errors happen
+            _ch = _eof;
             return;
         }
 
-        if (_ch != '\n' && _old == '\n') {
-            if (_row >= _line_size.size()) {
-                _line_size.push_back(_col);
-            }
-            ++_row, _col = 0;
-        } else {
+        if (_ch == '\n') {
+            ++_row;
+            _col = 0;
+        } else
             ++_col;
-        }
+        _ch = _in[_row][_col];
+
+        if (_ch == '\n' && _row == static_cast<int64_t>(_in.size()) - 1)
+            _ch = _eof;
     }
 
     inline void Lexer::_unget() {
-        if (_ch == '\0') {
+        if (_ch == '\0')
             return;
-        }
 
-        _in.unget();
-
-        if (_col == 0) {
+        if (!_col) {
+            // return previous line
             --_row;
-            _col = _line_size[_row];
-        } else {
+            _col = _in[_row].size() - 1;
+        } else
             --_col;
-        }
     }
 
     [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
@@ -137,9 +136,13 @@ namespace cc0 {
                                 current = DFAState::RBRACE;
                                 break;
                             // <float-literal> ::= '.'<digit-seq>[<exp>]
-                            case '.':
-                                current = DFAState::FLOAT_NO_INT;
-                                break;
+                            case '.': {
+                                if (_ss << _ch, _get(); isdigit(_ch)) {
+                                    current = DFAState::FLOAT_DOT;
+                                    break;
+                                }
+                                return _err(ErrCode::ErrInvalidFloat);
+                            }
                             case '\'':
                                 current = DFAState::CHAR;
                                 break;
@@ -150,7 +153,7 @@ namespace cc0 {
                     }
 
                     _ss << _ch;
-                    pos.first = _row, pos.second = _col - 1;
+                    pos.first = _row, pos.second = _col;
                     break;
                 }
                 case DFAState::ZERO: {
@@ -235,25 +238,6 @@ namespace cc0 {
                     } while (ishex(_ch));
                     _unget();
                     return _parse_int(pos, 16);
-                }
-                case DFAState::FLOAT_NO_INT: {
-                    // invalid float like .e3
-                    if (!isdigit(_ch))
-                        return _err(ErrCode::ErrInvalidFloat);
-
-                    do {
-                        _ss << _ch;
-                        _get();
-                    } while (isdigit(_ch));
-
-                    if (_ch == 'e' || _ch == 'E') {
-                        _ss << _ch;
-                        current = DFAState::FLOAT_EXP;
-                        break;
-                    } else {
-                        _unget();
-                        return _parse_float(pos);
-                    }
                 }
                 case DFAState::FLOAT_DOT: {
                     while (isdigit(_ch)) {
@@ -393,6 +377,7 @@ namespace cc0 {
                 case DFAState::RBRACE:
                     _unget();
                     return _token(TokenType::RBRACE);
+                // TODO: Test <char-literal> and <string-literal>
                 case DFAState::CHAR: {
                     _ss.str("");
 

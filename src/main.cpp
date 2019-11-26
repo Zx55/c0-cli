@@ -13,11 +13,15 @@
 int main(int argc, char* argv[]) {
     argparse::ArgumentParser program("cc0");
     program.add_argument("input")
-        .help("Specify the file to be compiled.");
+        .help("Specify the file contains c0 source code.");
     program.add_argument("-l")
         .default_value(false)
         .implicit_value(true)
-        .help("Perform lexical analyse based on the input c0 source code");
+        .help("Perform lexical analyse based on the input c0 source code.");
+    program.add_argument("-g")
+        .nargs(1)
+        .default_value(false)
+        .help("Specify the file contains OPG grammar.");
     program.add_argument("-s")
         .default_value(false)
         .implicit_value(true)
@@ -45,7 +49,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-
     auto out_fn = program.get<std::string>("-o");
     auto out_file = std::ofstream(out_fn);
 
@@ -68,11 +71,9 @@ int main(int argc, char* argv[]) {
         auto res = lexer.all_tokens();
 
         std::cout << "Tokens: " << std::endl;
-        for (const auto &tk: res.first)
-            std::cout << tk << std::endl;
+        std::cout << res.first << std::endl;
         std::cout << "Errors: " << std::endl;
-        // for (const auto &err: res.second)
-        //    std::cout << err << std::endl;
+        std::cout << res.second << std::endl;
     } else {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;

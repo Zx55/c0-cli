@@ -8,6 +8,8 @@
 
 #include <string>
 
-std::string analyse();
+namespace cc0 {
+
+}
 
 #endif //C0_ANALYSER_H
