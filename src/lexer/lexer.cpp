@@ -4,7 +4,6 @@
  */
 
 #include "lexer.h"
-#include "utils.h"
 
 #define _pos_end { (_ptr.first), ((_ptr.second) + 1) }
 #define _token(_type) { Token(_type, _ss.str(), pos, _pos_end), {}, {} }
@@ -24,15 +23,17 @@ namespace cc0 {
             return;
         }
 
+        if (_ch == '\n' && _ptr.first == static_cast<int64_t>(_in.size()) - 1) {
+            _ch = _eof;
+            return;
+        }
+
         if (_ch == '\n') {
             ++_ptr.first;
             _ptr.second = 0;
         } else
             ++_ptr.second;
         _ch = _in[_ptr.first][_ptr.second];
-
-        if (_ch == '\n' && _ptr.first == static_cast<int64_t>(_in.size()) - 1)
-            _ch = _eof;
     }
 
     inline void Lexer::_unget() {
@@ -45,6 +46,7 @@ namespace cc0 {
             _ptr.second = _in[_ptr.first].size() - 1;
         } else
             --_ptr.second;
+        _ch = _in[_ptr.first][_ptr.second];
     }
 
     [[nodiscard]] inline Lexer::_parseResult Lexer::_parse_int(pos_t pos, int base = 10) const {
@@ -317,10 +319,8 @@ namespace cc0 {
                         if (_ch == '*') {
                             if (_get(); _ch == '/')
                                 return _token(TokenType::COMMENT);
-                            else {
+                            else
                                 _ss << '*';
-                                _unget();
-                            }
                         } else {
                             _ss << _ch;
                             _get();
@@ -380,7 +380,6 @@ namespace cc0 {
                 case DFAState::RBRACE:
                     _unget();
                     return _token(TokenType::RBRACE);
-                // TODO: Test <char-literal> and <string-literal>
                 case DFAState::CHAR: {
                     _ss.str("");
 
@@ -398,6 +397,23 @@ namespace cc0 {
                                 return _token(TokenType::CHAR_LITERAL);
                             _unget();
                             return _err(ErrCode::ErrMissQuote);
+                        } else if (_ch == 'x') {
+                            _ss << _ch;
+                            if (_get(); ishex(_ch)) {
+                                _ss << _ch;
+                                if (_get(); ishex(_ch))
+                                    _ss << _ch;
+                                else
+                                    _unget();
+
+                                if (_get(); _ch == '\'')
+                                    return _token(TokenType::CHAR_LITERAL);
+                                else
+                                    return _err(ErrCode::ErrMissQuote);
+                            } else {
+                                _unget();
+                                return _err(ErrCode::ErrInvalidEscape);
+                            }
                         } else {
                             _unget();
                             return _err(ErrCode::ErrInvalidEscape);
@@ -417,7 +433,17 @@ namespace cc0 {
                             _ss << _ch;
                             if (_get(); ise_char(_ch))
                                 _ss << _ch;
-                            else {
+                            else if (_ch == 'x') {
+                                _ss << _ch;
+                                if (_get(); ishex(_ch)) {
+                                    _ss << _ch;
+                                    if (_get(); ishex(_ch))
+                                        _ss << _ch;
+                                    else
+                                        _unget();
+                                } else
+                                    return _err(ErrCode::ErrInvalidEscape);
+                            } else {
                                 _unget();
                                 return _err(ErrCode::ErrInvalidEscape);
                             }

@@ -23,8 +23,7 @@ namespace cc0 {
         out << cc0::RuntimeContext::get_tokens();
         out.close();
 
-        auto errs = cc0::RuntimeContext::get_errs();
-        if (!errs.empty())
+        if (auto errs = cc0::RuntimeContext::get_errs(); !errs.empty())
             std::cerr << errs << std::endl;
     }
 }

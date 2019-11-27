@@ -9,7 +9,9 @@ namespace cc0 {
     std::filesystem::path SourceContext::_in;
     std::filesystem::path SourceContext::_out;
     std::vector<std::string> SourceContext::_source;
+
     bool SourceContext::_f_wall = true;
+    bool SourceContext::_f_test = false;
 
     [[nodiscard]] bool SourceContext::set_ctx(const std::string& in_fn, const std::string& out_fn,
             bool f_wall) {
@@ -38,11 +40,25 @@ namespace cc0 {
         return false;
     }
 
+    void SourceContext::set_ctx(const std::istringstream &in) {
+        char split = '\n';
+        std::string::size_type p1, p2;
+
+        auto line = in.str();
+        for (p1 = 0, p2 = line.find(split); p2 != std::string::npos; p1 = p2 + 1, p2 = line.find(split, p1))
+            _source.push_back(line.substr(p1, p2 - p1) + '\n');
+        _source.push_back(line.substr(p1) + '\n');
+
+        _f_wall = true;
+        _f_test = true;
+    }
+
     void SourceContext::clear_ctx() {
         _in.clear();
         _out.clear();
         _source.clear();
 
         _f_wall = true;
+        _f_test = false;
     }
 }
