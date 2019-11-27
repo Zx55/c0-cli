@@ -6,12 +6,15 @@
 #ifndef C0_RT_CTX_H
 #define C0_RT_CTX_H
 
-#include "lexer/token.h"
 #include "tools/alias.h"
-#include "tools/error.h"
+#include "error/fatal.h"
+
+#include "lexer/token.h"
+#include "ast/ast.h"
 
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace cc0 {
     class   RuntimeContext final {
@@ -19,6 +22,7 @@ namespace cc0 {
     private:
         static std::vector<Token> _tokens;
         static std::vector<C0Err> _errs;
+        static std::unique_ptr<AST> _ast;
 
     public:
         RuntimeContext() = delete;

@@ -14,24 +14,18 @@ add_subdirectory(3rd_party/argparse)
 # Build libc0
 set(LIB "lib${PROJECT_NAME}")
 set(LIB_SRC
-        src/lexer/lexer.cpp
-        src/lexer/lexer.h
-        src/lexer/token.h
-        src/lexer/utils.h
-        src/analyser/analyser.cpp
-        src/analyser/analyser.h
-        src/ast/ast.cpp
-        src/ast/ast.h
-        src/ctx/src_ctx.cpp
-        src/ctx/src_ctx.h
-        src/ctx/rt_ctx.cpp
-        src/ctx/rt_ctx.h
-        src/tools/error.h
-        src/tools/warning.h
-        src/tools/alias.h
-        src/core.h)
+        src/lexer/lexer.cpp src/lexer/lexer.h src/lexer/token.h src/lexer/utils.h
+        src/analyser/analyser.h src/analyser/rdp.cpp src/analyser/rdp.h
+        src/ast/ast.h src/ast/basic_ast.h
+        src/ast/stmt_ast.cpp src/ast/stmt_ast.h
+        src/ast/expr_ast.cpp src/ast/expr_ast.h
+        src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h
+        src/error/error.h src/error/basic_error.h src/error/fatal.h src/error/warning.h
+        src/tools/alias.h src/core.h  )
 add_library(${LIB} ${LIB_SRC})
-target_include_directories(${LIB} PRIVATE ./src ./3rd_party/fmt/include)
+target_include_directories(${LIB} PRIVATE
+        ./src
+        ./3rd_party/fmt/include)
 
 # Build executable
 set(EXE ${PROJECT_NAME})
@@ -56,9 +50,7 @@ enable_testing()
 
 set(TEST "test${PROJECT_NAME}")
 set(TEST_SRC
-        tests/test_all.cpp
-        tests/test_lexer.cpp
-        tests/test_analyser.cpp)
+        tests/test_all.cpp tests/test_lexer.cpp tests/test_analyser.cpp)
 add_executable(${TEST} ${TEST_SRC})
 target_include_directories(${TEST} PRIVATE ./src)
 target_link_libraries(${TEST} Catch2 ${LIB} fmt::fmt)

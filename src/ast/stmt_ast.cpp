@@ -3,11 +3,8 @@
  * Copyright (c) zx5. All rights reserved.
  */
 
-#ifndef C0_WARNING_H
-#define C0_WARNING_H
+#include "stmt_ast.h"
 
 namespace cc0 {
 
 }
-
-#endif //C0_WARNING_H
