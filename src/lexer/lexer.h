@@ -7,7 +7,7 @@
 #define C0_LEXER_H
 
 #include "token.h"
-#include "error/error.h"
+#include "tools/error.h"
 #include "ctx/src_ctx.h"
 #include "ctx/rt_ctx.h"
 
@@ -20,7 +20,7 @@
 namespace cc0 {
     class Lexer final {
     private:
-        enum class DFAState: char {
+        enum class DFAState: unsigned char {
             INIT,
             ZERO,
             DECIMAL,
@@ -63,20 +63,25 @@ namespace cc0 {
         Lexer(Lexer&&) = delete;
         Lexer& operator=(Lexer) = delete;
 
-        [[nodiscard]] std::vector<std::string> get_input() { return _in; }
-        [[nodiscard]] std::string get_line(int64_t row) { return _in.at(row); }
         void next_token();
         void all_tokens();
 
     private:
+        struct _parseResult final {
+            std::optional<Token> _token;
+            std::optional<C0Err> _err;
+            std::optional<C0Err> _wrn;
+
+            _parseResult(std::optional<Token> token, std::optional<C0Err> err, std::optional<C0Err> wrn):
+                _token(std::move(token)), _err(std::move(err)), _wrn(std::move(wrn)) { }
+        };
+
         inline void _get();
         inline void _unget();
-        [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
-            _parse_int(pos_t p, int base) const;
-        [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
-            _parse_float(pos_t p) const;
+        [[nodiscard]] inline _parseResult _parse_int(pos_t p, int base) const;
+        [[nodiscard]] inline _parseResult _parse_float(pos_t p) const;
 
-        [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> _next();
+        [[nodiscard]] _parseResult _next();
     };
 }
 

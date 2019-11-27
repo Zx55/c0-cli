@@ -7,7 +7,7 @@
 #define C0_ANALYSER_H
 
 #include "tools/alias.h"
-#include "error/fatal.h"
+#include "tools/error.h"
 #include "ctx/rt_ctx.h"
 
 #include "lexer/token.h"

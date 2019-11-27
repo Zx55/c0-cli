@@ -20,8 +20,7 @@ set(LIB_SRC
         src/ast/stmt_ast.cpp src/ast/stmt_ast.h
         src/ast/expr_ast.cpp src/ast/expr_ast.h
         src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h
-        src/error/error.h src/error/basic_error.h src/error/fatal.h src/error/warning.h
-        src/tools/alias.h src/core.h  )
+        src/tools/error.h src/tools/alias.h src/core.h)
 add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE
         ./src

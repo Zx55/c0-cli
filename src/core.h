@@ -11,4 +11,22 @@
 #include "ctx/rt_ctx.h"
 #include "ctx/src_ctx.h"
 
+#include <fstream>
+
+namespace cc0 {
+    void tokenize() {
+        auto lexer = Lexer();
+        lexer.all_tokens();
+
+        auto out = std::ofstream(SourceContext::get_out());
+        out << "Tokens: \n";
+        out << cc0::RuntimeContext::get_tokens();
+        out.close();
+
+        auto errs = cc0::RuntimeContext::get_errs();
+        if (!errs.empty())
+            std::cerr << errs << std::endl;
+    }
+}
+
 #endif //C0_CORE_H

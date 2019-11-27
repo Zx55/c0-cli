@@ -80,7 +80,7 @@ namespace cc0 {
 
         friend std::ostream& operator<<(std::ostream& out, const std::vector<Token>& tks) {
             if (tks.empty()) {
-                out << "Bad bad - no token :(" << std::endl;
+                out << "Bad bad - no token :(\n";
                 return out;
             }
 
@@ -88,7 +88,7 @@ namespace cc0 {
             out << std::string(52, '-') << std::endl;
 
             for (const auto& tk: tks)
-                out << tk << std::endl;
+                out << tk << '\n';
             return out;
         }
 

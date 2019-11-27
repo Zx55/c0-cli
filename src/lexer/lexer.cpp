@@ -7,8 +7,9 @@
 #include "utils.h"
 
 #define _pos_end { (_ptr.first), ((_ptr.second) + 1) }
-#define _token(_type) { Token(_type, _ss.str(), pos, _pos_end), {} }
-#define _err(_type) { {}, C0Err(_type, pos, _pos_end) }
+#define _token(_type) { Token(_type, _ss.str(), pos, _pos_end), {}, {} }
+#define _err(_type) { {}, C0Err(_type, pos, _pos_end), {} }
+#define _wrn(_token, _type) { _token, {}, C0Err(_type, pos, _pos_end) }
 #define _eof '\0'
 
 namespace cc0 {
@@ -46,28 +47,27 @@ namespace cc0 {
             --_ptr.second;
     }
 
-    [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
-    Lexer::_parse_int(pos_t pos, int base = 10) const {
+    [[nodiscard]] inline Lexer::_parseResult Lexer::_parse_int(pos_t pos, int base = 10) const {
+        auto type = (base == 10) ? TokenType::DECIMAL : TokenType::HEXADECIMAL;
+
         try {
             auto res = std::stoi(_ss.str(), nullptr, base);
-            auto type = (base == 10) ? TokenType::DECIMAL : TokenType::HEXADECIMAL;
-            return { Token(type, res, pos, _pos_end), {} };
+            return { Token(type, res, pos, _pos_end), {}, {} };
         } catch (const std::out_of_range &) {
-            return _err(ErrCode::ErrInt32Overflow);
+            return _wrn(Token(type, 0, pos, _pos_end), ErrCode::WrnInt32Overflow);
         }
     }
 
-    [[nodiscard]] inline std::pair<std::optional<Token>, std::optional<C0Err>>
-    Lexer::_parse_float(pos_t pos) const {
+    [[nodiscard]] inline Lexer::_parseResult Lexer::_parse_float(pos_t pos) const {
         try {
             auto res = std::stod(_ss.str());
-            return { Token(TokenType::FLOAT, res, pos, _pos_end), {} };
+            return { Token(TokenType::FLOAT, res, pos, _pos_end), {}, {} };
         } catch (const std::out_of_range &) {
-            return _err(ErrCode::ErrFloatOverflow);
+            return _wrn(Token(TokenType::FLOAT, 0., pos, _pos_end), ErrCode::WrnFloat64Overflow);
         }
     }
 
-    [[nodiscard]] std::pair<std::optional<Token>, std::optional<C0Err>> Lexer::_next() {
+    [[nodiscard]] Lexer::_parseResult Lexer::_next() {
         auto current = DFAState::INIT;
         pos_t pos;
         _ss.clear();
@@ -182,7 +182,7 @@ namespace cc0 {
                         // <digit> ::= '0'
                         default:
                             _unget();
-                            return { Token(TokenType::DECIMAL, 0, pos, _pos_end), {} };
+                            return { Token(TokenType::DECIMAL, 0, pos, _pos_end), {}, {} };
                     }
 
                     _ss << _ch;
@@ -226,7 +226,7 @@ namespace cc0 {
 
                     auto id_str = _ss.str();
                     if (auto res = Token::get_reserved(id_str); res.has_value())
-                        return { Token(res.value(), id_str, pos, _pos_end), {} };
+                        return { Token(res.value(), id_str, pos, _pos_end), {}, {} };
                     else
                         return _token(TokenType::IDENTIFIER);
                 }
@@ -439,30 +439,36 @@ namespace cc0 {
     }
 
     void Lexer::next_token() {
-        const auto [tk, err] = _next();
+        const auto [tk, err, wrn] = _next();
         if (err.has_value()) {
-            if (err.value().get_code() == ErrCode::ErrEOF)
-                return;
-            RuntimeContext::put_err(err.value());
-        }
+            if (err.value().get_code() != ErrCode::ErrEOF)
+                RuntimeContext::put_fatal(err.value());
+            return;
+        } else if (wrn.has_value())
+            RuntimeContext::put_wrn(wrn.value());
         RuntimeContext::put_token(tk.value());
     }
 
     void Lexer::all_tokens() {
         auto tks = std::vector<Token>();
         auto errs = std::vector<C0Err>();
+        auto wrns = std::vector<C0Err>();
 
         while (true) {
-            if (const auto [tk, err] = _next(); err.has_value()) {
+            if (const auto [tk, err, wrn] = _next(); err.has_value()) {
                 if (err.value().get_code() == ErrCode::ErrEOF) {
                     RuntimeContext::set_tokens(tks);
-                    RuntimeContext::set_errs(errs);
+                    RuntimeContext::set_fatal(errs);
+                    RuntimeContext::set_wrns(wrns);
                     break;
                 }
                 else
                     errs.push_back(err.value());
-            } else
+            } else {
+                if (wrn.has_value())
+                    wrns.push_back(wrn.value());
                 tks.push_back(tk.value());
+            }
         }
     }
 }

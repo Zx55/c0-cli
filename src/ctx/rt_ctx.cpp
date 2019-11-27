@@ -5,12 +5,33 @@
 
 #include "rt_ctx.h"
 
+/* GCC-8.3.0 on compilers-env don't support STL parallel algorithm. */
+#include <algorithm>
+
 namespace cc0 {
+    std::vector<C0Err> RuntimeContext::_fatal;
+    std::vector<C0Err> RuntimeContext::_wrns;
     std::vector<Token> RuntimeContext::_tokens;
-    std::vector<C0Err> RuntimeContext::_errs;
 
     inline void RuntimeContext::clear_ctx() {
+        _fatal.clear();
+        _wrns.clear();
+
         _tokens.clear();
-        _errs.clear();
+    }
+
+    [[nodiscard]] std::vector<C0Err> RuntimeContext::get_errs() {
+        auto cmp = [](const C0Err& lhs, const C0Err& rhs) {
+            if (lhs.get_start().first == rhs.get_start().first)
+                return lhs.get_start().second <= rhs.get_start().second;
+            return lhs.get_start().first <= rhs.get_start().first;
+        };
+
+        std::vector<C0Err> errs(_fatal);
+        if (SourceContext::_f_wall)
+            errs.insert(errs.end(), _wrns.begin(), _wrns.end());
+
+        std::sort(errs.begin(), errs.end(), cmp);
+        return errs;
     }
 }

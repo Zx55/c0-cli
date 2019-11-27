@@ -8,7 +8,6 @@
 #include "argparse.hpp"
 
 #include <iostream>
-#include <fstream>
 
 int main(int argc, char* argv[]) {
     argparse::ArgumentParser program("cc0");
@@ -29,7 +28,11 @@ int main(int argc, char* argv[]) {
     program.add_argument("-o")
         .nargs(1)
         .default_value(std::string("out"))
-        .help("Specify the output file");
+        .help("Specify the output file.");
+    program.add_argument("-w")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Disable warning messages.");
 
     try {
         program.parse_args(argc, argv);
@@ -39,13 +42,12 @@ int main(int argc, char* argv[]) {
     }
 
     auto in_fn = program.get<std::string>("input");
-    if (!cc0::SourceContext::set_ctx(in_fn)) {
+    auto out_fn = program.get<std::string>("-o");
+
+    if (!cc0::SourceContext::set_ctx(in_fn, out_fn, program["-w"] != true)) {
         std::cerr << "File error: file not exist." << std::endl;
         return 1;
     }
-
-    auto out_fn = program.get<std::string>("-o");
-    auto out_file = std::ofstream(out_fn);
 
     int cnt = 0;
     (program["-s"] == true) ? ++cnt : cnt;
@@ -61,15 +63,9 @@ int main(int argc, char* argv[]) {
         std::cout << "ssss" << std::endl;
     } else if (program["-c"] == true) {
         std::cout << "cccc" << std::endl;
-    } else if (program["-l"] == true) {
-        auto lexer = cc0::Lexer();
-        lexer.all_tokens();
-
-        std::cout << "Tokens: " << std::endl;
-        std::cout << cc0::RuntimeContext::get_tokens() << std::endl;
-        std::cout << "Errors: " << std::endl;
-        std::cout << cc0::RuntimeContext::get_errs() << std::endl;
-    } else {
+    } else if (program["-l"] == true)
+        cc0::tokenize();
+    else {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;
     }
