@@ -6,10 +6,15 @@
 #ifndef C0_BASIC_AST_H
 #define C0_BASIC_AST_H
 
-namespace cc0 {
+#include "tools/error.h"
+
+#include <vector>
+
+namespace cc0::ast {
     class AST {
     public:
-        virtual void generate() = 0;
+        // TODO: what to return?
+        // virtual std::vector<C0Err> generate() = 0;
     };
 }
 

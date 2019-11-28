@@ -13,14 +13,29 @@ add_subdirectory(3rd_party/argparse)
 
 # Build libc0
 set(LIB "lib${PROJECT_NAME}")
+set(LEXER_SRC
+        src/lexer/lexer.cpp src/lexer/lexer.h src/lexer/token.h src/lexer/utils.h)
+set(ANALYSER_SRC
+        src/analyser/analyser.h src/analyser/rdp.cpp src/analyser/rdp.h)
+set(AST_SRC
+        src/ast/ast.h src/ast/basic_ast.h src/tools/enums.h src/tools/utils.h
+        src/ast/root_ast.h src/ast/var_ast.h src/ast/func_ast.h
+        src/ast/expr_ast/expr.h src/ast/expr_ast/basic_expr.h src/ast/expr_ast/cond_expr.h
+        src/ast/expr_ast/arith_expr.h src/ast/expr_ast/value_expr.h
+        src/ast/stmt_ast/stmt.h src/ast/stmt_ast/basic_stmt.h src/ast/stmt_ast/cond_stmt.h
+        src/ast/stmt_ast/loop_stmt.h src/ast/stmt_ast/io_stmt.h src/ast/stmt_ast/jmp_stmt.h)
+set(CTX_SRC
+        src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h)
+set(TOOL_SRC
+        src/tools/error.h src/tools/alias.h)
+
 set(LIB_SRC
-        src/lexer/lexer.cpp src/lexer/lexer.h src/lexer/token.h src/lexer/utils.h
-        src/analyser/analyser.h src/analyser/rdp.cpp src/analyser/rdp.h
-        src/ast/ast.h src/ast/basic_ast.h
-        src/ast/stmt_ast.cpp src/ast/stmt_ast.h
-        src/ast/expr_ast.cpp src/ast/expr_ast.h
-        src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h
-        src/tools/error.h src/tools/alias.h src/core.h)
+        ${LEXER_SRC}
+        ${ANALYSER_SRC}
+        ${AST_SRC}
+        ${CTX_SRC}
+        ${TOOL_SRC}
+         src/core.h)
 add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE
         ./src
@@ -29,7 +44,7 @@ target_include_directories(${LIB} PRIVATE
 # Build executable
 set(EXE ${PROJECT_NAME})
 set(EXE_SRC
-        src/main.cpp)
+        src/main.cpp src/ast/expr_ast/cond_expr.h)
 add_executable(${EXE} ${EXE_SRC})
 target_include_directories(${EXE} PRIVATE ./src)
 target_link_libraries(${EXE} PRIVATE ${LIB} fmt::fmt argparse)

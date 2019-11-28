@@ -15,16 +15,18 @@
 
 #include <vector>
 #include <string>
-// #include <memory>
+#include <memory>
 
 namespace cc0 {
     class   RuntimeContext final {
         friend class Lexer;
+
     private:
         static std::vector<C0Err> _fatal;
         static std::vector<C0Err> _wrns;
+
         static std::vector<Token> _tokens;
-        // static std::unique_ptr<AST> _ast;
+        static std::unique_ptr<AST> _ast;
 
     public:
         RuntimeContext() = delete;
@@ -33,11 +35,13 @@ namespace cc0 {
         RuntimeContext& operator=(const RuntimeContext&) = delete;
 
         inline static void clear_ctx();
-        [[nodiscard]] inline static auto& get_tokens() { return _tokens; }
+
         [[nodiscard]] inline static auto& get_fatal() { return _fatal; }
         [[nodiscard]] inline static auto& get_wrns() { return _wrns; }
         [[nodiscard]] static std::vector<C0Err> get_errs();
 
+        [[nodiscard]] inline static auto& get_tokens() { return _tokens; }
+        [[nodiscard]] inline static auto& get_ast() { return _ast; }
 
     private:
         inline static void set_tokens(std::vector<Token> tokens) { _tokens = std::move(tokens); }

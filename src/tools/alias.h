@@ -9,6 +9,9 @@
 #include <cstdint>
 #include <utility>
 
+#include <vector>
+#include <memory>
+
 namespace cc0 {
     using int32_t = std::int32_t;
     using uint32_t = std::uint32_t;
@@ -17,6 +20,11 @@ namespace cc0 {
 
     using pos_t = std::pair<int64_t, int64_t>;
     using range_t = std::pair<pos_t, pos_t>;
+
+    namespace ast {
+        template <typename T> using _ptr = std::unique_ptr<T>;
+        template <typename T> using _ptrs = std::vector<_ptr<T>>;
+    }
 }
 
 #endif //C0_ALIAS_H

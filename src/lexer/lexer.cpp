@@ -230,6 +230,7 @@ namespace cc0 {
                     else
                         return _token(TokenType::IDENTIFIER);
                 }
+                // TODO: Test <hexadecimal-literal>
                 case DFAState::HEXADECIMAL: {
                     // <hex-literal> ::= '0'('x'|'X')<hex-digit-seq>
                     if (!ishex(_ch))
@@ -380,7 +381,6 @@ namespace cc0 {
                 case DFAState::RBRACE:
                     _unget();
                     return _token(TokenType::RBRACE);
-                // TODO: Test <char-literal> and <string-literal>
                 case DFAState::CHAR: {
                     _ss.str("");
 

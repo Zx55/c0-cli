@@ -36,7 +36,6 @@ namespace cc0 {
             swap(lhs._ctx, rhs._ctx);
         }
 
-        // FIXME: print C0Err when using stringstream as input
         friend std::ostream& operator<<(std::ostream& out, const C0Err& err) {
             out << fmt::format("{}", err);
             return out;
@@ -123,7 +122,6 @@ namespace fmt {
             code = err.is_fatal() ? code : _wrn_offset(code);
             auto arrow = std::string(err.get_start().second + 8, ' ') + std::string(err.get_len(), '^');
 
-            // TODO: change console color using ASNI escape
             return format_to(ctx.out(), "{:s} In file {}:{:d}:{:d}: {:s}\n {:4d} | {:s}{:s}",
                     err.is_fatal() ? "!!Error!!" : "!Warning!", cc0::SourceContext::get_in_absolute(),
                     row, col, err_printable[code], row, err.get_err_line(), arrow);
