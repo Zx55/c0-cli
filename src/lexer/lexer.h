@@ -69,21 +69,21 @@ namespace cc0 {
         void all_tokens();
 
     private:
-        struct _parseResult final {
+        struct _ParseResult final {
             std::optional<Token> _token;
             std::optional<C0Err> _err;
             std::optional<C0Err> _wrn;
 
-            _parseResult(std::optional<Token> token, std::optional<C0Err> err, std::optional<C0Err> wrn):
+            _ParseResult(std::optional<Token> token, std::optional<C0Err> err, std::optional<C0Err> wrn):
                 _token(std::move(token)), _err(std::move(err)), _wrn(std::move(wrn)) { }
         };
 
         inline void _get();
         inline void _unget();
-        [[nodiscard]] inline _parseResult _parse_int(pos_t p, int base) const;
-        [[nodiscard]] inline _parseResult _parse_float(pos_t p) const;
+        [[nodiscard]] inline _ParseResult _parse_int(pos_t p, int base) const;
+        [[nodiscard]] inline _ParseResult _parse_float(pos_t p) const;
 
-        [[nodiscard]] _parseResult _next();
+        [[nodiscard]] _ParseResult _next();
     };
 }
 

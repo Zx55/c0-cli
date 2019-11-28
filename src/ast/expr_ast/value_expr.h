@@ -11,27 +11,27 @@
 #include "basic_expr.h"
 
 namespace cc0::ast {
-    class Int32ExprAST: public ExprAST {
+    class Int32ExprAST final: public ExprAST {
     public:
         explicit Int32ExprAST(int32_t value): ExprAST(Type::INT, value) { }
     };
 
-    class Float64ExprAST: public ExprAST {
+    class Float64ExprAST final: public ExprAST {
     public:
         explicit Float64ExprAST(double value): ExprAST(Type::DOUBLE, value) { }
     };
 
-    class CharExprAST: public ExprAST {
+    class CharExprAST final: public ExprAST {
     public:
         explicit CharExprAST(char value): ExprAST(Type::INT, static_cast<int32_t>(value)) { }
     };
 
-    class StringExprAST: public ExprAST {
+    class StringExprAST final: public ExprAST {
     public:
         explicit StringExprAST(std::string value): ExprAST(Type::STRING, value) { }
     };
 
-    class IdExprAST: public ExprAST {
+    class IdExprAST final: public ExprAST {
     private:
         Token& _id;
 

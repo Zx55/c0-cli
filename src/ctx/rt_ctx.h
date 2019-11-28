@@ -20,6 +20,7 @@
 namespace cc0 {
     class   RuntimeContext final {
         friend class Lexer;
+        friend class RDP;
 
     private:
         static std::vector<C0Err> _fatal;
@@ -44,12 +45,20 @@ namespace cc0 {
         [[nodiscard]] inline static auto& get_ast() { return _ast; }
 
     private:
-        inline static void set_tokens(std::vector<Token> tokens) { _tokens = std::move(tokens); }
-        inline static void put_token(Token token) { _tokens.push_back(std::move(token)); }
-        inline static void set_fatal(std::vector<C0Err> errs) { _fatal = std::move(errs); }
+        inline static void put_fatals(std::vector<C0Err>&& errs) {
+            _fatal.insert(_fatal.end(), std::make_move_iterator(errs.begin()),
+                    std::make_move_iterator(errs.end()));
+        }
         inline static void put_fatal(C0Err err) { _fatal.push_back(std::move(err)); }
-        inline static void set_wrns(std::vector<C0Err> wrns) { _wrns = std::move(wrns); }
+        inline static void put_wrns(std::vector<C0Err>&& wrns) {
+            _wrns.insert(_wrns.end(), std::make_move_iterator(wrns.begin()),
+                    std::make_move_iterator(wrns.end()));
+        }
         inline static void put_wrn(C0Err wrn) { _wrns.push_back(std::move(wrn)); }
+
+        inline static void set_tokens(std::vector<Token>&& tokens) { _tokens = std::move(tokens); }
+        inline static void put_token(Token token) { _tokens.push_back(std::move(token)); }
+        inline static void set_ast(ast::_ptr<AST> ast) { _ast.reset(nullptr); _ast = std::move(ast); }
     };
 }
 

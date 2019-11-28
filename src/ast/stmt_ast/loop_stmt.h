@@ -9,7 +9,7 @@
 #include "basic_stmt.h"
 
 namespace cc0::ast {
-    class WhileStmtAST: public StmtAST {
+    class WhileStmtAST final: public StmtAST {
     private:
         _ptr<CondExprAST> _cond;
         _ptrs<StmtAST> _stmts;
@@ -20,9 +20,9 @@ namespace cc0::ast {
     };
 
     /*
-     * class ForStmtAST: public StmtAST { };
+     * class ForStmtAST final: public StmtAST { };
      *
-     * class DoWhileStmtAST: public StmtAST { };
+     * class DoWhileStmtAST final: public StmtAST { };
      */
 }
 

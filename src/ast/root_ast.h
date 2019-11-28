@@ -16,13 +16,13 @@
 #include <memory>
 
 namespace cc0::ast {
-    class RootAST: public AST {
+    class RootAST final: public AST {
     private:
-        _ptrs<DeclAST> _vars;
+        _ptrs<VarDeclAST> _vars;
         _ptrs<FuncDefAST> _funcs;
 
     public:
-        explicit RootAST(_ptrs<DeclAST> vars, _ptrs<FuncDefAST> funcs):
+        explicit RootAST(_ptrs<VarDeclAST> vars, _ptrs<FuncDefAST> funcs):
             _vars(std::move(vars)), _funcs(std::move(funcs)) { }
     };
 }

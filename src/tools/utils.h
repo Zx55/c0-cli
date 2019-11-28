@@ -10,19 +10,36 @@
 
 #include "lexer/token.h"
 
-namespace cc0::ast {
-    inline Type make_type(TokenType type) {
+namespace cc0 {
+    inline bool istype(TokenType type) {
         switch (type) {
             case TokenType::VOID:
-                return Type::VOID;
+                [[fallthrough]];
             case TokenType::INT:
-                return Type::INT;
+                [[fallthrough]];
             case TokenType::CHAR:
-                return Type::CHAR;
+                [[fallthrough]];
             case TokenType::DOUBLE:
-                return Type::DOUBLE;
+                return true;
             default:
-                return Type::UNDEFINED;
+                return false;
+        }
+    }
+
+    namespace ast {
+        inline Type make_type(TokenType type) {
+            switch (type) {
+                case TokenType::VOID:
+                    return Type::VOID;
+                case TokenType::INT:
+                    return Type::INT;
+                case TokenType::CHAR:
+                    return Type::CHAR;
+                case TokenType::DOUBLE:
+                    return Type::DOUBLE;
+                default:
+                    return Type::UNDEFINED;
+            }
         }
     }
 }

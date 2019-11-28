@@ -20,7 +20,7 @@
 #include <optional>
 
 namespace cc0::ast {
-    class DeclAST: public AST {
+    class VarDeclAST final: public AST {
     private:
         ast::Type _type;
         _ptr<IdExprAST> _id;
@@ -28,11 +28,11 @@ namespace cc0::ast {
         bool _const;
 
     public:
-        explicit DeclAST(TokenType type, _ptr<IdExprAST> id, _ptr<ExprAST> init, bool f_const = false):
-            _type(make_type(type)), _id(std::move(id)), _init(std::move(init)), _const(f_const) { }
+        explicit VarDeclAST(Type type, _ptr<IdExprAST> id, _ptr<ExprAST> init, bool f_const = false):
+            _type(type), _id(std::move(id)), _init(std::move(init)), _const(f_const) { }
     };
 
-    class AssignAST: public ExprAST, public StmtAST {
+    class AssignAST final: public ExprAST, public StmtAST {
     private:
         _ptr<IdExprAST> _id;
         _ptr<ExprAST> _value;

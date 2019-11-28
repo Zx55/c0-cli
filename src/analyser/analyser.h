@@ -6,14 +6,18 @@
 #ifndef C0_ANALYSER_H
 #define C0_ANALYSER_H
 
+#include "tools/utils.h"
+
 #include "tools/alias.h"
 #include "tools/error.h"
 #include "ctx/rt_ctx.h"
 
 #include "lexer/token.h"
+#include "ast/ast.h"
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace cc0 {
     class Analyser {
@@ -21,6 +25,9 @@ namespace cc0 {
         std::vector<Token>& _tokens;
         int64_t _ptr;
         Token& _token;
+
+        std::vector<C0Err> _errs;
+        std::vector<C0Err> _wrns;
 
         [[nodiscard]] inline bool _get() {
             if (_ptr >= static_cast<int64_t>(_tokens.size()))
@@ -30,7 +37,7 @@ namespace cc0 {
             return true;
         }
 
-        [[nodiscard]] inline bool _unget() { return --_ptr >= 0; }
+        inline void _unget() { --_ptr; _token = _tokens.at(_ptr); }
 
         Analyser(): _tokens(RuntimeContext::get_tokens()), _ptr(0), _token(_tokens.at(_ptr)) { }
 

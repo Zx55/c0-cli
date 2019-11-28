@@ -9,7 +9,7 @@
 #include "basic_stmt.h"
 
 namespace cc0::ast {
-    class IfElseStmtAST: public StmtAST {
+    class IfElseStmtAST final: public StmtAST {
     private:
         _ptr<CondExprAST> _cond;
         _ptrs<StmtAST> _true;
@@ -21,7 +21,7 @@ namespace cc0::ast {
     };
 
     /*
-     * class SwitchStmtAST: public StmtAST { };
+     * class SwitchStmtAST final: public StmtAST { };
      */
 }
 

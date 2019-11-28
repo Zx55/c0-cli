@@ -18,7 +18,7 @@ set(LEXER_SRC
 set(ANALYSER_SRC
         src/analyser/analyser.h src/analyser/rdp.cpp src/analyser/rdp.h)
 set(AST_SRC
-        src/ast/ast.h src/ast/basic_ast.h src/tools/enums.h src/tools/utils.h
+        src/ast/ast.h src/ast/basic_ast.h
         src/ast/root_ast.h src/ast/var_ast.h src/ast/func_ast.h
         src/ast/expr_ast/expr.h src/ast/expr_ast/basic_expr.h src/ast/expr_ast/cond_expr.h
         src/ast/expr_ast/arith_expr.h src/ast/expr_ast/value_expr.h
@@ -27,7 +27,7 @@ set(AST_SRC
 set(CTX_SRC
         src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h)
 set(TOOL_SRC
-        src/tools/error.h src/tools/alias.h)
+        src/tools/alias.h src/tools/enums.h src/tools/error.h src/tools/utils.h)
 
 set(LIB_SRC
         ${LEXER_SRC}
@@ -44,7 +44,7 @@ target_include_directories(${LIB} PRIVATE
 # Build executable
 set(EXE ${PROJECT_NAME})
 set(EXE_SRC
-        src/main.cpp src/ast/expr_ast/cond_expr.h)
+        src/main.cpp)
 add_executable(${EXE} ${EXE_SRC})
 target_include_directories(${EXE} PRIVATE ./src)
 target_link_libraries(${EXE} PRIVATE ${LIB} fmt::fmt argparse)

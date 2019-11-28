@@ -10,7 +10,7 @@
 #include "value_expr.h"
 
 namespace cc0::ast {
-    class CondExprAST: public ExprAST {
+    class CondExprAST final: public ExprAST {
     private:
         _ptr<ExprAST> _lhs;
         Op _op;

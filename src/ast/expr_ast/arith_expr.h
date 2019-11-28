@@ -9,7 +9,7 @@
 #include "basic_expr.h"
 
 namespace cc0::ast {
-    class BinaryExprAST: public ExprAST {
+    class BinaryExprAST final: public ExprAST {
     private:
         _ptr<ExprAST> _lhs;
         Op _op;

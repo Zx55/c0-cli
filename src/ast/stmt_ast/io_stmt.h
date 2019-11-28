@@ -9,7 +9,7 @@
 #include "basic_stmt.h"
 
 namespace cc0::ast {
-    class PrintStmtAST: StmtAST {
+    class PrintStmtAST final: StmtAST {
     private:
         _ptrs<ExprAST> _printable;
 
@@ -17,7 +17,7 @@ namespace cc0::ast {
         explicit PrintStmtAST(_ptrs<ExprAST> printable): _printable(std::move(printable)) { }
     };
 
-    class ScanStmtAST: StmtAST {
+    class ScanStmtAST final: StmtAST {
     private:
         _ptr<IdExprAST> _id;
 

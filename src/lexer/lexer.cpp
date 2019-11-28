@@ -6,9 +6,9 @@
 #include "lexer.h"
 
 #define _pos_end { (_ptr.first), ((_ptr.second) + 1) }
-#define _token(_type) { Token(_type, _ss.str(), pos, _pos_end), {}, {} }
-#define _err(_type) { {}, C0Err(_type, pos, _pos_end), {} }
-#define _wrn(_token, _type) { _token, {}, C0Err(_type, pos, _pos_end) }
+#define _lex_token(_type) { Token(_type, _ss.str(), pos, _pos_end), {}, {} }
+#define _lex_err(_type) { {}, C0Err(_type, pos, _pos_end), {} }
+#define _lex_wrn(_token, _type) { _token, {}, C0Err(_type, pos, _pos_end) }
 #define _eof '\0'
 
 namespace cc0 {
@@ -49,27 +49,27 @@ namespace cc0 {
         _ch = _in[_ptr.first][_ptr.second];
     }
 
-    [[nodiscard]] inline Lexer::_parseResult Lexer::_parse_int(pos_t pos, int base = 10) const {
+    inline Lexer::_ParseResult Lexer::_parse_int(pos_t pos, int base = 10) const {
         auto type = (base == 10) ? TokenType::DECIMAL : TokenType::HEXADECIMAL;
 
         try {
             auto res = std::stoi(_ss.str(), nullptr, base);
             return { Token(type, res, pos, _pos_end), {}, {} };
         } catch (const std::out_of_range &) {
-            return _wrn(Token(type, 0, pos, _pos_end), ErrCode::WrnInt32Overflow);
+            return _lex_wrn(Token(type, 0, pos, _pos_end), ErrCode::WrnInt32Overflow);
         }
     }
 
-    [[nodiscard]] inline Lexer::_parseResult Lexer::_parse_float(pos_t pos) const {
+    inline Lexer::_ParseResult Lexer::_parse_float(pos_t pos) const {
         try {
             auto res = std::stod(_ss.str());
             return { Token(TokenType::FLOAT, res, pos, _pos_end), {}, {} };
         } catch (const std::out_of_range &) {
-            return _wrn(Token(TokenType::FLOAT, 0., pos, _pos_end), ErrCode::WrnFloat64Overflow);
+            return _lex_wrn(Token(TokenType::FLOAT, 0., pos, _pos_end), ErrCode::WrnFloat64Overflow);
         }
     }
 
-    [[nodiscard]] Lexer::_parseResult Lexer::_next() {
+    Lexer::_ParseResult Lexer::_next() {
         auto current = DFAState::INIT;
         pos_t pos;
         _ss.clear();
@@ -80,9 +80,9 @@ namespace cc0 {
             switch(_get(); current) {
                 case DFAState::INIT: {
                     if (iseof(_ch))
-                        return _err(ErrCode::ErrEOF);
+                        return _lex_err(ErrCode::ErrEOF);
                     if (!isaccept(_ch))
-                        return _err(ErrCode::ErrInvalidInput);
+                        return _lex_err(ErrCode::ErrInvalidInput);
 
                     if (isspace(_ch))
                         goto L_START;
@@ -146,7 +146,7 @@ namespace cc0 {
                                     current = DFAState::FLOAT_DOT;
                                     goto L_START;
                                 }
-                                return _err(ErrCode::ErrInvalidFloat);
+                                return _lex_err(ErrCode::ErrInvalidFloat);
                             }
                             case '\'':
                                 current = DFAState::CHAR;
@@ -230,13 +230,13 @@ namespace cc0 {
                     if (auto res = Token::get_reserved(id_str); res.has_value())
                         return { Token(res.value(), id_str, pos, _pos_end), {}, {} };
                     else
-                        return _token(TokenType::IDENTIFIER);
+                        return _lex_token(TokenType::IDENTIFIER);
                 }
                 // TODO: Test <hexadecimal-literal>
                 case DFAState::HEXADECIMAL: {
                     // <hex-literal> ::= '0'('x'|'X')<hex-digit-seq>
                     if (!ishex(_ch))
-                        return _err(ErrCode::ErrInvalidHexadecimal);
+                        return _lex_err(ErrCode::ErrInvalidHexadecimal);
 
                     do {
                         _ss << _ch;
@@ -280,13 +280,13 @@ namespace cc0 {
                 }
                 case DFAState::PLUS:
                     _unget();
-                    return _token(TokenType::PLUS);
+                    return _lex_token(TokenType::PLUS);
                 case DFAState::MINUS:
                     _unget();
-                    return _token(TokenType::MINUS);
+                    return _lex_token(TokenType::MINUS);
                 case DFAState::MULTIPLY:
                     _unget();
-                    return _token(TokenType::MULTIPLY);
+                    return _lex_token(TokenType::MULTIPLY);
                 case DFAState::DIVISION: {
                     if (_ch == '/')
                         current = DFAState::SINGLE_COMMENT;
@@ -294,7 +294,7 @@ namespace cc0 {
                         current = DFAState::MULTI_COMMENT;
                     else {
                         _unget();
-                        return _token(TokenType::DIVISION);
+                        return _lex_token(TokenType::DIVISION);
                     }
 
                     _ss << _ch;
@@ -308,18 +308,18 @@ namespace cc0 {
                         _get();
                     }
                     _unget();
-                    return _token(TokenType::COMMENT);
+                    return _lex_token(TokenType::COMMENT);
                 }
                 case DFAState::MULTI_COMMENT: {
                     _ss.str("");
 
                     while (true) {
                         if (iseof(_ch))
-                            return _err(ErrCode::ErrIncompleteComment);
+                            return _lex_err(ErrCode::ErrIncompleteComment);
 
                         if (_ch == '*') {
                             if (_get(); _ch == '/')
-                                return _token(TokenType::COMMENT);
+                                return _lex_token(TokenType::COMMENT);
                             else
                                 _ss << '*';
                         } else {
@@ -331,73 +331,73 @@ namespace cc0 {
                 case DFAState::ASSIGN: {
                     if (_ch == '=') {
                         _ss << _ch;
-                        return _token(TokenType::EQUAL);
+                        return _lex_token(TokenType::EQUAL);
                     }
                     _unget();
-                    return _token(TokenType::ASSIGN);
+                    return _lex_token(TokenType::ASSIGN);
                 }
                 case DFAState::GREATER: {
                     if (_ch == '=') {
                         _ss << _ch;
-                        return _token(TokenType::GREATER_EQUAL);
+                        return _lex_token(TokenType::GREATER_EQUAL);
                     }
                     _unget();
-                    return _token(TokenType::GREATER);
+                    return _lex_token(TokenType::GREATER);
                 }
                 case DFAState::LESS: {
                     if (_ch == '=') {
                         _ss << _ch;
-                        return _token(TokenType::LESS_EQUAL);
+                        return _lex_token(TokenType::LESS_EQUAL);
                     }
                     _unget();
-                    return _token(TokenType::LESS);
+                    return _lex_token(TokenType::LESS);
                 }
                 case DFAState::NEQUAL: {
                     if (_ch == '=') {
                         _ss << _ch;
-                        return _token(TokenType::NEQUAL);
+                        return _lex_token(TokenType::NEQUAL);
                     }
                     _unget();
-                    return _err(ErrCode::ErrMissEqOp);
+                    return _lex_err(ErrCode::ErrMissEqOp);
                 }
                 case DFAState::SEMI:
                     _unget();
-                    return _token(TokenType::SEMI);
+                    return _lex_token(TokenType::SEMI);
                 case DFAState::COLON:
                     _unget();
-                    return _token(TokenType::COLON);
+                    return _lex_token(TokenType::COLON);
                 case DFAState::COMMA:
                     _unget();
-                    return _token(TokenType::COMMA);
+                    return _lex_token(TokenType::COMMA);
                 case DFAState::LPARENTHESIS:
                     _unget();
-                    return _token(TokenType::LPARENTHESIS);
+                    return _lex_token(TokenType::LPARENTHESIS);
                 case DFAState::RPARENTHESIS:
                     _unget();
-                    return _token(TokenType::RPARENTHESIS);
+                    return _lex_token(TokenType::RPARENTHESIS);
                 case DFAState::LBRACE:
                     _unget();
-                    return _token(TokenType::LBRACE);
+                    return _lex_token(TokenType::LBRACE);
                 case DFAState::RBRACE:
                     _unget();
-                    return _token(TokenType::RBRACE);
+                    return _lex_token(TokenType::RBRACE);
                 case DFAState::CHAR: {
                     _ss.str("");
 
                     if (isc_char(_ch)) {
                         _ss << _ch;
                         if (_get(); _ch == '\'')
-                            return _token(TokenType::CHAR_LITERAL);
+                            return _lex_token(TokenType::CHAR_LITERAL);
                         _unget();
-                        return _err(ErrCode::ErrMissQuote);
+                        return _lex_err(ErrCode::ErrMissQuote);
                     } else if (_ch == '\\') {
                         _ss << _ch;
                         if (_get(); ise_char(_ch)) {
                             _ss << _ch;
                             if (_get(); _ch == '\'')
-                                return _token(TokenType::CHAR_LITERAL);
+                                return _lex_token(TokenType::CHAR_LITERAL);
                             _unget();
-                            return _err(ErrCode::ErrMissQuote);
+                            return _lex_err(ErrCode::ErrMissQuote);
                         } else if (_ch == 'x') {
                             _ss << _ch;
                             if (_get(); ishex(_ch)) {
@@ -408,20 +408,20 @@ namespace cc0 {
                                     _unget();
 
                                 if (_get(); _ch == '\'')
-                                    return _token(TokenType::CHAR_LITERAL);
+                                    return _lex_token(TokenType::CHAR_LITERAL);
                                 else
-                                    return _err(ErrCode::ErrMissQuote);
+                                    return _lex_err(ErrCode::ErrMissQuote);
                             } else {
                                 _unget();
-                                return _err(ErrCode::ErrInvalidEscape);
+                                return _lex_err(ErrCode::ErrInvalidEscape);
                             }
                         } else {
                             _unget();
-                            return _err(ErrCode::ErrInvalidEscape);
+                            return _lex_err(ErrCode::ErrInvalidEscape);
                         }
                     } else {
                         _unget();
-                        return _err(ErrCode::ErrInvalidChar);
+                        return _lex_err(ErrCode::ErrInvalidChar);
                     }
                 }
                 case DFAState::STRING: {
@@ -443,19 +443,19 @@ namespace cc0 {
                                     else
                                         _unget();
                                 } else
-                                    return _err(ErrCode::ErrInvalidEscape);
+                                    return _lex_err(ErrCode::ErrInvalidEscape);
                             } else {
                                 _unget();
-                                return _err(ErrCode::ErrInvalidEscape);
+                                return _lex_err(ErrCode::ErrInvalidEscape);
                             }
                         } else if (_ch == '\"') {
                             if (_ss.str().empty())
-                                return _err(ErrCode::ErrInvalidString);
+                                return _lex_err(ErrCode::ErrInvalidString);
                             else
-                                return _token(TokenType::STRING_LITERAL);
+                                return _lex_token(TokenType::STRING_LITERAL);
                         } else {
                             _unget();
-                            return _err(ErrCode::ErrMissQuote);
+                            return _lex_err(ErrCode::ErrMissQuote);
                         }
 
                         _get();
@@ -484,9 +484,9 @@ namespace cc0 {
         while (true) {
             if (const auto [tk, err, wrn] = _next(); err.has_value()) {
                 if (err.value().get_code() == ErrCode::ErrEOF) {
-                    RuntimeContext::set_tokens(tks);
-                    RuntimeContext::set_fatal(errs);
-                    RuntimeContext::set_wrns(wrns);
+                    RuntimeContext::set_tokens(std::move(tks));
+                    RuntimeContext::put_fatals(std::move(errs));
+                    RuntimeContext::put_wrns(std::move(wrns));
                     break;
                 }
                 else
