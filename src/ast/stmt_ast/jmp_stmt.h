@@ -11,7 +11,7 @@
 #include "basic_stmt.h"
 
 namespace cc0::ast {
-    class ReturnStmtAST final: StmtAST {
+    class ReturnStmtAST final: public StmtAST {
     private:
         _ptr<ExprAST> _ret;
 

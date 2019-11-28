@@ -17,7 +17,16 @@ namespace cc0 {
         [[nodiscard]] ast::_ptrs<ast::ParamAST> _analyse_params();
         [[nodiscard]] ast::_ptr<ast::BlockStmtAST> _analyse_block();
         [[nodiscard]] inline ast::Type _analyse_type_specifier();
+        [[nodiscard]] ast::_ptr<ast::StmtAST> _analyse_stmt();
+        [[nodiscard]] ast::_ptr<ast::IfElseStmtAST> _analyse_if_else();
+        [[nodiscard]] ast::_ptr<ast::WhileStmtAST> _analyse_while();
+        [[nodiscard]] ast::_ptr<ast::ReturnStmtAST> _analyse_return();
+        [[nodiscard]] ast::_ptr<ast::PrintStmtAST> _analyse_print();
+        [[nodiscard]] ast::_ptr<ast::ScanStmtAST> _analyse_scan();
         [[nodiscard]] ast::_ptr<ast::ExprAST> _analyse_expr();
+        [[nodiscard]] ast::_ptr<ast::CondExprAST> _analyse_cond();
+        [[nodiscard]] ast::_ptr<ast::AssignAST> _analyse_assign();
+        [[nodiscard]] ast::_ptr<ast::FuncCallAST> _analyse_func_call();
         [[nodiscard]] inline ast::_ptr<ast::IdExprAST> _analyser_id();
 
     public:

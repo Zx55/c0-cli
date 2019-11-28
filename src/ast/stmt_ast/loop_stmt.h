@@ -12,11 +12,11 @@ namespace cc0::ast {
     class WhileStmtAST final: public StmtAST {
     private:
         _ptr<CondExprAST> _cond;
-        _ptrs<StmtAST> _stmts;
+        _ptr<StmtAST> _stmt;
 
     public:
-        explicit WhileStmtAST(_ptr<CondExprAST> cond, _ptrs<StmtAST> stmts):
-            _cond(std::move(cond)), _stmts(std::move(stmts)) { }
+        explicit WhileStmtAST(_ptr<CondExprAST> cond, _ptr<StmtAST> stmt):
+            _cond(std::move(cond)), _stmt(std::move(stmt)) { }
     };
 
     /*

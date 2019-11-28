@@ -12,11 +12,11 @@ namespace cc0::ast {
     class IfElseStmtAST final: public StmtAST {
     private:
         _ptr<CondExprAST> _cond;
-        _ptrs<StmtAST> _true;
-        _ptrs<StmtAST> _false;
+        _ptr<StmtAST> _true;
+        _ptr<StmtAST> _false;
 
     public:
-        explicit IfElseStmtAST(_ptr<CondExprAST> cond, _ptrs<StmtAST> s_true, _ptrs<StmtAST> s_false):
+        explicit IfElseStmtAST(_ptr<CondExprAST> cond, _ptr<StmtAST> s_true, _ptr<StmtAST> s_false):
             _cond(std::move(cond)), _true(std::move(s_true)), _false(std::move(s_false)) { }
     };
 

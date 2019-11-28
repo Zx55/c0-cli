@@ -36,6 +36,8 @@ namespace cc0::ast {
     public:
         explicit BlockStmtAST(_ptrs<VarDeclAST> vars, _ptrs<StmtAST> stmts):
             _vars(std::move(vars)), _stmts(std::move(stmts)) { }
+        BlockStmtAST(BlockStmtAST&& ast) noexcept:
+            _vars(std::move(ast._vars)), _stmts(std::move(ast._stmts)) { }
     };
 
     class FuncDefAST final: public AST {

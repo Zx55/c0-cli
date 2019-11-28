@@ -26,6 +26,10 @@ namespace cc0 {
         }
     }
 
+    inline bool isconst(TokenType type) {
+        return type == TokenType::CONST;
+    }
+
     namespace ast {
         inline Type make_type(TokenType type) {
             switch (type) {
