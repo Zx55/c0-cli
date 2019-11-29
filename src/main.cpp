@@ -13,10 +13,14 @@ int main(int argc, char* argv[]) {
     argparse::ArgumentParser program("cc0");
     program.add_argument("input")
         .help("Specify the file contains c0 source code.");
-    program.add_argument("-l")
+    program.add_argument("-l", "--lex")
         .default_value(false)
         .implicit_value(true)
-        .help("Perform lexical analyse based on the input c0 source code.");
+        .help("Perform lexical analyse on the input c0 source code.");
+    program.add_argument("-t", "--tree")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Draw AST based on the input c0 source code.");
     program.add_argument("-s")
         .default_value(false)
         .implicit_value(true)
@@ -65,6 +69,8 @@ int main(int argc, char* argv[]) {
         std::cout << "cccc" << std::endl;
     } else if (program["-l"] == true)
         cc0::tokenize();
+    else if (program["-t"] == true)
+        cc0::analyse();
     else {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;

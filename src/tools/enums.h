@@ -7,7 +7,6 @@
 #define C0_ENUMS_H
 
 namespace cc0::ast {
-    // TODO: 计算时转换的优先级
     enum class Type: unsigned char {
         VOID,
         INT,

@@ -6,11 +6,82 @@
 #ifndef C0_UTILS_H
 #define C0_UTILS_H
 
+#include "ctx/rt_ctx.h"
 #include "enums.h"
 
 #include "lexer/token.h"
 
-namespace cc0 {
+#include <cctype>
+
+#define IS_FUNC(fn) \
+    inline bool fn(int ch) { \
+        return std::fn(static_cast<unsigned char>(ch)); \
+    } \
+
+namespace cc0::utils {
+    IS_FUNC(isprint)
+    IS_FUNC(isblank)
+    IS_FUNC(isdigit)
+    IS_FUNC(isalpha)
+    IS_FUNC(isalnum)
+    IS_FUNC(ispunct)
+
+    inline bool isline(int ch) {
+        switch (ch) {
+            case '\r':
+                [[fallthrough]];
+            case '\n':
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    inline bool isspace(int ch) {
+        return isblank(ch) || isline(ch);
+    }
+
+    inline bool ishex(int ch) {
+        return isdigit(ch) || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
+    }
+
+    inline bool iseof(int ch) {
+        return ch == '\0';
+    }
+
+    // 可接受字符集
+    inline bool isaccept(int ch) {
+        return isspace(ch) || isalnum(ch) || ispunct(ch);
+    }
+
+    inline bool isc_char(int ch) {
+        return isaccept(ch) && !isline(ch) && ch != '\'' && ch != '\\';
+    }
+
+    inline bool iss_char(int ch) {
+        return isaccept(ch) && !isline(ch) && ch != '\"' && ch != '\\';
+    }
+
+    // 转义字符 \x特判
+    inline bool ise_char(int ch) {
+        switch (ch) {
+            case 'r':
+                [[fallthrough]];
+            case 'n':
+                [[fallthrough]];
+            case 't':
+                [[fallthrough]];
+            case '\\':
+                [[fallthrough]];
+            case '\'':
+                [[fallthrough]];
+            case '\"':
+                return true;
+            default:
+                return false;
+        }
+    }
+
     inline bool istype(TokenType type) {
         switch (type) {
             case TokenType::VOID:
@@ -71,74 +142,76 @@ namespace cc0 {
         }
     }
 
-    namespace ast {
-        inline Type make_type(TokenType type) {
-            switch (type) {
-                case TokenType::VOID:
-                    return Type::VOID;
-                case TokenType::INT:
-                    return Type::INT;
-                case TokenType::CHAR:
-                    return Type::CHAR;
-                case TokenType::DOUBLE:
-                    return Type::DOUBLE;
-                default:
-                    return Type::UNDEFINED;
-            }
-        }
+    inline ast::Type make_type(TokenType type) {
+        using namespace ast;
 
-        inline Op make_op(TokenType op) {
-            switch (op) {
-                case TokenType::PLUS:
-                    return Op::ADD;
-                case TokenType::MINUS:
-                    return Op::SUB;
-                case TokenType::MULTIPLY:
-                    return Op::MUL;
-                case TokenType::DIVISION:
-                    return Op::DIV;
-                case TokenType::LESS:
-                    return Op::LT;
-                case TokenType::LESS_EQUAL:
-                    return Op::LE;
-                case TokenType::GREATER:
-                    return Op::GT;
-                case TokenType::GREATER_EQUAL:
-                    return Op::GE;
-                case TokenType::EQUAL:
-                    return Op::EQ;
-                case TokenType::NEQUAL:
-                    return Op::NEQ;
-                default:
-                    return Op::UNDEFINED;
-            }
+        switch (type) {
+            case TokenType::VOID:
+                return Type::VOID;
+            case TokenType::INT:
+                return Type::INT;
+            case TokenType::CHAR:
+                return Type::CHAR;
+            case TokenType::DOUBLE:
+                return Type::DOUBLE;
+            default:
+                return Type::UNDEFINED;
         }
+    }
 
-        inline int32_t make_escape(std::string ch_str) {
-            switch (ch_str[1]) {
-                case 'r':
-                    return '\r';
-                case 'n':
-                    return '\n';
-                case 't':
-                    return '\t';
-                case '\\':
-                    return '\\';
-                case '\'':
-                    return '\'';
-                case '\"':
-                    return '\"';
-                case 'x': {
-                    auto hex_str = ch_str.substr(2);
-                    try {
-                        return std::stoi(hex_str, nullptr, 16);
-                    } catch (const std::out_of_range&) {
-                        return -1;
-                    }
-                }
-                default:
+    inline ast::Op make_op(TokenType op) {
+        using namespace ast;
+
+        switch (op) {
+            case TokenType::PLUS:
+                return Op::ADD;
+            case TokenType::MINUS:
+                return Op::SUB;
+            case TokenType::MULTIPLY:
+                return Op::MUL;
+            case TokenType::DIVISION:
+                return Op::DIV;
+            case TokenType::LESS:
+                return Op::LT;
+            case TokenType::LESS_EQUAL:
+                return Op::LE;
+            case TokenType::GREATER:
+                return Op::GT;
+            case TokenType::GREATER_EQUAL:
+                return Op::GE;
+            case TokenType::EQUAL:
+                return Op::EQ;
+            case TokenType::NEQUAL:
+                return Op::NEQ;
+            default:
+                return Op::UNDEFINED;
+        }
+    }
+
+    inline int32_t make_escape(std::string ch_str) {
+        switch (ch_str[1]) {
+            case 'r':
+                return '\r';
+            case 'n':
+                return '\n';
+            case 't':
+                return '\t';
+            case '\\':
+                return '\\';
+            case '\'':
+                return '\'';
+            case '\"':
+                return '\"';
+            case 'x': {
+                auto hex_str = ch_str.substr(2);
+                try {
+                    return std::stoi(hex_str, nullptr, 16);
+                } catch (const std::out_of_range&) {
                     return -1;
+                }
             }
+            default:
+                return -1;
         }
     }
 }

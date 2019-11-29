@@ -13,6 +13,7 @@
 namespace cc0::ast {
     class AST {
     public:
+        // TODO: the range of AST, for error in semantic parse.
         // TODO: what to return?
         // virtual std::vector<C0Err> generate() = 0;
     };

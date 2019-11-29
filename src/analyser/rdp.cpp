@@ -18,6 +18,7 @@ namespace cc0 {
     // <C0> ::= {<var-decl>}{<func-def>}
     ast::_ptr<ast::RootAST> RDP::_analyse_root() {
         using namespace ast;
+        using namespace utils;
 
         auto vars = _ptrs<VarDeclAST>();
         auto funcs = _ptrs<FuncDefAST>();
@@ -75,6 +76,7 @@ namespace cc0 {
     // <var-decl> ::= [<const>]<type><init-decl-list>';'
     ast::_ptrs<ast::VarDeclAST> RDP::_analyse_var_decl() {
         using namespace ast;
+        using namespace utils;
 
         auto vars = _ptrs<VarDeclAST>();
         bool f_const = false;
@@ -134,6 +136,7 @@ namespace cc0 {
     // <func-def> ::= <type><identifier><params><block>
     ast::_ptr<ast::FuncDefAST> RDP::_analyse_func_def() {
         using namespace ast;
+        using namespace utils;
 
         (void) _get();
         // <type>
@@ -157,6 +160,7 @@ namespace cc0 {
     // <params> ::= '(' [<params-decl-list>] ')'
     ast::_ptrs<ast::ParamAST> RDP::_analyse_params() {
         using namespace ast;
+        using namespace utils;
 
         auto params = _ptrs<ParamAST>();
 
@@ -226,6 +230,7 @@ namespace cc0 {
     // <block> ::= '{' {<var-decl>}{<stmts>} '}'
     ast::_ptr<ast::BlockStmtAST> RDP::_analyse_block() {
         using namespace ast;
+        using namespace utils;
 
         auto vars = _ptrs<VarDeclAST>();
         auto stmts = _ptrs<StmtAST>();
@@ -275,6 +280,7 @@ namespace cc0 {
     // <type> !! must pre-read
     inline ast::Type RDP::_analyse_type_specifier() {
         using namespace ast;
+        using namespace utils;
 
         Type type = make_type(_token.get_type());
         if (type == Type::UNDEFINED) {
@@ -290,6 +296,7 @@ namespace cc0 {
     //     |<print-stmt>|<scan-stmt>|<assign>';'|<func-call>';'|';'
     ast::_ptr<ast::StmtAST> RDP::_analyse_stmt() {
         using namespace ast;
+        using namespace utils;
 
         if (!_get()) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
@@ -354,6 +361,7 @@ namespace cc0 {
     // <if-else-stmt> ::= 'if' '(' <cond> ')' <stmt> ['else' <stmt>]
     ast::_ptr<ast::IfElseStmtAST> RDP::_analyse_if_else() {
         using namespace ast;
+        using namespace utils;
 
         // 'if'
         (void) _get();
@@ -396,6 +404,7 @@ namespace cc0 {
     // <while-stmt> ::= 'while' '(' <cond> ')' <stmt>
     ast::_ptr<ast::WhileStmtAST> RDP::_analyse_while() {
         using namespace ast;
+        using namespace utils;
 
         // 'while'
         (void) _get();
@@ -426,6 +435,7 @@ namespace cc0 {
     // <return-stmt> ::= 'return' [<expr>] ';'
     ast::_ptr<ast::ReturnStmtAST> RDP::_analyse_return() {
         using namespace ast;
+        using namespace utils;
 
         // 'return'
         (void) _get();
@@ -454,6 +464,7 @@ namespace cc0 {
     // <print-stmt> ::= 'print' '(' [<print-list>] ')' ';'
     ast::_ptr<ast::PrintStmtAST> RDP::_analyse_print() {
         using namespace ast;
+        using namespace utils;
 
         auto printable = _ptrs<ExprAST>();
 
@@ -514,6 +525,7 @@ namespace cc0 {
     // <scan-stmt> ::= 'scan' '(' <identifier> ')' ';'
     ast::_ptr<ast::ScanStmtAST> RDP::_analyse_scan() {
         using namespace ast;
+        using namespace utils;
 
         // 'scan'
         (void) _get();
@@ -545,6 +557,7 @@ namespace cc0 {
     // <expr> ::= <term>{<add-op><term>}
     ast::_ptr<ast::ExprAST> RDP::_analyse_expr() {
         using namespace ast;
+        using namespace utils;
 
         auto root = _analyse_term();
         if (!root) return nullptr;
@@ -569,6 +582,7 @@ namespace cc0 {
     // <term> ::= <factor>{<mul-op><factor>}
     ast::_ptr<ast::ExprAST> RDP::_analyse_term() {
         using namespace ast;
+        using namespace utils;
 
         auto root = _analyse_factor();
         if (!root) return nullptr;
@@ -593,6 +607,7 @@ namespace cc0 {
     // <factor> ::= {'(' <type> ')'} [<unary-op>] <prim-expr>
     ast::_ptr<ast::ExprAST> RDP::_analyse_factor() {
         using namespace ast;
+        using namespace utils;
 
         std::vector<Type> casts;
         bool sign = true;
@@ -649,6 +664,7 @@ namespace cc0 {
     //    |<char-literal>|<floating-literal>|<func-call>
     ast::_ptr<ast::ExprAST> RDP::_analyse_primary() {
         using namespace ast;
+        using namespace utils;
 
         (void) _get();
         switch (_token.get_type()) {
@@ -705,6 +721,7 @@ namespace cc0 {
     // <cond-expr> ::= <expr>[<re-op><expr>]
     ast::_ptr<ast::CondExprAST> RDP::_analyse_cond() {
         using namespace ast;
+        using namespace utils;
 
         auto lhs = _analyse_expr();
         if (!lhs) return nullptr;
@@ -727,6 +744,7 @@ namespace cc0 {
     // <assign-expr> ::= <identifier>'='<expr>
     ast::_ptr<ast::AssignAST> RDP::_analyse_assign() {
         using namespace ast;
+        using namespace utils;
 
         auto id = _analyse_id();
         if (!id) return nullptr;
@@ -745,6 +763,7 @@ namespace cc0 {
     // <func-call> ::= <identifier> '(' [<expr-list>] ')'
     ast::_ptr<ast::FuncCallAST> RDP::_analyse_func_call() {
         using namespace ast;
+        using namespace utils;
 
         auto params = _ptrs<ExprAST>();
 
@@ -802,6 +821,7 @@ namespace cc0 {
     // <identifier>
     inline ast::_ptr<ast::IdExprAST> RDP::_analyse_id() {
         using namespace ast;
+        using namespace utils;
 
         if (!_get() || _token.get_type() != TokenType::IDENTIFIER) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissIdentifier));
@@ -813,6 +833,7 @@ namespace cc0 {
 
     void RDP::analyse() {
         using namespace ast;
+        using namespace utils;
 
         RuntimeContext::set_ast(_analyse_root());
         RuntimeContext::put_fatals(std::move(_errs));

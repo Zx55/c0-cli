@@ -70,6 +70,8 @@ namespace cc0 {
     }
 
     Lexer::_ParseResult Lexer::_next() {
+        using namespace utils;
+        
         auto current = DFAState::INIT;
         pos_t pos;
         _ss.clear();
@@ -232,7 +234,6 @@ namespace cc0 {
                     else
                         return _lex_token(TokenType::IDENTIFIER);
                 }
-                // TODO: Test <hexadecimal-literal>
                 case DFAState::HEXADECIMAL: {
                     // <hex-literal> ::= '0'('x'|'X')<hex-digit-seq>
                     if (!ishex(_ch))

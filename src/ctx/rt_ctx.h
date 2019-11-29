@@ -18,7 +18,7 @@
 #include <memory>
 
 namespace cc0 {
-    class   RuntimeContext final {
+    class RuntimeContext final {
         friend class Lexer;
         friend class RDP;
 
