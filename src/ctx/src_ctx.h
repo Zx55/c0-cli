@@ -24,8 +24,10 @@ namespace cc0 {
 
         // enable all warning messages
         static bool _f_wall;
-        // enable test mode (use sstream as input)
-        static bool _f_test;
+        // make warning into fatal error
+        static bool _f_werror;
+        // enable sstream as input, usually for test
+        static bool _f_ss;
 
     public:
         SourceContext() = delete;
@@ -34,13 +36,13 @@ namespace cc0 {
         SourceContext& operator=(const SourceContext&) = delete;
 
         [[nodiscard]] static bool set_ctx(const std::string& in_fn, const std::string& out_fn,
-                bool f_wall = true);
-        /* api for test, which use sstream as input */
+                bool f_wall = true, bool f_werror = false);
+        /* api for sstream */
         static void set_ctx(const std::istringstream&);
         static void clear_ctx();
 
         [[nodiscard]] inline static std::string get_in_absolute() {
-            return _f_test ? "test stream" : std::filesystem::absolute(_in).string();
+            return _f_ss ? "string stream" : std::filesystem::absolute(_in).string();
         }
         [[nodiscard]] inline static std::string get_out() {
             return std::filesystem::absolute(_out).string();

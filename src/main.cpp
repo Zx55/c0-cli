@@ -33,10 +33,14 @@ int main(int argc, char* argv[]) {
         .nargs(1)
         .default_value(std::string("out"))
         .help("Specify the output file.");
-    program.add_argument("-w")
+    program.add_argument("-Wdisable")
         .default_value(false)
         .implicit_value(true)
         .help("Disable warning messages.");
+    program.add_argument("-Werror")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Make all warnings into errors.");
 
     try {
         program.parse_args(argc, argv);
@@ -48,7 +52,8 @@ int main(int argc, char* argv[]) {
     auto in_fn = program.get<std::string>("input");
     auto out_fn = program.get<std::string>("-o");
 
-    if (!cc0::SourceContext::set_ctx(in_fn, out_fn, program["-w"] != true)) {
+    if (!cc0::SourceContext::set_ctx(in_fn, out_fn, program["-Wdisable"] != true,
+            program["-Werror"] == true)) {
         std::cerr << "File error: file not exist." << std::endl;
         return 1;
     }

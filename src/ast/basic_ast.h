@@ -16,6 +16,7 @@ namespace cc0::ast {
         // TODO: the range of AST, for error in semantic parse.
         // TODO: what to return?
         // virtual std::vector<C0Err> generate() = 0;
+        // virtual void graphize(std::ostream& out, int t) = 0;
     };
 }
 

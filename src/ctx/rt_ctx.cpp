@@ -13,7 +13,7 @@ namespace cc0 {
     std::vector<C0Err> RuntimeContext::_fatal;
     std::vector<C0Err> RuntimeContext::_wrns;
     std::vector<Token> RuntimeContext::_tokens;
-    std::unique_ptr<AST> RuntimeContext::_ast = nullptr;
+    std::unique_ptr<ast::RootAST> RuntimeContext::_ast = nullptr;
 
     inline void RuntimeContext::clear_ctx() {
         _fatal.clear();
@@ -23,7 +23,7 @@ namespace cc0 {
         _ast.reset(nullptr);
     }
 
-    [[nodiscard]] std::vector<C0Err> RuntimeContext::get_errs() {
+    std::vector<C0Err> RuntimeContext::get_errs() {
         auto cmp = [](const C0Err& lhs, const C0Err& rhs) {
             if (lhs.get_start().first == rhs.get_start().first)
                 return lhs.get_start().second <= rhs.get_start().second;

@@ -11,10 +11,11 @@ namespace cc0 {
     std::vector<std::string> SourceContext::_source;
 
     bool SourceContext::_f_wall = true;
-    bool SourceContext::_f_test = false;
+    bool SourceContext::_f_werror = false;
+    bool SourceContext::_f_ss = false;
 
     [[nodiscard]] bool SourceContext::set_ctx(const std::string& in_fn, const std::string& out_fn,
-            bool f_wall) {
+            bool f_wall, bool f_werror) {
         _source.clear();
 
         auto path = std::filesystem::path(in_fn);
@@ -33,6 +34,7 @@ namespace cc0 {
 
             // set flags
             _f_wall = f_wall;
+            _f_werror = f_werror;
 
             return true;
         }
@@ -50,7 +52,8 @@ namespace cc0 {
         _source.push_back(line.substr(p1) + '\n');
 
         _f_wall = true;
-        _f_test = true;
+        _f_werror = false;
+        _f_ss = true;
     }
 
     void SourceContext::clear_ctx() {
@@ -59,6 +62,7 @@ namespace cc0 {
         _source.clear();
 
         _f_wall = true;
-        _f_test = false;
+        _f_werror = false;
+        _f_ss = false;
     }
 }

@@ -48,7 +48,7 @@ namespace cc0 {
         analyser->analyse();
         analyser.reset(nullptr);
 
-        // auto& root = RuntimeContext::get_ast();
+        [[maybe_unused]] auto& root = RuntimeContext::get_ast();
         if (output) {
             // TODO: how to print AST
         }

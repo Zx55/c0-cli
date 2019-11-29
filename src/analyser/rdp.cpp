@@ -51,7 +51,9 @@ namespace cc0 {
 
                 // read <function-definition>
                 if (_token.get_type() == TokenType::LPARENTHESIS) {
-                    _unget(); _unget(); _unget();
+                    _unget();
+                    _unget();
+                    _unget();
                     break;
                 }
 
@@ -108,11 +110,13 @@ namespace cc0 {
                 return _rdp_ptrs(vars);
             }
             // ['='<expr>]
-            if (_token.get_type() == TokenType::EQUAL) {
+            if (_token.get_type() == TokenType::ASSIGN) {
                 if (auto res = _analyse_expr(); res)
                     vars.push_back(std::make_unique<VarDeclAST>(type, std::move(id), std::move(res), f_const));
-            } else
+            } else {
                 _unget();
+                vars.push_back(std::make_unique<VarDeclAST>(type, std::move(id), nullptr, f_const));
+            }
 
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
@@ -122,7 +126,7 @@ namespace cc0 {
             if (_token.get_type() == TokenType::SEMI)
                 break;
             else if (_token.get_type() == TokenType::COMMA)
-                vars.push_back(std::make_unique<VarDeclAST>(type, std::move(id), nullptr, f_const));
+                continue;
             else {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidDeclaration));
                 return _rdp_ptrs(vars);
@@ -342,15 +346,21 @@ namespace cc0 {
                     _unget(); _unget();
                     auto res = _analyse_func_call();
                     return _rdp_stmt(res);
-                } else if (type == TokenType::EQUAL) {
+                } else if (type == TokenType::ASSIGN) {
                     _unget(); _unget();
                     auto res = _analyse_assign();
+                    if (!_get() || _token.get_type() != TokenType::SEMI)
+                        _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
                     return _rdp_stmt(res);
                 } else {
                     _unget();
                     _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidStatement));
                     return nullptr;
                 }
+            }
+            case TokenType::SEMI: {
+                _wrns.emplace_back(_rdp_err(ErrCode::WrnEmptyStatement));
+                return nullptr;
             }
             default:
                 _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidStatement));
@@ -442,22 +452,21 @@ namespace cc0 {
 
         if (!_get()) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-            return nullptr;
+            return std::make_unique<ReturnStmtAST>(nullptr);
         }
 
         // ';'
         if (_token.get_type() == TokenType::SEMI)
             return std::make_unique<ReturnStmtAST>(nullptr);
 
+        _unget();
         // [<expr>]
         auto expr = _analyse_expr();
         if (!expr) return nullptr;
 
         // ';'
-        if (!_get()) {
+        if (!_get() || _token.get_type() != TokenType::SEMI)
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-            return nullptr;
-        }
         return std::make_unique<ReturnStmtAST>(std::move(expr));
     }
 
@@ -519,6 +528,9 @@ namespace cc0 {
         }
 
         // already read ')'
+        // ';'
+        if (!_get() || _token.get_type() != TokenType::SEMI)
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
         return std::make_unique<PrintStmtAST>(std::move(printable));
     }
 
@@ -546,10 +558,8 @@ namespace cc0 {
         }
 
         // ';'
-        if (!_get()) {
+        if (!_get() || _token.get_type() != TokenType::SEMI)
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-            return nullptr;
-        }
 
         return std::make_unique<ScanStmtAST>(std::move(id));
     }

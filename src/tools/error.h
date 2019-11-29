@@ -38,6 +38,7 @@ namespace cc0 {
         ErrIncompleteComment,
         WrnInt32Overflow            = 128,
         WrnFloat64Overflow,
+        WrnEmptyStatement,
     };
 
     class C0Err final {
@@ -135,6 +136,7 @@ namespace fmt {
                     "ErrIncompleteComment",
                     "WrnInt32Overflow",
                     "WrnFloat64Overflow",
+                    "WrnEmptyStatement",
             };
 
             auto row = err.get_start().first + 1, col = err.get_start().second + 1;

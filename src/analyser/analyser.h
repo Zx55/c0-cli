@@ -24,7 +24,7 @@ namespace cc0 {
     protected:
         std::vector<Token>& _tokens;
         int64_t _ptr;
-        Token& _token;
+        Token _token;
 
         std::vector<C0Err> _errs;
         std::vector<C0Err> _wrns;
@@ -37,7 +37,10 @@ namespace cc0 {
             return true;
         }
 
-        inline void _unget() { --_ptr; _token = _tokens.at(_ptr); }
+        inline void _unget() {
+            --_ptr;
+            _token = _ptr <= 0 ? _tokens.at(0) : _tokens.at(_ptr - 1);
+        }
 
         Analyser(): _tokens(RuntimeContext::get_tokens()), _ptr(0), _token(_tokens.at(_ptr)) { }
 

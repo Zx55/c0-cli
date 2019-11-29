@@ -8,6 +8,8 @@
 
 /* Contains left-value and right-value */
 
+#include <utility>
+
 #include "basic_expr.h"
 
 namespace cc0::ast {
@@ -33,10 +35,10 @@ namespace cc0::ast {
 
     class IdExprAST final: public ExprAST {
     private:
-        Token& _id;
+        Token _id;
 
     public:
-        explicit IdExprAST(Token& id): ExprAST(), _id(id) { }
+        explicit IdExprAST(Token id): ExprAST(), _id(std::move(id)) { }
     };
 }
 
