@@ -24,10 +24,13 @@ namespace cc0 {
         [[nodiscard]] ast::_ptr<ast::PrintStmtAST> _analyse_print();
         [[nodiscard]] ast::_ptr<ast::ScanStmtAST> _analyse_scan();
         [[nodiscard]] ast::_ptr<ast::ExprAST> _analyse_expr();
+        [[nodiscard]] ast::_ptr<ast::ExprAST> _analyse_term();
+        [[nodiscard]] ast::_ptr<ast::ExprAST> _analyse_factor();
+        [[nodiscard]] ast::_ptr<ast::ExprAST> _analyse_primary();
         [[nodiscard]] ast::_ptr<ast::CondExprAST> _analyse_cond();
         [[nodiscard]] ast::_ptr<ast::AssignAST> _analyse_assign();
         [[nodiscard]] ast::_ptr<ast::FuncCallAST> _analyse_func_call();
-        [[nodiscard]] inline ast::_ptr<ast::IdExprAST> _analyser_id();
+        [[nodiscard]] inline ast::_ptr<ast::IdExprAST> _analyse_id();
 
     public:
         RDP(): Analyser() { }

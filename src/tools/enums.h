@@ -27,7 +27,8 @@ namespace cc0::ast {
         GT,
         GE,
         EQ,
-        NEQ
+        NEQ,
+        UNDEFINED,
     };
 }
 

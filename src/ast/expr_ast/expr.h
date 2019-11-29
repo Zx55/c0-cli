@@ -9,5 +9,6 @@
 #include "cond_expr.h"
 #include "arith_expr.h"
 #include "value_expr.h"
+#include "cast_expr.h"
 
 #endif //C0_EXPR_H

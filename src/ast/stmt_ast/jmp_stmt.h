@@ -20,11 +20,15 @@ namespace cc0::ast {
             _ret(std::move(ret)) { }
     };
 
-    /*
-     * class BreakStmtAST final: StmtAST { };
-     *
-     * class ContinueStmtAST final: StmtAST { };
-     */
+    class BreakStmtAST final: public StmtAST {
+    public:
+        explicit BreakStmtAST(): StmtAST() { }
+    };
+
+    class ContinueStmtAST final: public StmtAST {
+    public:
+        explicit ContinueStmtAST(): StmtAST() { }
+    };
 }
 
 #endif //C0_JMP_STMT_H

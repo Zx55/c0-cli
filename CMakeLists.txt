@@ -23,7 +23,7 @@ set(AST_SRC
         src/ast/expr_ast/expr.h src/ast/expr_ast/basic_expr.h src/ast/expr_ast/cond_expr.h
         src/ast/expr_ast/arith_expr.h src/ast/expr_ast/value_expr.h
         src/ast/stmt_ast/stmt.h src/ast/stmt_ast/basic_stmt.h src/ast/stmt_ast/cond_stmt.h
-        src/ast/stmt_ast/loop_stmt.h src/ast/stmt_ast/io_stmt.h src/ast/stmt_ast/jmp_stmt.h)
+        src/ast/stmt_ast/loop_stmt.h src/ast/stmt_ast/io_stmt.h src/ast/stmt_ast/jmp_stmt.h src/ast/expr_ast/cast_expr.h)
 set(CTX_SRC
         src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h)
 set(TOOL_SRC

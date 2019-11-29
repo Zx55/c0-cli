@@ -10,6 +10,9 @@
 #define _rdp_move_back(_src, _res) _src.insert(_src.end(), std::make_move_iterator(_res.begin()), \
     std::make_move_iterator(_res.end()))
 #define _rdp_stmt(_res) std::unique_ptr<StmtAST>(std::move(_res))
+#define _rdp_bin(_lhs, _op, _rhs) std::unique_ptr<ExprAST>( \
+    new BinaryExprAST(std::move(_lhs), _op, std::move(_rhs)))
+#define _rdp_expr(_res) std::unique_ptr<ExprAST>(std::move(_res))
 
 namespace cc0 {
     // <C0> ::= {<var-decl>}{<func-def>}
@@ -92,17 +95,17 @@ namespace cc0 {
         if (type == Type::UNDEFINED) return { };
 
         // <init-decl-list> ::= <init-decl>{','<init-decl>}
-        // <init-decl>      ::= <identifier>['='<expression>]
+        // <init-decl>      ::= <identifier>['='<expr>]
         while (true) {
             // <identifier>
-            auto id = _analyser_id();
+            auto id = _analyse_id();
             if (!id) return _rdp_ptrs(vars);
 
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
                 return _rdp_ptrs(vars);
             }
-            // ['='<expression>]
+            // ['='<expr>]
             if (_token.get_type() == TokenType::EQUAL) {
                 if (auto res = _analyse_expr(); res)
                     vars.push_back(std::make_unique<VarDeclAST>(type, std::move(id), std::move(res), f_const));
@@ -138,7 +141,7 @@ namespace cc0 {
         if (type == Type::UNDEFINED) return nullptr;
 
         // <identifier>
-        auto id = _analyser_id();
+        auto id = _analyse_id();
         if (!id) return nullptr;
 
         // <params>
@@ -162,6 +165,16 @@ namespace cc0 {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
             return { };
         }
+
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return { };
+        }
+        // ')'
+        if (_token.get_type() == TokenType::RPARENTHESIS)
+            return { };
+        else
+            _unget();
 
         // <params-decl-list> ::= <param-decl>{','<param-decl>}
         // <param-decl>       ::= [<const>]<type><identifier>
@@ -188,7 +201,7 @@ namespace cc0 {
             if (type == Type::UNDEFINED) return _rdp_ptrs(params);
 
             // <identifier>
-            auto id = _analyser_id();
+            auto id = _analyse_id();
             if (!id) return _rdp_ptrs(params);
 
             if (!_get()) {
@@ -196,9 +209,9 @@ namespace cc0 {
                 return _rdp_ptrs(params);
             }
             // {','<param-decl>}
-            if (_token.get_type() == TokenType::RPARENTHESIS)
+            if (auto token_t = _token.get_type(); token_t == TokenType::RPARENTHESIS)
                 break;
-            else if (_token.get_type() == TokenType::COMMA)
+            else if (token_t == TokenType::COMMA)
                 params.push_back(std::make_unique<ParamAST>(type, std::move(id), f_const));
             else {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
@@ -296,6 +309,10 @@ namespace cc0 {
                 _unget();
                 auto res = _analyse_while();
                 return _rdp_stmt(res);
+            } case TokenType::BREAK: {
+                return std::make_unique<BreakStmtAST>();
+            } case TokenType::CONTINUE: {
+                return std::make_unique<ContinueStmtAST>();
             } case TokenType::RETURN: {
                 _unget();
                 auto res = _analyse_return();
@@ -438,6 +455,8 @@ namespace cc0 {
     ast::_ptr<ast::PrintStmtAST> RDP::_analyse_print() {
         using namespace ast;
 
+        auto printable = _ptrs<ExprAST>();
+
         // 'print'
         (void) _get();
 
@@ -447,7 +466,49 @@ namespace cc0 {
             return nullptr;
         }
 
-        // TODO
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+        // ')'
+        if (_token.get_type() == TokenType::RPARENTHESIS)
+            return std::make_unique<PrintStmtAST>(std::move(printable));
+        else
+            _unget();
+
+        // [<print-list>]
+        while (true) {
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return std::make_unique<PrintStmtAST>(std::move(printable));
+            }
+
+            // <printable> ::= <expr> | <string>
+            if (_token.get_type() == TokenType::STRING_LITERAL)
+                printable.push_back(std::make_unique<StringExprAST>(_token.get_value_string()));
+            else {
+                _unget();
+                if (auto res = _analyse_expr(); res)
+                    printable.push_back(std::move(res));
+            }
+
+            // {',' <printable>}
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return std::make_unique<PrintStmtAST>(std::move(printable));
+            }
+            if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
+                break;
+            else if (type == TokenType::COMMA)
+                continue;
+            else {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return std::make_unique<PrintStmtAST>(std::move(printable));
+            }
+        }
+
+        // already read ')'
+        return std::make_unique<PrintStmtAST>(std::move(printable));
     }
 
     // <scan-stmt> ::= 'scan' '(' <identifier> ')' ';'
@@ -463,7 +524,7 @@ namespace cc0 {
             return nullptr;
         }
 
-        auto id = _analyser_id();
+        auto id = _analyse_id();
         if (!id) return nullptr;
 
         // ')'
@@ -481,32 +542,265 @@ namespace cc0 {
         return std::make_unique<ScanStmtAST>(std::move(id));
     }
 
+    // <expr> ::= <term>{<add-op><term>}
     ast::_ptr<ast::ExprAST> RDP::_analyse_expr() {
         using namespace ast;
 
-        return nullptr;
+        auto root = _analyse_term();
+        if (!root) return nullptr;
+
+        while (true) {
+            if (!_get())
+                return root;
+
+            if (auto type = _token.get_type(); isadd(type)) {
+                auto op = make_op(type);
+                if (auto rhs = _analyse_term(); rhs)
+                    root = _rdp_bin(root, op, rhs);
+                else
+                    return root;
+            } else {
+                _unget();
+                return root;
+            }
+        }
     }
 
+    // <term> ::= <factor>{<mul-op><factor>}
+    ast::_ptr<ast::ExprAST> RDP::_analyse_term() {
+        using namespace ast;
+
+        auto root = _analyse_factor();
+        if (!root) return nullptr;
+
+        while (true) {
+            if (!_get())
+                return root;
+
+            if (auto type = _token.get_type(); ismul(type)) {
+                auto op = make_op(type);
+                if (auto rhs = _analyse_factor(); rhs)
+                    root = _rdp_bin(root, op, rhs);
+                else
+                    return root;
+            } else {
+                _unget();
+                return root;
+            }
+        }
+    }
+
+    // <factor> ::= {'(' <type> ')'} [<unary-op>] <prim-expr>
+    ast::_ptr<ast::ExprAST> RDP::_analyse_factor() {
+        using namespace ast;
+
+        std::vector<Type> casts;
+        bool sign = true;
+
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidExpression));
+            return nullptr;
+        }
+
+        // {'(' <type> ')'}
+        while (_token.get_type() == TokenType::LPARENTHESIS) {
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissTypeSpecifier));
+                return nullptr;
+            }
+
+            auto type = _analyse_type_specifier();
+            if (type == Type::UNDEFINED) return nullptr;
+            casts.push_back(type);
+
+            if (!_get() || _token.get_type() != TokenType::RPARENTHESIS) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return nullptr;
+            }
+
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidExpression));
+                return nullptr;
+            }
+        }
+
+        if (auto type = _token.get_type(); isadd(type)) {
+            sign = (type == TokenType::PLUS);
+
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidExpression));
+                return nullptr;
+            }
+        }
+
+        _unget();
+        auto root = _analyse_primary();
+        if (!root) return nullptr;
+
+        if (!sign)
+            root = std::unique_ptr<ExprAST>(new UnaryExprAST(sign, std::move(root)));
+        for (auto it = casts.crbegin(); it != casts.crend(); ++it)
+            root = std::unique_ptr<ExprAST>(new CastExprAST(*it, std::move(root)));
+
+        return root;
+    }
+
+    // <prim-expr> ::= '('<expr>')'|<identifier>|<int-literal>
+    //    |<char-literal>|<floating-literal>|<func-call>
+    ast::_ptr<ast::ExprAST> RDP::_analyse_primary() {
+        using namespace ast;
+
+        (void) _get();
+        switch (_token.get_type()) {
+            case TokenType::LPARENTHESIS: {
+                auto expr = _analyse_expr();
+                if (!expr) return nullptr;
+
+                if (!_get() || _token.get_type() != TokenType::RPARENTHESIS)
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+
+                return _rdp_expr(expr);
+            }
+            case TokenType::IDENTIFIER: {
+                if (!_get())
+                    goto L_ID;
+                if (_token.get_type() == TokenType::LPARENTHESIS) {
+                    // <func-call>
+                    _unget(); _unget();
+                    if (auto call = _analyse_func_call(); call)
+                        return _rdp_expr(call);
+                } else
+                    _unget();
+
+            L_ID:
+                // <identifier>
+                _unget();
+                auto id = _analyse_id();
+                return _rdp_expr(id);
+            }
+            case TokenType::DECIMAL:
+                [[fallthrough]];
+            case TokenType::HEXADECIMAL:
+                return std::unique_ptr<ExprAST>(new Int32ExprAST(
+                        std::any_cast<int32_t>(_token.get_value())));
+            case TokenType::FLOAT:
+                return std::unique_ptr<ExprAST>(new Float64ExprAST(
+                        std::any_cast<double>(_token.get_value())));
+            case TokenType::CHAR: {
+                char ch;
+
+                if (auto ch_str = _token.get_value_string(); ch_str.size() == 1)
+                    ch = ch_str.at(0);
+                else
+                    ch = make_escape(ch_str);
+
+                return std::unique_ptr<ExprAST>(new CharExprAST(ch));
+            }
+            default:
+                _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidExpression));
+                return nullptr;
+        }
+    }
+
+    // <cond-expr> ::= <expr>[<re-op><expr>]
     ast::_ptr<ast::CondExprAST> RDP::_analyse_cond() {
         using namespace ast;
 
-        return nullptr;
+        auto lhs = _analyse_expr();
+        if (!lhs) return nullptr;
+
+        if (!_get())
+            return std::make_unique<CondExprAST>(std::move(lhs));
+
+        if (auto type = _token.get_type(); isre_op(type)) {
+            auto op = make_op(type);
+            if (auto rhs = _analyse_expr(); rhs)
+                return std::make_unique<CondExprAST>(std::move(lhs), op, std::move(rhs));
+            else
+                return nullptr;
+        }
+
+        _unget();
+        return std::make_unique<CondExprAST>(std::move(lhs));
     }
 
+    // <assign-expr> ::= <identifier>'='<expr>
     ast::_ptr<ast::AssignAST> RDP::_analyse_assign() {
         using namespace ast;
 
-        return nullptr;
+        auto id = _analyse_id();
+        if (!id) return nullptr;
+
+        if (!_get() || _token.get_type() != TokenType::ASSIGN) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissAssignOp));
+            return nullptr;
+        }
+
+        auto value = _analyse_expr();
+        if (!value) return nullptr;
+
+        return std::make_unique<AssignAST>(std::move(id), std::move(value));
     }
 
+    // <func-call> ::= <identifier> '(' [<expr-list>] ')'
     ast::_ptr<ast::FuncCallAST> RDP::_analyse_func_call() {
         using namespace ast;
 
-        return nullptr;
+        auto params = _ptrs<ExprAST>();
+
+        // <identifier>
+        auto id = _analyse_id();
+        if (!id) return nullptr;
+
+        // '('
+        if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+        // ')'
+        if (_token.get_type() == TokenType::RPARENTHESIS)
+            return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+        else
+            _unget();
+
+        // [<expr-list>]
+        while (true) {
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+            }
+
+            _unget();
+            if (auto param = _analyse_expr(); param)
+                params.push_back(std::move(param));
+
+            // {',' <expr>}
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+            }
+
+            if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
+                break;
+            else if (type == TokenType::COMMA)
+                continue;
+            else {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+            }
+        }
+
+        // already read ')'
+        return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
     }
 
     // <identifier>
-    inline ast::_ptr<ast::IdExprAST> RDP::_analyser_id() {
+    inline ast::_ptr<ast::IdExprAST> RDP::_analyse_id() {
         using namespace ast;
 
         if (!_get() || _token.get_type() != TokenType::IDENTIFIER) {
