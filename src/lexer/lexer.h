@@ -14,9 +14,6 @@
 #include "ctx/rt_ctx.h"
 
 #include <sstream>
-#include <string>
-#include <vector>
-#include <unordered_map>
 #include <optional>
 
 namespace cc0 {

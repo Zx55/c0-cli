@@ -10,15 +10,6 @@
 #include "expr_ast/expr.h"
 #include "stmt_ast/stmt.h"
 
-#include "tools/alias.h"
-#include "tools/enums.h"
-#include "tools/utils.h"
-#include "lexer/token.h"
-
-#include <vector>
-#include <memory>
-#include <optional>
-
 namespace cc0::ast {
     class VarDeclAST final: public AST {
     private:
@@ -42,6 +33,5 @@ namespace cc0::ast {
             _id(std::move(id)), _value(std::move(value)) { }
     };
 }
-
 
 #endif //C0_VAR_AST_H

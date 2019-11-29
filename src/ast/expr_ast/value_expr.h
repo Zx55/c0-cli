@@ -8,8 +8,6 @@
 
 /* Contains left-value and right-value */
 
-#include <utility>
-
 #include "basic_expr.h"
 
 namespace cc0::ast {

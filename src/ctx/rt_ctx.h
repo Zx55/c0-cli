@@ -13,6 +13,7 @@
 #include "lexer/token.h"
 #include "ast/ast.h"
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <memory>

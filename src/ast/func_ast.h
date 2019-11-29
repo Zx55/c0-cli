@@ -11,11 +11,6 @@
 #include "expr_ast/expr.h"
 #include "stmt_ast/stmt.h"
 
-#include "tools/alias.h"
-#include "tools/enums.h"
-#include "tools/utils.h"
-#include "lexer/token.h"
-
 namespace cc0::ast {
     class ParamAST final: public AST {
     private:

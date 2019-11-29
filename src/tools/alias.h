@@ -6,11 +6,10 @@
 #ifndef C0_ALIAS_H
 #define C0_ALIAS_H
 
-#include <cstdint>
-#include <utility>
-
 #include <vector>
 #include <memory>
+#include <cstdint>
+#include <utility>
 
 namespace cc0 {
     using int32_t = std::int32_t;

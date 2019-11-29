@@ -8,11 +8,6 @@
 
 #include "../basic_ast.h"
 
-#include "tools/alias.h"
-#include "tools/enums.h"
-
-#include <any>
-
 namespace cc0::ast {
     class ExprAST: public AST {
     protected:

@@ -7,8 +7,6 @@
 
 #include "rt_ctx.h"
 
-#include <algorithm>
-
 namespace cc0 {
     std::vector<C0Err> RuntimeContext::_fatal;
     std::vector<C0Err> RuntimeContext::_wrns;

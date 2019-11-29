@@ -6,8 +6,6 @@
 #ifndef C0_JMP_STMT_H
 #define C0_JMP_STMT_H
 
-#include <memory>
-
 #include "basic_stmt.h"
 
 namespace cc0::ast {
