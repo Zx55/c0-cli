@@ -28,13 +28,19 @@ namespace cc0 {
         static std::vector<C0Err> _wrns;
 
         static std::vector<Token> _tokens;
-        static std::unique_ptr<ast::RootAST> _ast;
+        static std::unique_ptr<AST> _ast;
 
     public:
         RuntimeContext() = delete;
         RuntimeContext(const RuntimeContext&) = delete;
         RuntimeContext(RuntimeContext&&) = delete;
         RuntimeContext& operator=(const RuntimeContext&) = delete;
+        ~RuntimeContext() {
+            // release static this unique_ptr
+            if (_ast != nullptr) {
+                _ast.reset(nullptr);
+            }
+        }
 
         inline static void clear_ctx();
 
@@ -61,7 +67,7 @@ namespace cc0 {
 
         inline static void set_tokens(std::vector<Token>&& tokens) { _tokens = std::move(tokens); }
         inline static void put_token(Token token) { _tokens.push_back(std::move(token)); }
-        inline static void set_ast(ast::_ptr<ast::RootAST> ast) { _ast.reset(nullptr); _ast = std::move(ast); }
+        inline static void set_ast(ast::_ptr<AST> ast) { _ast.reset(nullptr); _ast = std::move(ast); }
     };
 }
 

@@ -18,6 +18,18 @@ namespace cc0::ast {
     public:
         explicit IfElseStmtAST(_ptr<CondExprAST> cond, _ptr<StmtAST> s_true, _ptr<StmtAST> s_false):
             _cond(std::move(cond)), _true(std::move(s_true)), _false(std::move(s_false)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<if-else-stmt>\n" << _mid(t);
+            _cond->graphize(out, t + 1);
+            if (_false == nullptr) out << _end(t);
+            else out << _mid(t);
+            _true->graphize(out, t + 1);
+            if (_false != nullptr) {
+                out << _end(t);
+                _false->graphize(out, t + 1);
+            }
+        }
     };
 
     /*

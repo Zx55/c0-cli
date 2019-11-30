@@ -15,6 +15,11 @@ namespace cc0::ast {
 
     public:
         explicit PrintStmtAST(_ptrs<ExprAST> printable): _printable(std::move(printable)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<print-stmt>\n";
+            graphize_list(_printable, out, t, t + 1);
+        }
     };
 
     class ScanStmtAST final: public StmtAST {
@@ -23,6 +28,11 @@ namespace cc0::ast {
 
     public:
         explicit ScanStmtAST(_ptr<IdExprAST> id): _id(std::move(id)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<scan-stmt> ";
+            _id->graphize(out, t + 1);
+        }
     };
 }
 

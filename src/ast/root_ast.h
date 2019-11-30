@@ -33,14 +33,7 @@ namespace cc0::ast {
                 (*(_vars.cend() - 1))->graphize(out, t + 1);
             }
 
-            if (!_funcs.empty()) {
-                for (auto it = _funcs.cbegin(); it != _funcs.cend() - 1; ++it) {
-                    out << _mid(t);
-                    (*it)->graphize(out, t + 1);
-                }
-                out << _end(t);
-                (*(_funcs.cend() - 1))->graphize(out, t + 1);
-            }
+            graphize_list(_funcs, out, t, t + 1);
         }
     };
 }

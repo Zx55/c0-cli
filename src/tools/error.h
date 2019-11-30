@@ -11,7 +11,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 20
+#define ERR_NUM 21
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -35,6 +35,7 @@ namespace cc0 {
         ErrMissIdentifier,
         ErrMissParenthesis,
         ErrMissBrace,
+        ErrMissWhile,
         ErrIncompleteComment,
         WrnInt32Overflow            = 128,
         WrnFloat64Overflow,
@@ -133,6 +134,7 @@ namespace fmt {
                     "ErrMissIdentifier",
                     "ErrMissParenthesis",
                     "ErrMissBrace",
+                    "ErrMissWhile",
                     "ErrIncompleteComment",
                     "WrnInt32Overflow",
                     "WrnFloat64Overflow",

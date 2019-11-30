@@ -20,6 +20,8 @@ namespace cc0 {
         [[nodiscard]] ast::_ptr<ast::StmtAST> _analyse_stmt();
         [[nodiscard]] ast::_ptr<ast::IfElseStmtAST> _analyse_if_else();
         [[nodiscard]] ast::_ptr<ast::WhileStmtAST> _analyse_while();
+        [[nodiscard]] ast::_ptr<ast::DoWhileStmtAST> _analyse_do_while();
+        [[nodiscard]] ast::_ptr<ast::ForStmtAST> _analyse_for();
         [[nodiscard]] ast::_ptr<ast::ReturnStmtAST> _analyse_return();
         [[nodiscard]] ast::_ptr<ast::PrintStmtAST> _analyse_print();
         [[nodiscard]] ast::_ptr<ast::ScanStmtAST> _analyse_scan();

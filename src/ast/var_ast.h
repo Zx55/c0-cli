@@ -21,6 +21,16 @@ namespace cc0::ast {
     public:
         explicit VarDeclAST(Type type, _ptr<IdExprAST> id, _ptr<ExprAST> init, bool f_const = false):
             _type(type), _id(std::move(id)), _init(std::move(init)), _const(f_const) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<var-decl> [type] " << (_const ? "const " : "") << type_str(_type) << "\n";
+            out << (_init == nullptr ? _end(t) : _mid(t));
+            _id->graphize(out, t + 1);
+            if (_init != nullptr) {
+                out << _end(t);
+                _init->graphize(out, t + 1);
+            }
+        }
     };
 
     class AssignAST final: public ExprAST, public StmtAST {
@@ -31,6 +41,13 @@ namespace cc0::ast {
     public:
         explicit AssignAST(_ptr<IdExprAST> id, _ptr<ExprAST> value):
             _id(std::move(id)), _value(std::move(value)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<assignment>\n" << _mid(t);
+            _id->graphize(out, t + 1);
+            out << _end(t);
+            _value->graphize(out, t + 1);
+        }
     };
 }
 

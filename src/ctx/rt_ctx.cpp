@@ -11,7 +11,7 @@ namespace cc0 {
     std::vector<C0Err> RuntimeContext::_fatal;
     std::vector<C0Err> RuntimeContext::_wrns;
     std::vector<Token> RuntimeContext::_tokens;
-    std::unique_ptr<ast::RootAST> RuntimeContext::_ast = nullptr;
+    std::unique_ptr<AST> RuntimeContext::_ast = nullptr;
 
     inline void RuntimeContext::clear_ctx() {
         _fatal.clear();

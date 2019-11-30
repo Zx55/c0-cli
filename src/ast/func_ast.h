@@ -21,6 +21,11 @@ namespace cc0::ast {
     public:
         explicit ParamAST(Type type, _ptr<IdExprAST> id, bool f_const = false):
             _type(type), _id(std::move(id)), _const(f_const) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "[type] " << (_const ? "const " : "") << type_str(_type) << " ";
+            _id->graphize(out, t + 1);
+        }
     };
 
     class BlockStmtAST final: public StmtAST {
@@ -31,8 +36,22 @@ namespace cc0::ast {
     public:
         explicit BlockStmtAST(_ptrs<VarDeclAST> vars, _ptrs<StmtAST> stmts):
             _vars(std::move(vars)), _stmts(std::move(stmts)) { }
-        BlockStmtAST(BlockStmtAST&& ast) noexcept:
-            _vars(std::move(ast._vars)), _stmts(std::move(ast._stmts)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<block>\n";
+
+            if (!_vars.empty()) {
+                for (auto it = _vars.cbegin(); it != _vars.cend() - 1; ++it) {
+                    out << _mid(t);
+                    (*it)->graphize(out, t + 1);
+                }
+                if (_stmts.empty()) out << _end(t);
+                else out << _mid(t);
+                (*(_vars.cend() - 1))->graphize(out, t + 1);
+            }
+
+            graphize_list(_stmts, out, t, t + 1);
+        }
     };
 
     class FuncDefAST final: public AST {
@@ -45,6 +64,15 @@ namespace cc0::ast {
     public:
         explicit FuncDefAST(Type ret, _ptr<IdExprAST> id, _ptrs<ParamAST> params, _ptr<BlockStmtAST> block):
             _ret(ret), _id(std::move(id)), _params(std::move(params)), _block(std::move(block)) { }
+
+        void graphize(std::ostream &out, int t) override {
+            out << "<func-def> [return] -> " << type_str(_ret) << "\n" << _mid(t);
+            _id->graphize(out, t + 1);
+            if (!_params.empty()) out << _mid(t) << "<params>\n";
+            graphize_list(_params, out, t + 1, t + 1);
+            out << _end(t);
+            _block->graphize(out, t + 1);
+        }
     };
 
     class FuncCallAST final: public ExprAST, public StmtAST {
@@ -55,6 +83,19 @@ namespace cc0::ast {
     public:
         explicit FuncCallAST(_ptr<IdExprAST> id, _ptrs<ExprAST> params):
             ExprAST(), _id(std::move(id)), _params(std::move(params)) { }
+
+        void graphize(std::ostream &out, int t) override {
+            out << "<func-call> ";
+            _id->graphize(out, t + 1);
+            if (!_params.empty()) {
+                for (auto it = _params.cbegin(); it != _params.cend() - 1; ++it) {
+                    out << _mid(t);
+                    (*it)->graphize(out, t + 1);
+                }
+                out << _end(t);
+                (*(_params.cend() - 1))->graphize(out, t + 1);
+            }
+        }
     };
 }
 

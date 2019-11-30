@@ -211,16 +211,18 @@ namespace cc0 {
             // <identifier>
             auto id = _analyse_id();
             if (!id) return _rdp_ptrs(params);
+            params.push_back(std::make_unique<ParamAST>(type, std::move(id), f_const));
 
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
                 return _rdp_ptrs(params);
             }
+
             // {','<param-decl>}
             if (auto token_t = _token.get_type(); token_t == TokenType::RPARENTHESIS)
                 break;
             else if (token_t == TokenType::COMMA)
-                params.push_back(std::make_unique<ParamAST>(type, std::move(id), f_const));
+                continue;
             else {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
                 return _rdp_ptrs(params);
@@ -312,31 +314,49 @@ namespace cc0 {
                 _unget();
                 auto res = _analyse_block();
                 return _rdp_stmt(res);
-            } case TokenType ::IF: {
+            }
+            case TokenType ::IF: {
                 _unget();
                 auto res = _analyse_if_else();
                 return _rdp_stmt(res);
-            } case TokenType::WHILE: {
+            }
+            case TokenType::WHILE: {
                 _unget();
                 auto res = _analyse_while();
                 return _rdp_stmt(res);
-            } case TokenType::BREAK: {
+            }
+            case TokenType::DO: {
+                _unget();
+                auto res = _analyse_do_while();
+                return _rdp_stmt(res);
+            }
+            case TokenType::FOR: {
+                _unget();
+                auto res = _analyse_for();
+                return _rdp_stmt(res);
+            }
+            case TokenType::BREAK: {
                 return std::make_unique<BreakStmtAST>();
-            } case TokenType::CONTINUE: {
+            }
+            case TokenType::CONTINUE: {
                 return std::make_unique<ContinueStmtAST>();
-            } case TokenType::RETURN: {
+            }
+            case TokenType::RETURN: {
                 _unget();
                 auto res = _analyse_return();
                 return _rdp_stmt(res);
-            } case TokenType::PRINT: {
+            }
+            case TokenType::PRINT: {
                 _unget();
                 auto res = _analyse_print();
                 return _rdp_stmt(res);
-            } case TokenType::SCAN: {
+            }
+            case TokenType::SCAN: {
                 _unget();
                 auto res = _analyse_scan();
                 return _rdp_stmt(res);
-            } case TokenType::IDENTIFIER: {
+            }
+            case TokenType::IDENTIFIER: {
                 if (!_get()) {
                     _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
                     return nullptr;
@@ -360,7 +380,7 @@ namespace cc0 {
             }
             case TokenType::SEMI: {
                 _wrns.emplace_back(_rdp_err(ErrCode::WrnEmptyStatement));
-                return nullptr;
+                return std::unique_ptr<StmtAST>(new ReturnStmtAST());
             }
             default:
                 _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidStatement));
@@ -440,6 +460,51 @@ namespace cc0 {
         if (!stmt) return nullptr;
 
         return std::make_unique<WhileStmtAST>(std::move(cond), std::move(stmt));
+    }
+
+    // <do-while-stmt> ::= 'do' <stmt> 'while' '(' <cond> ')' ';'
+    ast::_ptr<ast::DoWhileStmtAST> RDP::_analyse_do_while() {
+        using namespace ast;
+        using namespace utils;
+
+        // 'do'
+        (void) _get();
+        // <stmt>
+        auto stmt = _analyse_stmt();
+        if (!stmt) return nullptr;
+
+        // 'while'
+        if (!_get() || _token.get_type() != TokenType::WHILE) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissWhile));
+            return nullptr;
+        }
+
+        // '('
+        if (!_get() ||_token.get_type() != TokenType::LPARENTHESIS) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+
+        // <cond>
+        auto cond = _analyse_cond();
+        if (!cond) return nullptr;
+
+        // ')'
+        if (!_get() || _token.get_type() != TokenType::RPARENTHESIS)
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+        if (!_get() || _token.get_type() != TokenType::SEMI)
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
+        return std::make_unique<DoWhileStmtAST>(std::move(cond), std::move(stmt));
+    }
+
+    // TODO: <for-stmt> ::= 'for' '('<for-init> [<cond>]';' [<for-update>]')' <stmt>
+    ast::_ptr<ast::ForStmtAST> RDP::_analyse_for() {
+        using namespace ast;
+        using namespace utils;
+
+        (void) _get();
+
+        return nullptr;
     }
 
     // <return-stmt> ::= 'return' [<expr>] ';'

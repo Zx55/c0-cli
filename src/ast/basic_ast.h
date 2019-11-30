@@ -52,6 +52,16 @@ namespace cc0::ast {
                 default: return "undefined";
             }
         }
+        template <typename T> static void graphize_list(const _ptrs<T>& list, std::ostream& out, int tab, int child) {
+            if (!list.empty()) {
+                for (auto it = list.cbegin(); it != list.cend() - 1; ++it) {
+                    out << _mid(tab);
+                    (*it)->graphize(out, child);
+                }
+                out << _end(tab);
+                (*(list.cend() - 1))->graphize(out, child);
+            }
+        }
 
     public:
         // TODO: the range of AST, for error in semantic parse.

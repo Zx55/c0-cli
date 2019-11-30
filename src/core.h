@@ -48,9 +48,11 @@ namespace cc0 {
         analyser->analyse();
         analyser.reset(nullptr);
 
-        [[maybe_unused]] auto& root = RuntimeContext::get_ast();
+        auto& root = RuntimeContext::get_ast();
         if (output) {
-            // TODO: how to print AST
+            auto out = std::ofstream(SourceContext::get_out());
+            root->graphize(out, 0);
+            out.close();
         }
 
         if (verbose)

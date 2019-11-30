@@ -15,17 +15,33 @@ namespace cc0::ast {
 
     public:
         explicit ReturnStmtAST(_ptr<ExprAST> ret = std::make_unique<ExprAST>(Type::VOID)):
-            _ret(std::move(ret)) { }
+            StmtAST(), _ret(std::move(ret)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<ret-stmt>\n";
+            if (_ret != nullptr) {
+                out << _end(t);
+                _ret->graphize(out, t + 1);
+            }
+        }
     };
 
     class BreakStmtAST final: public StmtAST {
     public:
         explicit BreakStmtAST(): StmtAST() { }
+
+        void graphize(std::ostream& out, [[maybe_unused]] int t) override {
+            out << "<break-stmt>\n";
+        }
     };
 
     class ContinueStmtAST final: public StmtAST {
     public:
         explicit ContinueStmtAST(): StmtAST() { }
+
+        void graphize(std::ostream& out, [[maybe_unused]] int t) override {
+            out << "<continue-stmt>\n";
+        }
     };
 }
 

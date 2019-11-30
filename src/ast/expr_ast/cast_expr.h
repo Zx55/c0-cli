@@ -17,6 +17,11 @@ namespace cc0::ast {
     public:
         explicit CastExprAST(Type cast, _ptr<ExprAST> expr):
             _cast(cast), _expr(std::move(expr)) { }
+
+        void graphize(std::ostream& out, int t) override {
+            out << "<cast-expr> [type] " << type_str(_cast) << "\n" << _end(t);
+            _expr->graphize(out, t + 1);
+        }
     };
 }
 
