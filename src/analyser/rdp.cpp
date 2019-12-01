@@ -380,7 +380,7 @@ namespace cc0 {
             }
             case TokenType::SEMI: {
                 _wrns.emplace_back(_rdp_err(ErrCode::WrnEmptyStatement));
-                return std::unique_ptr<StmtAST>(new ReturnStmtAST());
+                return std::unique_ptr<StmtAST>(new EmptyStmtAST());
             }
             default:
                 _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidStatement));

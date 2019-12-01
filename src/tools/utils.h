@@ -3,13 +3,11 @@
  * Copyright (c) zx5. All rights reserved.
  */
 
+#pragma once
 #ifndef C0_UTILS_H
 #define C0_UTILS_H
 
-#include "ctx/rt_ctx.h"
 #include "enums.h"
-
-#include "lexer/token.h"
 
 #include <cctype>
 
@@ -204,12 +202,6 @@ namespace cc0::utils {
                 return '\"';
             default:
                 return -1;
-        }
-    }
-
-    inline std::pair<std::string, uint8_t> make_instruction(InstructionType type) {
-        switch (type) {
-            case InstructionType::NOP: return { "nop", 0x00 };
         }
     }
 }

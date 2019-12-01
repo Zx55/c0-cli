@@ -11,7 +11,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 21
+#define ERR_NUM 23
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -37,6 +37,8 @@ namespace cc0 {
         ErrMissBrace,
         ErrMissWhile,
         ErrIncompleteComment,
+        ErrUndeclaredVariable,
+        ErrAssignToConstant,
         WrnInt32Overflow            = 128,
         WrnFloat64Overflow,
         WrnEmptyStatement,
@@ -45,7 +47,8 @@ namespace cc0 {
     class C0Err final {
         friend inline void swap(C0Err& lhs, C0Err& rhs) {
             std::swap(lhs._code, rhs._code);
-            swap(lhs._ctx, rhs._ctx);
+            std::swap(lhs._ctx._line, rhs._ctx._line);
+            std::swap(lhs._ctx._range, rhs._ctx._range);
         }
 
         friend std::ostream& operator<<(std::ostream& out, const C0Err& err) {
@@ -64,11 +67,6 @@ namespace cc0 {
 
     private:
         class _ErrContext final {
-            friend inline void swap(_ErrContext& lhs, _ErrContext& rhs) {
-                std::swap(lhs._line, rhs._line);
-                std::swap(lhs._range, rhs._range);
-            }
-
         public:
             std::string& _line;
             range_t _range;
@@ -90,8 +88,8 @@ namespace cc0 {
             C0Err(code, { start_row, start_col }, { end_row, end_col }) { }
         C0Err(const C0Err&) = default;
         C0Err(C0Err&& err) noexcept: _code(err._code), _ctx(std::move(err._ctx)) {}
-        C0Err& operator=(C0Err err) {
-            swap(*this, err);
+        C0Err& operator=(C0Err rhs) {
+            swap(*this, rhs);
             return *this;
         }
         bool operator==(const C0Err& err) { return _code == err._code && _ctx == err._ctx; }
@@ -136,6 +134,8 @@ namespace fmt {
                     "ErrMissBrace",
                     "ErrMissWhile",
                     "ErrIncompleteComment",
+                    "ErrUndeclaredVariable",
+                    "ErrAssignToConstant",
                     "WrnInt32Overflow",
                     "WrnFloat64Overflow",
                     "WrnEmptyStatement",

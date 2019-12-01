@@ -17,9 +17,9 @@ namespace cc0::ast {
         }
     };
 
-    class EmptyStmt final: StmtAST {
+    class EmptyStmtAST final: public StmtAST {
     public:
-        EmptyStmt(): StmtAST() { }
+        EmptyStmtAST(): StmtAST() { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<empty-stmt>\n";

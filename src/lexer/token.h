@@ -7,6 +7,7 @@
 #define C0_TOKEN_H
 
 #include "tools/alias.h"
+#include "tools/enums.h"
 
 #include "fmt/format.h"
 
@@ -17,60 +18,6 @@
 #include <any>
 
 namespace cc0 {
-    // 类别表
-    enum class TokenType: char {
-        UNDEFINED,
-
-        CONST,
-        VOID,
-        INT,
-        CHAR,
-        DOUBLE,
-        STRUCT,
-        IF,
-        ELSE,
-        SWITCH,
-        CASE,
-        DEFAULT,
-        WHILE,
-        FOR,
-        DO,
-        RETURN,
-        BREAK,
-        CONTINUE,
-        PRINT,
-        SCAN,
-
-        DECIMAL,
-        HEXADECIMAL,
-        FLOAT,
-        IDENTIFIER,
-        PLUS,
-        MINUS,
-        MULTIPLY,
-        DIVISION,
-        ASSIGN,
-
-        EQUAL,
-        GREATER,
-        GREATER_EQUAL,
-        LESS,
-        LESS_EQUAL,
-        NEQUAL,
-
-        SEMI,
-        COLON,
-        COMMA,
-
-        LPARENTHESIS,
-        RPARENTHESIS,
-        LBRACE,
-        RBRACE,
-
-        CHAR_LITERAL,
-        STRING_LITERAL,
-    };
-
     class Token final {
         friend std::ostream& operator<<(std::ostream& out, const Token& token) {
             out << fmt::format("{}", token);
@@ -176,7 +123,7 @@ namespace cc0 {
     };
 }
 
-static void replace_all(std::string& src, const std::string& target, const std::string& value) {
+static void replace_all(std::string &src, const std::string &target, const std::string &value) {
     std::string::size_type p;
 
     for (p = src.find(target); p != std::string::npos; p = src.find(target))

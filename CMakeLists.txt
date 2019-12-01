@@ -30,7 +30,7 @@ set(AST_SRC
 # Instruction
 set(IST_SRC src/instruction/instruction.h)
 # Symbol Table
-set(TBL_SRC)
+set(TBL_SRC src/symtbl/symbol.h src/symtbl/symtbl.h src/symtbl/symtbl.cpp)
 # Context
 set(CTX_SRC
         src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h)

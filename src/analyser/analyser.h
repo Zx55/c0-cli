@@ -6,12 +6,6 @@
 #ifndef C0_ANALYSER_H
 #define C0_ANALYSER_H
 
-#include "lexer/token.h"
-#include "ast/ast.h"
-
-#include "tools/alias.h"
-#include "tools/error.h"
-#include "tools/utils.h"
 #include "ctx/rt_ctx.h"
 
 #include <string>

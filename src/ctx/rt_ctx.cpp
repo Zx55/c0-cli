@@ -10,8 +10,10 @@
 namespace cc0 {
     std::vector<C0Err> RuntimeContext::_fatal;
     std::vector<C0Err> RuntimeContext::_wrns;
+
     std::vector<Token> RuntimeContext::_tokens;
     std::unique_ptr<AST> RuntimeContext::_ast = nullptr;
+    std::vector<Instruction> RuntimeContext::_inst;
 
     inline void RuntimeContext::clear_ctx() {
         _fatal.clear();
@@ -32,6 +34,7 @@ namespace cc0 {
         if (SourceContext::_f_wall)
             errs.insert(errs.end(), _wrns.begin(), _wrns.end());
 
+        // FIXME: line ctx error.
         std::sort(errs.begin(), errs.end(), cmp);
         return errs;
     }

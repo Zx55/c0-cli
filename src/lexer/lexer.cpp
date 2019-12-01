@@ -407,8 +407,11 @@ namespace cc0 {
                                 _ss << _ch;
                                 if (_get(); ishex(_ch))
                                     _ss << _ch;
-                                else
+                                else {
+                                L_ERR_ESCAPE:
                                     _unget();
+                                    return _lex_err(ErrCode::ErrInvalidEscape);
+                                }
 
                                 auto hex_str = _ss.str();
                                 auto hex_value = std::stoi(hex_str, nullptr, 16);
@@ -419,14 +422,8 @@ namespace cc0 {
                                     return _lex_token(TokenType::CHAR_LITERAL);
                                 _unget();
                                 return _lex_err(ErrCode::ErrMissQuote);
-                            } else {
-                                _unget();
-                                return _lex_err(ErrCode::ErrInvalidEscape);
-                            }
-                        } else {
-                            _unget();
-                            return _lex_err(ErrCode::ErrInvalidEscape);
-                        }
+                            } else goto L_ERR_ESCAPE;
+                        } else goto L_ERR_ESCAPE;
                     } else {
                         _unget();
                         return _lex_err(ErrCode::ErrInvalidChar);
@@ -442,22 +439,17 @@ namespace cc0 {
                             if (_get(); ise_char(_ch))
                                 _ss << make_escape(_ch);
                             else if (_ch == 'x') {
-                                std::string hex_str = "";
+                                std::string hex_str;
                                 if (_get(); ishex(_ch)) {
                                     hex_str += _ch;
                                     if (_get(); ishex(_ch))
                                         hex_str += _ch;
-                                    else
-                                        _unget();
+                                    else goto L_ERR_ESCAPE;
 
                                     auto hex_value = std::stoi(hex_str, nullptr, 16);
                                     _ss << static_cast<char>(hex_value);
-                                } else
-                                    return _lex_err(ErrCode::ErrInvalidEscape);
-                            } else {
-                                _unget();
-                                return _lex_err(ErrCode::ErrInvalidEscape);
-                            }
+                                } else goto L_ERR_ESCAPE;
+                            } else goto L_ERR_ESCAPE;
                         } else if (_ch == '\"') {
                             if (_ss.str().empty())
                                 return _lex_err(ErrCode::ErrInvalidString);
@@ -467,7 +459,6 @@ namespace cc0 {
                             _unget();
                             return _lex_err(ErrCode::ErrMissQuote);
                         }
-
                         _get();
                     }
                 }

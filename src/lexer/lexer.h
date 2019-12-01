@@ -6,11 +6,6 @@
 #ifndef C0_LEXER_H
 #define C0_LEXER_H
 
-#include "token.h"
-
-#include "tools/error.h"
-#include "tools/utils.h"
-#include "ctx/src_ctx.h"
 #include "ctx/rt_ctx.h"
 
 #include <sstream>

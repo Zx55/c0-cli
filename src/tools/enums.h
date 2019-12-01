@@ -7,6 +7,60 @@
 #define C0_ENUMS_H
 
 namespace cc0 {
+    // 类别表
+    enum class TokenType: char {
+        UNDEFINED,
+
+        CONST,
+        VOID,
+        INT,
+        CHAR,
+        DOUBLE,
+        STRUCT,
+        IF,
+        ELSE,
+        SWITCH,
+        CASE,
+        DEFAULT,
+        WHILE,
+        FOR,
+        DO,
+        RETURN,
+        BREAK,
+        CONTINUE,
+        PRINT,
+        SCAN,
+
+        DECIMAL,
+        HEXADECIMAL,
+        FLOAT,
+        IDENTIFIER,
+        PLUS,
+        MINUS,
+        MULTIPLY,
+        DIVISION,
+        ASSIGN,
+
+        EQUAL,
+        GREATER,
+        GREATER_EQUAL,
+        LESS,
+        LESS_EQUAL,
+        NEQUAL,
+
+        SEMI,
+        COLON,
+        COMMA,
+
+        LPARENTHESIS,
+        RPARENTHESIS,
+        LBRACE,
+        RBRACE,
+
+        CHAR_LITERAL,
+        STRING_LITERAL,
+    };
+
     namespace ast {
         enum class Type: unsigned char {
             VOID,
@@ -32,14 +86,28 @@ namespace cc0 {
         };
     }
 
-    enum class ConstantType: unsigned char {
-        INT,
-        DOUBLE,
-        STRING,
-    };
+    using ast::Type;
 
-    enum class InstructionType: unsigned char {
+    enum class InstType: unsigned char {
         NOP,
+        BIPUSH, IPUSH,
+        POP, POP2, POPN,
+        DUP, DUP2,
+        LOADC, LOADA,
+        NEW, SNEW,
+        ILOAD, DLOAD, ALOAD,
+        /* iaload, daload, aaload */
+        ISTORE, DSTORE, ASTORE,
+        /* iastore, dastore, aastore */
+        IADD, DADD, ISUB, DSUB,
+        IMUL, DMUL, IDIV, DDIV,
+        INEG, DNEG,
+        ICMP, DCMP,
+        I2D, D2I, I2C,
+        JMP, JE, JNE, JGE, JG, JLE, JL,
+        CALL, RET, IRET, DRET, ARET,
+        IPRINT, DPRINT, CPRINT, SPRINT, PRINTL,
+        ISCAN, DSCAN, CSCAN
     };
 }
 
