@@ -34,8 +34,17 @@ namespace cc0::ast {
         explicit CharExprAST(char value): ExprAST(Type::INT, static_cast<int32_t>(value)) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
-            int ch = std::any_cast<int32_t>(_value);
-            out << "<char> [value] " << static_cast<char>(ch) << " (" << ch << ")\n";
+            int ch = static_cast<char>(std::any_cast<int32_t>(_value));
+            std::string output;
+
+            switch (ch) {
+                case '\r': output += "\\r"; break;
+                case '\n': output += "\\n"; break;
+                case '\t': output += "\\t"; break;
+                default: output.append(1, ch);
+            }
+
+            out << "<char> [value] \'" << output << "\' (" << ch << ")\n";
         }
     };
 
@@ -44,7 +53,11 @@ namespace cc0::ast {
         explicit StringExprAST(std::string value): ExprAST(Type::STRING, value) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
-            out << "<string> [value] " << std::any_cast<std::string>(_value) << "\n";
+            auto str = std::any_cast<std::string>(_value);
+            replace_all(str, "\r", "\\r");
+            replace_all(str, "\n", "\\n");
+            replace_all(str, "\t", "\\t");
+            out << "<string> [value] \"" << str << "\"\n";
         }
     };
 
@@ -56,7 +69,7 @@ namespace cc0::ast {
         explicit IdExprAST(Token id): ExprAST(), _id(std::move(id)) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
-            out << "<id> [name] " << _id.get_value_string() << "\n";
+            out << "<id> [name] " << _id.get_value_str() << "\n";
         }
     };
 }

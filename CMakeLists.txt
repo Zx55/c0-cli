@@ -13,10 +13,13 @@ add_subdirectory(3rd_party/argparse)
 
 # Build libc0
 set(LIB "lib${PROJECT_NAME}")
+# Lexer
 set(LEXER_SRC
         src/lexer/lexer.cpp src/lexer/lexer.h src/lexer/token.h)
+# RDP
 set(ANALYSER_SRC
         src/analyser/analyser.h src/analyser/rdp.cpp src/analyser/rdp.h)
+# Abstract Syntax Tree
 set(AST_SRC
         src/ast/ast.h src/ast/basic_ast.h
         src/ast/root_ast.h src/ast/var_ast.h src/ast/func_ast.h
@@ -24,8 +27,14 @@ set(AST_SRC
         src/ast/expr_ast/arith_expr.h src/ast/expr_ast/value_expr.h src/ast/expr_ast/cast_expr.h
         src/ast/stmt_ast/stmt.h src/ast/stmt_ast/basic_stmt.h src/ast/stmt_ast/cond_stmt.h
         src/ast/stmt_ast/loop_stmt.h src/ast/stmt_ast/io_stmt.h src/ast/stmt_ast/jmp_stmt.h)
+# Instruction
+set(IST_SRC src/instruction/instruction.h)
+# Symbol Table
+set(TBL_SRC)
+# Context
 set(CTX_SRC
         src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h)
+# Tools
 set(TOOL_SRC
         src/tools/alias.h src/tools/enums.h src/tools/error.h src/tools/utils.h)
 
@@ -33,6 +42,8 @@ set(LIB_SRC
         ${LEXER_SRC}
         ${ANALYSER_SRC}
         ${AST_SRC}
+        ${IST_SRC}
+        ${TBL_SRC}
         ${CTX_SRC}
         ${TOOL_SRC}
          src/core.h)

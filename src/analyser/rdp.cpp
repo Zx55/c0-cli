@@ -570,7 +570,7 @@ namespace cc0 {
 
             // <printable> ::= <expr> | <string>
             if (_token.get_type() == TokenType::STRING_LITERAL)
-                printable.push_back(std::make_unique<StringExprAST>(_token.get_value_string()));
+                printable.push_back(std::make_unique<StringExprAST>(_token.get_value_str()));
             else {
                 _unget();
                 if (auto res = _analyse_expr(); res)
@@ -777,14 +777,8 @@ namespace cc0 {
             case TokenType::FLOAT:
                 return std::unique_ptr<ExprAST>(new Float64ExprAST(
                         std::any_cast<double>(_token.get_value())));
-            case TokenType::CHAR: {
-                char ch;
-
-                if (auto ch_str = _token.get_value_string(); ch_str.size() == 1)
-                    ch = ch_str.at(0);
-                else
-                    ch = make_escape(ch_str);
-
+            case TokenType::CHAR_LITERAL: {
+                char ch = _token.get_value_str().at(0);
                 return std::unique_ptr<ExprAST>(new CharExprAST(ch));
             }
             default:

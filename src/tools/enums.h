@@ -6,28 +6,40 @@
 #ifndef C0_ENUMS_H
 #define C0_ENUMS_H
 
-namespace cc0::ast {
-    enum class Type: unsigned char {
-        VOID,
+namespace cc0 {
+    namespace ast {
+        enum class Type: unsigned char {
+            VOID,
+            INT,
+            CHAR,
+            STRING,
+            DOUBLE,
+            UNDEFINED,
+        };
+
+        enum class Op: unsigned char {
+            ADD,
+            SUB,
+            MUL,
+            DIV,
+            LT,
+            LE,
+            GT,
+            GE,
+            EQ,
+            NEQ,
+            UNDEFINED,
+        };
+    }
+
+    enum class ConstantType: unsigned char {
         INT,
-        CHAR,
-        STRING,
         DOUBLE,
-        UNDEFINED,
+        STRING,
     };
 
-    enum class Op: unsigned char {
-        ADD,
-        SUB,
-        MUL,
-        DIV,
-        LT,
-        LE,
-        GT,
-        GE,
-        EQ,
-        NEQ,
-        UNDEFINED,
+    enum class InstructionType: unsigned char {
+        NOP,
     };
 }
 

@@ -12,27 +12,27 @@
 int main(int argc, char* argv[]) {
     argparse::ArgumentParser program("cc0");
     program.add_argument("input")
-        .help("Specify the file contains c0 source code.");
+        .help("Specify the input file.");
     program.add_argument("-l", "--lex")
         .default_value(false)
         .implicit_value(true)
-        .help("Perform lexical analyse on the input c0 source code.");
+        .help("Perform lexical analyse.");
     program.add_argument("-t", "--tree")
         .default_value(false)
         .implicit_value(true)
-        .help("Draw AST based on the input c0 source code.");
+        .help("Draw AST.");
     program.add_argument("-s")
         .default_value(false)
         .implicit_value(true)
-        .help("Translate the input c0 source code to assembly text.");
+        .help("Compile only.");
     program.add_argument("-c")
         .default_value(false)
         .implicit_value(true)
-        .help("Transform the input c0 source code to binary object.");
+        .help("Compile and assemble.");
     program.add_argument("-o")
         .nargs(1)
         .default_value(std::string("out"))
-        .help("Specify the output file.");
+        .help("Specify the output file. (default: ./out)");
     program.add_argument("-Wdisable")
         .default_value(false)
         .implicit_value(true)

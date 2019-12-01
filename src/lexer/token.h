@@ -49,7 +49,6 @@ namespace cc0 {
         MINUS,
         MULTIPLY,
         DIVISION,
-        COMMENT,
         ASSIGN,
 
         EQUAL,
@@ -121,8 +120,8 @@ namespace cc0 {
             return *this;
         }
         bool operator==(const Token& rhs) const {
-            return _type == rhs._type && get_value_string() == rhs.get_value_string()
-                && _range == rhs._range;
+            return _type == rhs._type && get_value_str() == rhs.get_value_str()
+                   && _range == rhs._range;
         }
 
         [[nodiscard]] inline TokenType get_type() const { return _type; }
@@ -131,7 +130,7 @@ namespace cc0 {
         [[nodiscard]] inline pos_t get_start() const { return _range.first; }
         [[nodiscard]] inline pos_t get_end() const { return _range.second; }
 
-        [[nodiscard]] std::string get_value_string() const {
+        [[nodiscard]] std::string get_value_str() const {
             try {
                 return std::any_cast<std::string>(_value);
             } catch (const std::bad_any_cast &) { }
@@ -177,6 +176,13 @@ namespace cc0 {
     };
 }
 
+static void replace_all(std::string& src, const std::string& target, const std::string& value) {
+    std::string::size_type p;
+
+    for (p = src.find(target); p != std::string::npos; p = src.find(target))
+        src.replace(p, target.size(), value);
+}
+
 namespace fmt {
     template<>
     struct formatter<cc0::Token> {
@@ -217,7 +223,6 @@ namespace fmt {
                     "MINUS",
                     "MULTIPLY",
                     "DIVISION",
-                    "COMMENT",
                     "ASSIGN",
 
                     "EQUAL",
@@ -240,7 +245,11 @@ namespace fmt {
                     "STRING_LITERAL",
             };
 
-            auto value_str = token.get_value_string();
+            auto value_str = token.get_value_str();
+            // replace '\r\n\t'
+            replace_all(value_str, "\r", "\\r");
+            replace_all(value_str, "\n", "\\n");
+            replace_all(value_str, "\t", "\\t");
             if (value_str.size() > 10) {
                 value_str = value_str.substr(0, 7) + "...";
             }

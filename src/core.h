@@ -58,6 +58,14 @@ namespace cc0 {
         if (verbose)
             _verbose();
     }
+
+    void compile([[maybe_unused]] bool output = true, [[maybe_unused]] bool verbose = true) {
+
+    }
+
+    void assemble() {
+
+    }
 }
 
 #endif //C0_CORE_H

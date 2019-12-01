@@ -188,8 +188,8 @@ namespace cc0::utils {
         }
     }
 
-    inline int32_t make_escape(std::string ch_str) {
-        switch (ch_str[1]) {
+    inline char make_escape(char ch) {
+        switch (ch) {
             case 'r':
                 return '\r';
             case 'n':
@@ -202,16 +202,14 @@ namespace cc0::utils {
                 return '\'';
             case '\"':
                 return '\"';
-            case 'x': {
-                auto hex_str = ch_str.substr(2);
-                try {
-                    return std::stoi(hex_str, nullptr, 16);
-                } catch (const std::out_of_range&) {
-                    return -1;
-                }
-            }
             default:
                 return -1;
+        }
+    }
+
+    inline std::pair<std::string, uint8_t> make_instruction(InstructionType type) {
+        switch (type) {
+            case InstructionType::NOP: return { "nop", 0x00 };
         }
     }
 }

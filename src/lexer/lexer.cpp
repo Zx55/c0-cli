@@ -9,6 +9,7 @@
 #define _lex_token(_type) { Token(_type, _ss.str(), pos, _pos_end), {}, {} }
 #define _lex_err(_type) { {}, C0Err(_type, pos, _pos_end), {} }
 #define _lex_wrn(_token, _type) { _token, {}, C0Err(_type, pos, _pos_end) }
+#define _lex_cmt { {}, {}, {} }
 #define _eof '\0'
 
 namespace cc0 {
@@ -156,6 +157,9 @@ namespace cc0 {
                             case '\"':
                                 current = DFAState::STRING;
                                 break;
+                            default:
+                                pos = _ptr;
+                                return _lex_err(ErrCode::ErrInvalidChar);
                             }
                     }
 
@@ -309,7 +313,7 @@ namespace cc0 {
                         _get();
                     }
                     _unget();
-                    return _lex_token(TokenType::COMMENT);
+                    return _lex_cmt;
                 }
                 case DFAState::MULTI_COMMENT: {
                     _ss.str("");
@@ -320,7 +324,7 @@ namespace cc0 {
 
                         if (_ch == '*') {
                             if (_get(); _ch == '/')
-                                return _lex_token(TokenType::COMMENT);
+                                return _lex_cmt;
                             else
                                 _ss << '*';
                         } else {
@@ -392,15 +396,13 @@ namespace cc0 {
                         _unget();
                         return _lex_err(ErrCode::ErrMissQuote);
                     } else if (_ch == '\\') {
-                        _ss << _ch;
                         if (_get(); ise_char(_ch)) {
-                            _ss << _ch;
+                            _ss << make_escape(_ch);
                             if (_get(); _ch == '\'')
                                 return _lex_token(TokenType::CHAR_LITERAL);
                             _unget();
                             return _lex_err(ErrCode::ErrMissQuote);
                         } else if (_ch == 'x') {
-                            _ss << _ch;
                             if (_get(); ishex(_ch)) {
                                 _ss << _ch;
                                 if (_get(); ishex(_ch))
@@ -408,10 +410,15 @@ namespace cc0 {
                                 else
                                     _unget();
 
+                                auto hex_str = _ss.str();
+                                auto hex_value = std::stoi(hex_str, nullptr, 16);
+                                _ss.str("");
+                                _ss << static_cast<char>(hex_value);
+
                                 if (_get(); _ch == '\'')
                                     return _lex_token(TokenType::CHAR_LITERAL);
-                                else
-                                    return _lex_err(ErrCode::ErrMissQuote);
+                                _unget();
+                                return _lex_err(ErrCode::ErrMissQuote);
                             } else {
                                 _unget();
                                 return _lex_err(ErrCode::ErrInvalidEscape);
@@ -432,17 +439,19 @@ namespace cc0 {
                         if (iss_char(_ch))
                             _ss << _ch;
                         else if (_ch == '\\') {
-                            _ss << _ch;
                             if (_get(); ise_char(_ch))
-                                _ss << _ch;
+                                _ss << make_escape(_ch);
                             else if (_ch == 'x') {
-                                _ss << _ch;
+                                std::string hex_str = "";
                                 if (_get(); ishex(_ch)) {
-                                    _ss << _ch;
+                                    hex_str += _ch;
                                     if (_get(); ishex(_ch))
-                                        _ss << _ch;
+                                        hex_str += _ch;
                                     else
                                         _unget();
+
+                                    auto hex_value = std::stoi(hex_str, nullptr, 16);
+                                    _ss << static_cast<char>(hex_value);
                                 } else
                                     return _lex_err(ErrCode::ErrInvalidEscape);
                             } else {
@@ -472,9 +481,13 @@ namespace cc0 {
             if (err.value().get_code() != ErrCode::ErrEOF)
                 RuntimeContext::put_fatal(err.value());
             return;
-        } else if (wrn.has_value())
+        }
+
+        if (wrn.has_value())
             RuntimeContext::put_wrn(wrn.value());
-        RuntimeContext::put_token(tk.value());
+
+        if (tk.has_value())
+            RuntimeContext::put_token(tk.value());
     }
 
     void Lexer::all_tokens() {
@@ -495,7 +508,9 @@ namespace cc0 {
             } else {
                 if (wrn.has_value())
                     wrns.push_back(wrn.value());
-                tks.push_back(tk.value());
+
+                if (tk.has_value())
+                    tks.push_back(tk.value());
             }
         }
     }
