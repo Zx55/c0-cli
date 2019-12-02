@@ -32,23 +32,6 @@ namespace cc0::ast {
             }
         }
     };
-
-    class AssignAST final: public ExprAST, public StmtAST {
-    private:
-        _ptr<IdExprAST> _id;
-        _ptr<ExprAST> _value;
-
-    public:
-        explicit AssignAST(_ptr<IdExprAST> id, _ptr<ExprAST> value):
-            _id(std::move(id)), _value(std::move(value)) { }
-
-        void graphize(std::ostream& out, int t) override {
-            out << "<assignment>\n" << _mid(t);
-            _id->graphize(out, t + 1);
-            out << _end(t);
-            _value->graphize(out, t + 1);
-        }
-    };
 }
 
 #endif //C0_VAR_AST_H

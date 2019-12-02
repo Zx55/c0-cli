@@ -65,8 +65,8 @@ namespace cc0::ast {
 
     public:
         // TODO: the range of AST, for error in semantic parse.
-        // TODO: what to return?
-        // virtual std::vector<C0Err> generate() = 0;
+        // TODO: what to return? and what to pass? make a Param struct and a Ret struct
+        // virtual std::vector<C0Err> generate(int domain, int level) = 0;
         virtual void graphize(std::ostream& out, int t) = 0;
     };
 }

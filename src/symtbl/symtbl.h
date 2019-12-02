@@ -13,24 +13,29 @@
 namespace cc0 {
     class SymTbl final {
     private:
+        struct _DomainLevel {
+            std::string _id;
+            uint32_t _domain;
+            uint32_t _level;
+        };
+
         std::unordered_set<ConstSym, ConstSym::_Hash> _consts;
         std::unordered_map<std::string, FuncSym> _funcs;
-        std::unordered_map<std::string, VarSym> _vars;
-        std::vector<std::pair<std::string, uint32_t>> _level_stk;
+
+        /*
+         * variable table
+         * _globs - store global vars (_domain = 0)
+         *          storing vars in two table is to make finding global vars easy.
+         * _vars  - store local vars  (_domain > 0)
+         */
+        std::unordered_map<std::string, VarSym> _globs;
+        std::vector<VarSym> _vars;
 
     public:
         SymTbl() = default;
         SymTbl(const SymTbl&) = delete;
         SymTbl(SymTbl&&) = delete;
         SymTbl& operator=(SymTbl tbl) = delete;
-
-        [[nodiscard]] inline bool is_declared(const std::string& id) const;
-        [[nodiscard]] inline bool is_declared(const std::string& id, int level) const;
-
-        [[nodiscard]] inline Type get_type(const std::string& id) const;
-
-        inline void assign(const std::string& id, std::any value);
-        void leave();   // leave a block, destroy vars in _level_stk
     };
 }
 

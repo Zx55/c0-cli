@@ -320,6 +320,11 @@ namespace cc0 {
                 auto res = _analyse_if_else();
                 return _rdp_stmt(res);
             }
+            case TokenType::SWITCH: {
+                _unget();
+                auto res = _analyse_switch();
+                return _rdp_stmt(res);
+            }
             case TokenType::WHILE: {
                 _unget();
                 auto res = _analyse_while();
@@ -336,9 +341,13 @@ namespace cc0 {
                 return _rdp_stmt(res);
             }
             case TokenType::BREAK: {
+                if (!_get() || _token.get_type() != TokenType::SEMI)
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
                 return std::make_unique<BreakStmtAST>();
             }
             case TokenType::CONTINUE: {
+                if (!_get() || _token.get_type() != TokenType::SEMI)
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
                 return std::make_unique<ContinueStmtAST>();
             }
             case TokenType::RETURN: {
@@ -365,6 +374,8 @@ namespace cc0 {
                 if (auto type = _token.get_type(); type == TokenType::LPARENTHESIS) {
                     _unget(); _unget();
                     auto res = _analyse_func_call();
+                    if (!_get() || _token.get_type() != TokenType::SEMI)
+                        _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
                     return _rdp_stmt(res);
                 } else if (type == TokenType::ASSIGN) {
                     _unget(); _unget();
@@ -429,6 +440,108 @@ namespace cc0 {
 
         _unget();
         return std::make_unique<IfElseStmtAST>(std::move(cond), std::move(s_true), nullptr);
+    }
+
+    // <switch-stmt> ::= 'switch' '(' <expr> ')' '{' {<label-stmt>} '}'
+    ast::_ptr<ast::SwitchStmtAST> RDP::_analyse_switch() {
+        using namespace ast;
+        using namespace utils;
+
+        _ptrs<LabelStmtAST> cases;
+        ast::_ptr<StmtAST> dft = nullptr;
+
+        // 'switch'
+        (void) _get();
+
+        // '('
+        if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+
+        // <expr>
+        auto cond = _analyse_expr();
+        if (!cond) return nullptr;
+
+        // ')'
+        if (!_get() || _token.get_type() != TokenType::RPARENTHESIS) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+
+        // '{'
+        if (!_get() || _token.get_type() != TokenType::LBRACE) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));
+            return nullptr;
+        }
+
+        while (true) {
+            if (!_get()) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));
+                return nullptr;
+            }
+
+            switch (_token.get_type()) {
+                // '}'
+                case TokenType::RBRACE:
+                L_SWITCH_RET:
+                    return std::make_unique<SwitchStmtAST>(std::move(cond), std::move(cases), std::move(dft));
+                // 'case'
+                case TokenType::CASE: {
+                    if (!_get()) {
+                        _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidCase));
+                        goto L_SWITCH_RET;
+                    }
+
+                    // <int-literal>|<char-literal>
+                    if (auto type = _token.get_type(); type == TokenType::DECIMAL
+                        || type == TokenType::HEXADECIMAL || type == TokenType::CHAR_LITERAL) {
+                        _unget();
+                        auto this_case = _analyse_primary();
+
+                        // ':'
+                        if (!_get() || _token.get_type() != TokenType::COLON) {
+                            _errs.emplace_back(_rdp_err(ErrCode::ErrMissColon));
+                            goto L_SWITCH_RET;
+                        }
+
+                        // '<stmt>
+                        auto stmt = _analyse_stmt();
+                        if (!stmt) goto L_SWITCH_RET;
+
+                        auto label = std::make_unique<LabelStmtAST>(std::move(this_case), std::move(stmt));
+                        cases.push_back(std::move(label));
+                        break;
+                    } else {
+                        _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidCase));
+                        goto L_SWITCH_RET;
+                    }
+                }
+                // 'default' ':' <stmt>
+                case TokenType::DEFAULT: {
+                    if (dft != nullptr) {
+                        _errs.emplace_back(_rdp_err(ErrCode::ErrRepeatedDefault));
+                        goto L_SWITCH_RET;
+                    }
+
+                    if (!_get() || _token.get_type() != TokenType::COLON) {
+                        _errs.emplace_back(_rdp_err(ErrCode::ErrMissColon));
+                        goto L_SWITCH_RET;
+                    }
+
+                    auto stmt = _analyse_stmt();
+                    if (!stmt) goto L_SWITCH_RET;
+
+                    dft = std::move(stmt);
+                    break;
+                }
+                default: {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidStatement));
+                    _unget();
+                    goto L_SWITCH_RET;
+                }
+            }
+        }
     }
 
     // <while-stmt> ::= 'while' '(' <cond> ')' <stmt>
@@ -497,14 +610,134 @@ namespace cc0 {
         return std::make_unique<DoWhileStmtAST>(std::move(cond), std::move(stmt));
     }
 
-    // TODO: <for-stmt> ::= 'for' '('<for-init> [<cond>]';' [<for-update>]')' <stmt>
+    // <for-stmt> ::= 'for' '('<for-init> [<cond>]';' [<for-update>]')' <stmt>
     ast::_ptr<ast::ForStmtAST> RDP::_analyse_for() {
         using namespace ast;
         using namespace utils;
 
+        _ptrs<AssignAST> inits;
+        ast::_ptr<CondExprAST> cond;
+        _ptrs<ExprAST> updates;
+
+        // 'for'
         (void) _get();
 
-        return nullptr;
+        // '('
+        if (!_get() ||_token.get_type() != TokenType::LPARENTHESIS) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+
+        // <for-init>
+        // ';'
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
+            return nullptr;
+        }
+
+        if (_token.get_type() != TokenType::SEMI) {
+            _unget();
+
+            // [<assign>{','<assign>}]';'
+            while (true) {
+                auto assign = _analyse_assign();
+                if (!assign) return nullptr;
+                inits.push_back(std::move(assign));
+
+                if (!_get()) {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
+                    return nullptr;
+                }
+
+                if (auto type = _token.get_type(); type == TokenType::SEMI)
+                    break;
+                else if (type == TokenType::COMMA)
+                    continue;
+                else {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
+                    return nullptr;
+                }
+            }
+        }
+
+        // <for-cond>
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
+            return nullptr;
+        }
+
+        if (_token.get_type() != TokenType::SEMI) {
+            _unget();
+
+            // <cond>
+            cond = _analyse_cond();
+            if (!cond) return nullptr;
+
+            // ';'
+            if (!_get() || _token.get_type() != TokenType::SEMI) {
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
+                return nullptr;
+            }
+        }
+
+        // <for-update>
+        // ')'
+        if (!_get()) {
+            _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+            return nullptr;
+        }
+        if (_token.get_type() != TokenType::RPARENTHESIS) {
+            _unget();
+
+            // (<assign>|<func-call>){','(<assign>|<func-call>)}
+            while (true) {
+                if (!_get() || _token.get_type() != TokenType::IDENTIFIER) {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissIdentifier));
+                    return nullptr;
+                }
+                if (!_get()) {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidForUpdate));
+                    return nullptr;
+                }
+
+                ast::_ptr<ExprAST> update;
+                if (auto type = _token.get_type(); type == TokenType::ASSIGN) {
+                    // <assign>
+                    _unget(); _unget();
+                    update = _analyse_assign();
+                    if (!update) return nullptr;
+                } else if (type == TokenType::LPARENTHESIS) {
+                    // <func-call>
+                    _unget(); _unget();
+                    update = _analyse_func_call();
+                    if (!update) return nullptr;
+                } else {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidForUpdate));
+                    return nullptr;
+                }
+
+                updates.push_back(std::move(update));
+
+                if (!_get()) {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                    return nullptr;
+                }
+                if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
+                    break;
+                else if (type == TokenType::COMMA)
+                    continue;
+                else {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidForUpdate));
+                    return nullptr;
+                }
+            }
+        }
+
+        // <stmt>
+        auto stmt = _analyse_stmt();
+        if (!stmt) return nullptr;
+
+        return std::make_unique<ForStmtAST>(std::move(inits), std::move(cond), std::move(updates), std::move(stmt));
     }
 
     // <return-stmt> ::= 'return' [<expr>] ';'

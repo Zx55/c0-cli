@@ -116,32 +116,76 @@ namespace cc0 {
         }
 
     private:
+        /*
+         * variable info
+         * _id    - identifier
+         * _type  - variable type
+         * _value - variable value
+         * _const - if const?
+         */
         std::string _id;
         Type _type;
         std::optional<std::any> _value;
         bool _const;
 
-        uint32_t _addr;         // address in vm
+        /*
+         * runtime info
+         * _offset - offset in current/global frame in vm stack.
+         *
+         */
+        uint32_t _offset;
+
+        /*
+         * scope info
+         * _domain - index in call chain
+         *           when a function return, we should pop vars of this function(_domain).
+         * _level  - index of block
+         *           when leaving a block, we should pop vars of this block(_level).
+         *
+         * for example
+         *      domain - 0 (global):
+         *          level - 0:
+         *              var a ...
+         *              var b ...
+         *      domain - 1 (main):
+         *          level - 0:
+         *              var c ...
+         *          level - 1:    // like a if-else-stmt block
+         *              var c ... // override definition in domain 1 level 0.
+         *      domain - 2 (fun): // may be call fun(a)
+         *          level - 0:
+         *              param a ...
+         *          ...
+         *
+         * when we return from fun, domain 2 will be destroyed.
+         * and we leave if-else-block, level 1 of domain 1 will be destroyed.
+         */
+        uint32_t _domain;
         uint32_t _level;
+
         [[maybe_unused]] uint32_t _usage;
 
     public:
-        VarSym(std::string id, Type type, std::any value, bool f_const, uint32_t level):
-            _id(std::move(id)), _type(type), _value(std::move(value)), _const(f_const),
-            _addr(0), _level(level), _usage(0) { }
+        VarSym(std::string id, Type type, std::any value, bool f_const, uint32_t domain, uint32_t level):
+                _id(std::move(id)), _type(type), _value(std::move(value)), _const(f_const),
+                _offset(0), _domain(domain), _level(level), _usage(0) { }
         VarSym(const VarSym&) = default;
         VarSym(VarSym&&) = default;
         VarSym& operator=(VarSym rhs) {
             swap(*this, rhs);
             return *this;
         }
-        bool operator==(const VarSym& rhs) { return _id == rhs._id && _level == rhs._level; }
+        bool operator==(const VarSym& rhs) const {
+            return _id == rhs._id && _domain == rhs._domain && _level == rhs._level;
+        }
 
         [[nodiscard]] inline bool is_init() const { return _value == std::nullopt; }
         [[nodiscard]] inline bool is_const() const { return _const; }
 
         [[nodiscard]] inline Type get_type() const { return _type; }
-        [[nodiscard]] inline uint32_t get_addr() const { return _addr; }
+        [[nodiscard]] inline std::pair<Type, std::any> get_value() const { return { _type, _value }; }
+        [[nodiscard]] inline uint32_t get_offset() const { return _offset; }
+        [[nodiscard]] inline std::pair<uint32_t, uint32_t> get_scope() const { return { _domain, _level }; }
 
         inline void set_value(std::any value) { _value = std::move(value); }
     };

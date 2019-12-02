@@ -11,7 +11,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 23
+#define ERR_NUM 27
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -27,6 +27,8 @@ namespace cc0 {
         ErrInvalidTypeSpecifier,
         ErrInvalidExpression,
         ErrInvalidStatement,
+        ErrInvalidCase,
+        ErrInvalidForUpdate,
         ErrMissEqOp,
         ErrMissAssignOp,
         ErrMissQuote,
@@ -35,7 +37,9 @@ namespace cc0 {
         ErrMissIdentifier,
         ErrMissParenthesis,
         ErrMissBrace,
+        ErrMissColon,
         ErrMissWhile,
+        ErrRepeatedDefault,
         ErrIncompleteComment,
         ErrUndeclaredVariable,
         ErrAssignToConstant,
@@ -124,6 +128,8 @@ namespace fmt {
                     "ErrInvalidTypeSpecifier",
                     "ErrInvalidExpression",
                     "ErrInvalidStatement",
+                    "ErrInvalidCase",
+                    "ErrInvalidForUpdate",
                     "ErrMissEqOp",
                     "ErrMissAssignOp",
                     "ErrMissQuote",
@@ -132,7 +138,9 @@ namespace fmt {
                     "ErrMissIdentifier",
                     "ErrMissParenthesis",
                     "ErrMissBrace",
+                    "ErrMissColon",
                     "ErrMissWhile",
+                    "ErrRepeatedDefault",
                     "ErrIncompleteComment",
                     "ErrUndeclaredVariable",
                     "ErrAssignToConstant",

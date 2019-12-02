@@ -19,6 +19,7 @@ namespace cc0 {
         [[nodiscard]] inline ast::Type _analyse_type_specifier();
         [[nodiscard]] ast::_ptr<ast::StmtAST> _analyse_stmt();
         [[nodiscard]] ast::_ptr<ast::IfElseStmtAST> _analyse_if_else();
+        [[nodiscard]] ast::_ptr<ast::SwitchStmtAST> _analyse_switch();
         [[nodiscard]] ast::_ptr<ast::WhileStmtAST> _analyse_while();
         [[nodiscard]] ast::_ptr<ast::DoWhileStmtAST> _analyse_do_while();
         [[nodiscard]] ast::_ptr<ast::ForStmtAST> _analyse_for();
