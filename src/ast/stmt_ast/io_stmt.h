@@ -14,11 +14,12 @@ namespace cc0::ast {
         _ptrs<ExprAST> _printable;
 
     public:
-        explicit PrintStmtAST(_ptrs<ExprAST> printable): _printable(std::move(printable)) { }
+        explicit PrintStmtAST(range_t range, _ptrs<ExprAST> printable):
+            StmtAST(range), _printable(std::move(printable)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<print-stmt>\n";
-            graphize_list(_printable, out, t, t + 1);
+            _graphize_list(_printable, out, t, t + 1);
         }
     };
 
@@ -27,7 +28,8 @@ namespace cc0::ast {
         _ptr<IdExprAST> _id;
 
     public:
-        explicit ScanStmtAST(_ptr<IdExprAST> id): _id(std::move(id)) { }
+        explicit ScanStmtAST(range_t range, _ptr<IdExprAST> id):
+            StmtAST(range), _id(std::move(id)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<scan-stmt> ";

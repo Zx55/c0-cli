@@ -16,11 +16,11 @@ namespace cc0::ast {
         _ptr<ExprAST> _rhs;
 
     public:
-        explicit BinaryExprAST(_ptr<ExprAST> lhs, Op op, _ptr<ExprAST> rhs):
-            ExprAST(), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
+        explicit BinaryExprAST(range_t range, _ptr<ExprAST> lhs, Op op, _ptr<ExprAST> rhs):
+            ExprAST(range), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
 
         void graphize(std::ostream& out, int t) override {
-            out << "<binary-expr> [op] " << op_str(_op) << "\n" << _mid(t);
+            out << "<binary-expr> [op] " << _op_str(_op) << "\n" << _mid(t);
             _lhs->graphize(out, t + 1);
             out << _end(t);
             _rhs->graphize(out, t + 1);
@@ -33,8 +33,8 @@ namespace cc0::ast {
         _ptr<ExprAST> _expr;
 
     public:
-        explicit UnaryExprAST(bool sign, _ptr<ExprAST> expr):
-            _sign(sign), _expr(std::move(expr)) { }
+        explicit UnaryExprAST(range_t range, bool sign, _ptr<ExprAST> expr):
+            ExprAST(range), _sign(sign), _expr(std::move(expr)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<unary-expr> [sign] " << (_sign ? '+' : '-') << "\n" << _end(t);

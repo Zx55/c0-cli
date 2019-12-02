@@ -17,11 +17,15 @@ namespace cc0::ast {
         _ptr<ExprAST> _rhs;
 
     public:
-        explicit CondExprAST(_ptr<ExprAST> lhs, Op op = Op::NEQ, _ptr<ExprAST> rhs = _ptr<ExprAST>(new Int32ExprAST(0))):
-            ExprAST(Type::INT), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
+        explicit CondExprAST(range_t range, _ptr<ExprAST> lhs):
+                ExprAST(range, Type::INT), _lhs(std::move(lhs)), _op(Op::NEQ) {
+            _rhs = std::make_unique<Int32ExprAST>(range, 0);
+        }
+        explicit CondExprAST(range_t range, _ptr<ExprAST> lhs, Op op, _ptr<ExprAST> rhs):
+            ExprAST(range, Type::INT), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
 
         void graphize(std::ostream& out, int t) override {
-            out << "<cond-expr> [op] " << op_str(_op) << "\n" << _mid(t);
+            out << "<cond-expr> [op] " << _op_str(_op) << "\n" << _mid(t);
             _lhs->graphize(out, t + 1);
             out << _end(t);
             _rhs->graphize(out, t + 1);

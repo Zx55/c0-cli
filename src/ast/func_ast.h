@@ -19,11 +19,11 @@ namespace cc0::ast {
         bool _const;
 
     public:
-        explicit ParamAST(Type type, _ptr<IdExprAST> id, bool f_const = false):
-            _type(type), _id(std::move(id)), _const(f_const) { }
+        explicit ParamAST(range_t range, Type type, _ptr<IdExprAST> id, bool f_const = false):
+            AST(range), _type(type), _id(std::move(id)), _const(f_const) { }
 
         void graphize(std::ostream& out, int t) override {
-            out << "[type] " << (_const ? "const " : "") << type_str(_type) << " ";
+            out << "[type] " << (_const ? "const " : "") << _type_str(_type) << " ";
             _id->graphize(out, t + 1);
         }
     };
@@ -34,8 +34,8 @@ namespace cc0::ast {
         _ptrs<StmtAST> _stmts;
 
     public:
-        explicit BlockStmtAST(_ptrs<VarDeclAST> vars, _ptrs<StmtAST> stmts):
-            _vars(std::move(vars)), _stmts(std::move(stmts)) { }
+        explicit BlockStmtAST(range_t range, _ptrs<VarDeclAST> vars, _ptrs<StmtAST> stmts):
+            StmtAST(range), _vars(std::move(vars)), _stmts(std::move(stmts)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<block>\n";
@@ -50,7 +50,7 @@ namespace cc0::ast {
                 (*(_vars.cend() - 1))->graphize(out, t + 1);
             }
 
-            graphize_list(_stmts, out, t, t + 1);
+            _graphize_list(_stmts, out, t, t + 1);
         }
     };
 
@@ -62,14 +62,15 @@ namespace cc0::ast {
         _ptr<BlockStmtAST> _block;
 
     public:
-        explicit FuncDefAST(Type ret, _ptr<IdExprAST> id, _ptrs<ParamAST> params, _ptr<BlockStmtAST> block):
-            _ret(ret), _id(std::move(id)), _params(std::move(params)), _block(std::move(block)) { }
+        explicit FuncDefAST(range_t range, Type ret, _ptr<IdExprAST> id,
+                _ptrs<ParamAST> params, _ptr<BlockStmtAST> block):
+            AST(range), _ret(ret), _id(std::move(id)), _params(std::move(params)), _block(std::move(block)) { }
 
         void graphize(std::ostream &out, int t) override {
-            out << "<func-def> [return] -> " << type_str(_ret) << "\n" << _mid(t);
+            out << "<func-def> [return] -> " << _type_str(_ret) << "\n" << _mid(t);
             _id->graphize(out, t + 1);
             if (!_params.empty()) out << _mid(t) << "<params>\n";
-            graphize_list(_params, out, t + 1, t + 1);
+            _graphize_list(_params, out, t + 1, t + 1);
             out << _end(t);
             _block->graphize(out, t + 1);
         }
@@ -81,8 +82,8 @@ namespace cc0::ast {
         _ptrs<ExprAST> _params;
 
     public:
-        explicit FuncCallAST(_ptr<IdExprAST> id, _ptrs<ExprAST> params):
-            ExprAST(), _id(std::move(id)), _params(std::move(params)) { }
+        explicit FuncCallAST(range_t range, _ptr<IdExprAST> id, _ptrs<ExprAST> params):
+            ExprAST(range), StmtAST(range), _id(std::move(id)), _params(std::move(params)) { }
 
         void graphize(std::ostream &out, int t) override {
             out << "<func-call> ";

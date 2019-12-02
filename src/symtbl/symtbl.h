@@ -27,6 +27,7 @@ namespace cc0 {
          * _globs - store global vars (_domain = 0)
          *          storing vars in two table is to make finding global vars easy.
          * _vars  - store local vars  (_domain > 0)
+         *          LinkedHashMap will be better here
          */
         std::unordered_map<std::string, VarSym> _globs;
         std::vector<VarSym> _vars;

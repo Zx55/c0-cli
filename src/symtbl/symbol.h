@@ -86,7 +86,7 @@ namespace cc0 {
         std::unordered_map<std::string, Type> _params;
         
         uint32_t _code_start;   // index in instructions
-        [[maybe_unused]] uint32_t _usage;
+        uint32_t _usage;
 
     public:
         FuncSym(uint32_t index, std::string id, Type ret, uint32_t start):
@@ -163,7 +163,7 @@ namespace cc0 {
         uint32_t _domain;
         uint32_t _level;
 
-        [[maybe_unused]] uint32_t _usage;
+        uint32_t _usage;
 
     public:
         VarSym(std::string id, Type type, std::any value, bool f_const, uint32_t domain, uint32_t level):

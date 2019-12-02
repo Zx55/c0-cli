@@ -5,13 +5,14 @@
 
 #include "rdp.h"
 
+#define _rdp_pair(x) std::make_pair(x, _token.get_end())
 #define _rdp_err(_type) C0Err(_type, _token.get_range())
 #define _rdp_ptrs(_c) { std::make_move_iterator(_c.begin()), std::make_move_iterator(_c.end()) }
 #define _rdp_move_back(_src, _res) _src.insert(_src.end(), std::make_move_iterator(_res.begin()), \
     std::make_move_iterator(_res.end()))
 #define _rdp_stmt(_res) std::unique_ptr<StmtAST>(std::move(_res))
-#define _rdp_bin(_lhs, _op, _rhs) std::unique_ptr<ExprAST>( \
-    new BinaryExprAST(std::move(_lhs), _op, std::move(_rhs)))
+#define _rdp_bin(_r, _lhs, _op, _rhs) std::unique_ptr<ExprAST>( \
+    new BinaryExprAST(std::move(_r), std::move(_lhs), _op, std::move(_rhs)))
 #define _rdp_expr(_res) std::unique_ptr<ExprAST>(std::move(_res))
 
 namespace cc0 {
@@ -22,12 +23,13 @@ namespace cc0 {
 
         auto vars = _ptrs<VarDeclAST>();
         auto funcs = _ptrs<FuncDefAST>();
+        pos_t start = { 0, 0 };
 
         // {<variable-declaration>}
         while (true) {
             if (!_get())
                 // EOF
-                return std::make_unique<RootAST>(std::move(vars), std::move(funcs));
+                return std::make_unique<RootAST>(_rdp_pair(start), std::move(vars), std::move(funcs));
 
             if (isconst(_token.get_type())) {
                 _unget();
@@ -36,7 +38,7 @@ namespace cc0 {
             } else if (istype(_token.get_type())) {
                 if (!_get()) {
                     _errs.emplace_back(_rdp_err(ErrCode::ErrMissIdentifier));
-                    return std::make_unique<RootAST>(std::move(vars), std::move(funcs));
+                    return std::make_unique<RootAST>(_rdp_pair(start), std::move(vars), std::move(funcs));
                 }
 
                 if (_token.get_type() != TokenType::IDENTIFIER) {
@@ -46,7 +48,7 @@ namespace cc0 {
 
                 if (!_get()) {
                     _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-                    return std::make_unique<RootAST>(std::move(vars), std::move(funcs));
+                    return std::make_unique<RootAST>(_rdp_pair(start), std::move(vars), std::move(funcs));
                 }
 
                 // read <function-definition>
@@ -67,7 +69,7 @@ namespace cc0 {
         while (true) {
             if (!_get())
                 // EOF
-                return std::make_unique<RootAST>(std::move(vars), std::move(funcs));
+                return std::make_unique<RootAST>(_rdp_pair(start), std::move(vars), std::move(funcs));
 
             _unget();
             if (auto res = _analyse_func_def(); res)
@@ -84,6 +86,8 @@ namespace cc0 {
         bool f_const = false;
 
         (void) _get();
+        pos_t start = _token.get_start();
+
         // [<const>]
         if (isconst(_token.get_type())) {
             f_const = true;
@@ -112,10 +116,12 @@ namespace cc0 {
             // ['='<expr>]
             if (_token.get_type() == TokenType::ASSIGN) {
                 if (auto res = _analyse_expr(); res)
-                    vars.push_back(std::make_unique<VarDeclAST>(type, std::move(id), std::move(res), f_const));
+                    vars.push_back(std::make_unique<VarDeclAST>(_rdp_pair(start), type, std::move(id),
+                            std::move(res), f_const));
             } else {
                 _unget();
-                vars.push_back(std::make_unique<VarDeclAST>(type, std::move(id), nullptr, f_const));
+                vars.push_back(std::make_unique<VarDeclAST>(_rdp_pair(start), type, std::move(id),
+                        nullptr, f_const));
             }
 
             if (!_get()) {
@@ -143,6 +149,7 @@ namespace cc0 {
         using namespace utils;
 
         (void) _get();
+        pos_t start = _token.get_start();
         // <type>
         Type type = _analyse_type_specifier();
         if (type == Type::UNDEFINED) return nullptr;
@@ -158,7 +165,8 @@ namespace cc0 {
         auto block = _analyse_block();
         if (!block) return nullptr;
 
-        return std::make_unique<FuncDefAST>(type, std::move(id), std::move(params), std::move(block));
+        return std::make_unique<FuncDefAST>(_rdp_pair(start), type, std::move(id),
+                std::move(params), std::move(block));
     }
 
     // <params> ::= '(' [<params-decl-list>] ')'
@@ -173,6 +181,7 @@ namespace cc0 {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
             return { };
         }
+        pos_t start = _token.get_start();
 
         if (!_get()) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
@@ -211,7 +220,7 @@ namespace cc0 {
             // <identifier>
             auto id = _analyse_id();
             if (!id) return _rdp_ptrs(params);
-            params.push_back(std::make_unique<ParamAST>(type, std::move(id), f_const));
+            params.push_back(std::make_unique<ParamAST>(_rdp_pair(start), type, std::move(id), f_const));
 
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
@@ -246,12 +255,13 @@ namespace cc0 {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));
             return nullptr;
         }
+        pos_t start = _token.get_start();
 
         // {<var-decl>}
         while (true) {
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));
-                return std::make_unique<BlockStmtAST>(std::move(vars), std::move(stmts));
+                return std::make_unique<BlockStmtAST>(_rdp_pair(start), std::move(vars), std::move(stmts));
             }
 
             if (isconst(_token.get_type()) || make_type(_token.get_type()) != Type::UNDEFINED) {
@@ -268,7 +278,7 @@ namespace cc0 {
         while (true) {
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));
-                return std::make_unique<BlockStmtAST>(std::move(vars), std::move(stmts));
+                return std::make_unique<BlockStmtAST>(_rdp_pair(start), std::move(vars), std::move(stmts));
             }
 
             // '}'
@@ -280,7 +290,7 @@ namespace cc0 {
                 stmts.push_back(std::move(res));
         }
 
-        return std::make_unique<BlockStmtAST>(std::move(vars), std::move(stmts));
+        return std::make_unique<BlockStmtAST>(_rdp_pair(start), std::move(vars), std::move(stmts));
     }
 
     // <type> !! must pre-read
@@ -308,6 +318,8 @@ namespace cc0 {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
             return nullptr;
         }
+
+        pos_t start = _token.get_start();
 
         switch (_token.get_type()) {
             case TokenType::LBRACE: {
@@ -343,12 +355,12 @@ namespace cc0 {
             case TokenType::BREAK: {
                 if (!_get() || _token.get_type() != TokenType::SEMI)
                     _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-                return std::make_unique<BreakStmtAST>();
+                return std::make_unique<BreakStmtAST>(_rdp_pair(start));
             }
             case TokenType::CONTINUE: {
                 if (!_get() || _token.get_type() != TokenType::SEMI)
                     _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-                return std::make_unique<ContinueStmtAST>();
+                return std::make_unique<ContinueStmtAST>(_rdp_pair(start));
             }
             case TokenType::RETURN: {
                 _unget();
@@ -391,7 +403,7 @@ namespace cc0 {
             }
             case TokenType::SEMI: {
                 _wrns.emplace_back(_rdp_err(ErrCode::WrnEmptyStatement));
-                return std::unique_ptr<StmtAST>(new EmptyStmtAST());
+                return std::unique_ptr<StmtAST>(new EmptyStmtAST(_rdp_pair(start)));
             }
             default:
                 _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidStatement));
@@ -406,6 +418,7 @@ namespace cc0 {
 
         // 'if'
         (void) _get();
+        pos_t start = _token.get_start();
 
         // '('
         if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
@@ -428,18 +441,22 @@ namespace cc0 {
         if (!s_true) return nullptr;
 
         if (!_get())
-            return std::make_unique<IfElseStmtAST>(std::move(cond), std::move(s_true), nullptr);
+            return std::make_unique<IfElseStmtAST>(_rdp_pair(start), std::move(cond),
+                    std::move(s_true), nullptr);
 
         // ['else' <stmt>]
         if (_token.get_type() == TokenType::ELSE) {
             auto s_false = _analyse_stmt();
             if (!s_false)
-                return std::make_unique<IfElseStmtAST>(std::move(cond), std::move(s_true), nullptr);
-            return std::make_unique<IfElseStmtAST>(std::move(cond), std::move(s_true), std::move(s_false));
+                return std::make_unique<IfElseStmtAST>(_rdp_pair(start), std::move(cond),
+                        std::move(s_true), nullptr);
+            return std::make_unique<IfElseStmtAST>(_rdp_pair(start), std::move(cond),
+                    std::move(s_true), std::move(s_false));
         }
 
         _unget();
-        return std::make_unique<IfElseStmtAST>(std::move(cond), std::move(s_true), nullptr);
+        return std::make_unique<IfElseStmtAST>(_rdp_pair(start), std::move(cond),
+                std::move(s_true), nullptr);
     }
 
     // <switch-stmt> ::= 'switch' '(' <expr> ')' '{' {<label-stmt>} '}'
@@ -452,6 +469,7 @@ namespace cc0 {
 
         // 'switch'
         (void) _get();
+        pos_t start = _token.get_start();
 
         // '('
         if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
@@ -485,7 +503,8 @@ namespace cc0 {
                 // '}'
                 case TokenType::RBRACE:
                 L_SWITCH_RET:
-                    return std::make_unique<SwitchStmtAST>(std::move(cond), std::move(cases), std::move(dft));
+                    return std::make_unique<SwitchStmtAST>(_rdp_pair(start),
+                            std::move(cond), std::move(cases), std::move(dft));
                 // 'case'
                 case TokenType::CASE: {
                     if (!_get()) {
@@ -509,7 +528,8 @@ namespace cc0 {
                         auto stmt = _analyse_stmt();
                         if (!stmt) goto L_SWITCH_RET;
 
-                        auto label = std::make_unique<LabelStmtAST>(std::move(this_case), std::move(stmt));
+                        auto label = std::make_unique<LabelStmtAST>(_rdp_pair(start),
+                                std::move(this_case), std::move(stmt));
                         cases.push_back(std::move(label));
                         break;
                     } else {
@@ -551,6 +571,7 @@ namespace cc0 {
 
         // 'while'
         (void) _get();
+        pos_t start = _token.get_start();
 
         // '('
         if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
@@ -572,7 +593,7 @@ namespace cc0 {
         auto stmt = _analyse_stmt();
         if (!stmt) return nullptr;
 
-        return std::make_unique<WhileStmtAST>(std::move(cond), std::move(stmt));
+        return std::make_unique<WhileStmtAST>(_rdp_pair(start), std::move(cond), std::move(stmt));
     }
 
     // <do-while-stmt> ::= 'do' <stmt> 'while' '(' <cond> ')' ';'
@@ -582,6 +603,8 @@ namespace cc0 {
 
         // 'do'
         (void) _get();
+        pos_t start = _token.get_start();
+
         // <stmt>
         auto stmt = _analyse_stmt();
         if (!stmt) return nullptr;
@@ -607,7 +630,7 @@ namespace cc0 {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
         if (!_get() || _token.get_type() != TokenType::SEMI)
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-        return std::make_unique<DoWhileStmtAST>(std::move(cond), std::move(stmt));
+        return std::make_unique<DoWhileStmtAST>(_rdp_pair(start), std::move(cond), std::move(stmt));
     }
 
     // <for-stmt> ::= 'for' '('<for-init> [<cond>]';' [<for-update>]')' <stmt>
@@ -621,6 +644,7 @@ namespace cc0 {
 
         // 'for'
         (void) _get();
+        pos_t start = _token.get_start();
 
         // '('
         if (!_get() ||_token.get_type() != TokenType::LPARENTHESIS) {
@@ -737,7 +761,8 @@ namespace cc0 {
         auto stmt = _analyse_stmt();
         if (!stmt) return nullptr;
 
-        return std::make_unique<ForStmtAST>(std::move(inits), std::move(cond), std::move(updates), std::move(stmt));
+        return std::make_unique<ForStmtAST>(_rdp_pair(start), std::move(inits), std::move(cond),
+                std::move(updates), std::move(stmt));
     }
 
     // <return-stmt> ::= 'return' [<expr>] ';'
@@ -747,15 +772,16 @@ namespace cc0 {
 
         // 'return'
         (void) _get();
+        pos_t start = _token.get_start();
 
         if (!_get()) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-            return std::make_unique<ReturnStmtAST>(nullptr);
+            return std::make_unique<ReturnStmtAST>(_rdp_pair(start), nullptr);
         }
 
         // ';'
         if (_token.get_type() == TokenType::SEMI)
-            return std::make_unique<ReturnStmtAST>(nullptr);
+            return std::make_unique<ReturnStmtAST>(_rdp_pair(start), nullptr);
 
         _unget();
         // [<expr>]
@@ -765,7 +791,7 @@ namespace cc0 {
         // ';'
         if (!_get() || _token.get_type() != TokenType::SEMI)
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-        return std::make_unique<ReturnStmtAST>(std::move(expr));
+        return std::make_unique<ReturnStmtAST>(_rdp_pair(start), std::move(expr));
     }
 
     // <print-stmt> ::= 'print' '(' [<print-list>] ')' ';'
@@ -777,6 +803,7 @@ namespace cc0 {
 
         // 'print'
         (void) _get();
+        pos_t start = _token.get_start();
 
         // '('
         if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
@@ -790,7 +817,7 @@ namespace cc0 {
         }
         // ')'
         if (_token.get_type() == TokenType::RPARENTHESIS)
-            return std::make_unique<PrintStmtAST>(std::move(printable));
+            return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
         else
             _unget();
 
@@ -798,12 +825,12 @@ namespace cc0 {
         while (true) {
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<PrintStmtAST>(std::move(printable));
+                return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
             }
 
             // <printable> ::= <expr> | <string>
             if (_token.get_type() == TokenType::STRING_LITERAL)
-                printable.push_back(std::make_unique<StringExprAST>(_token.get_value_str()));
+                printable.push_back(std::make_unique<StringExprAST>(_rdp_pair(start), _token.get_value_str()));
             else {
                 _unget();
                 if (auto res = _analyse_expr(); res)
@@ -813,7 +840,7 @@ namespace cc0 {
             // {',' <printable>}
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<PrintStmtAST>(std::move(printable));
+                return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
             }
             if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
                 break;
@@ -821,7 +848,7 @@ namespace cc0 {
                 continue;
             else {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<PrintStmtAST>(std::move(printable));
+                return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
             }
         }
 
@@ -829,7 +856,7 @@ namespace cc0 {
         // ';'
         if (!_get() || _token.get_type() != TokenType::SEMI)
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-        return std::make_unique<PrintStmtAST>(std::move(printable));
+        return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
     }
 
     // <scan-stmt> ::= 'scan' '(' <identifier> ')' ';'
@@ -839,6 +866,7 @@ namespace cc0 {
 
         // 'scan'
         (void) _get();
+        pos_t start = _token.get_start();
 
         // '('
         if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
@@ -859,7 +887,7 @@ namespace cc0 {
         if (!_get() || _token.get_type() != TokenType::SEMI)
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
 
-        return std::make_unique<ScanStmtAST>(std::move(id));
+        return std::make_unique<ScanStmtAST>(_rdp_pair(start), std::move(id));
     }
 
     // <expr> ::= <term>{<add-op><term>}
@@ -870,15 +898,17 @@ namespace cc0 {
         auto root = _analyse_term();
         if (!root) return nullptr;
 
+
         while (true) {
             if (!_get())
                 return root;
 
             if (auto type = _token.get_type(); isadd(type)) {
                 auto op = make_op(type);
-                if (auto rhs = _analyse_term(); rhs)
-                    root = _rdp_bin(root, op, rhs);
-                else
+                if (auto rhs = _analyse_term(); rhs) {
+                    range_t range = root->get_range();
+                    root = _rdp_bin(range, root, op, rhs);
+                } else
                     return root;
             } else {
                 _unget();
@@ -901,9 +931,10 @@ namespace cc0 {
 
             if (auto type = _token.get_type(); ismul(type)) {
                 auto op = make_op(type);
-                if (auto rhs = _analyse_factor(); rhs)
-                    root = _rdp_bin(root, op, rhs);
-                else
+                if (auto rhs = _analyse_factor(); rhs) {
+                    range_t range = root->get_range();
+                    root = _rdp_bin(range, root, op, rhs);
+                } else
                     return root;
             } else {
                 _unget();
@@ -924,6 +955,7 @@ namespace cc0 {
             _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidExpression));
             return nullptr;
         }
+        Token tmp = _token;
 
         // {'(' <type> ')'}
         while (_token.get_type() == TokenType::LPARENTHESIS) {
@@ -961,9 +993,9 @@ namespace cc0 {
         if (!root) return nullptr;
 
         if (!sign)
-            root = std::unique_ptr<ExprAST>(new UnaryExprAST(sign, std::move(root)));
+            root = std::unique_ptr<ExprAST>(new UnaryExprAST(_rdp_pair(tmp.get_start()), sign, std::move(root)));
         for (auto it = casts.crbegin(); it != casts.crend(); ++it)
-            root = std::unique_ptr<ExprAST>(new CastExprAST(*it, std::move(root)));
+            root = std::unique_ptr<ExprAST>(new CastExprAST(_rdp_pair(tmp.get_start()), *it, std::move(root)));
 
         return root;
     }
@@ -975,6 +1007,8 @@ namespace cc0 {
         using namespace utils;
 
         (void) _get();
+        pos_t start = _token.get_start();
+
         switch (_token.get_type()) {
             case TokenType::LPARENTHESIS: {
                 auto expr = _analyse_expr();
@@ -1005,14 +1039,14 @@ namespace cc0 {
             case TokenType::DECIMAL:
                 [[fallthrough]];
             case TokenType::HEXADECIMAL:
-                return std::unique_ptr<ExprAST>(new Int32ExprAST(
+                return std::unique_ptr<ExprAST>(new Int32ExprAST(_rdp_pair(start),
                         std::any_cast<int32_t>(_token.get_value())));
             case TokenType::FLOAT:
-                return std::unique_ptr<ExprAST>(new Float64ExprAST(
+                return std::unique_ptr<ExprAST>(new Float64ExprAST(_rdp_pair(start),
                         std::any_cast<double>(_token.get_value())));
             case TokenType::CHAR_LITERAL: {
                 char ch = _token.get_value_str().at(0);
-                return std::unique_ptr<ExprAST>(new CharExprAST(ch));
+                return std::unique_ptr<ExprAST>(new CharExprAST(_rdp_pair(start), ch));
             }
             default:
                 _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidExpression));
@@ -1027,20 +1061,21 @@ namespace cc0 {
 
         auto lhs = _analyse_expr();
         if (!lhs) return nullptr;
+        pos_t start = lhs->get_range().first;
 
         if (!_get())
-            return std::make_unique<CondExprAST>(std::move(lhs));
+            return std::make_unique<CondExprAST>(_rdp_pair(start), std::move(lhs));
 
         if (auto type = _token.get_type(); isre_op(type)) {
             auto op = make_op(type);
             if (auto rhs = _analyse_expr(); rhs)
-                return std::make_unique<CondExprAST>(std::move(lhs), op, std::move(rhs));
+                return std::make_unique<CondExprAST>(_rdp_pair(start), std::move(lhs), op, std::move(rhs));
             else
                 return nullptr;
         }
 
         _unget();
-        return std::make_unique<CondExprAST>(std::move(lhs));
+        return std::make_unique<CondExprAST>(_rdp_pair(start), std::move(lhs));
     }
 
     // <assign-expr> ::= <identifier>'='<expr>
@@ -1050,6 +1085,7 @@ namespace cc0 {
 
         auto id = _analyse_id();
         if (!id) return nullptr;
+        pos_t start = id->get_range().first;
 
         if (!_get() || _token.get_type() != TokenType::ASSIGN) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissAssignOp));
@@ -1059,7 +1095,7 @@ namespace cc0 {
         auto value = _analyse_expr();
         if (!value) return nullptr;
 
-        return std::make_unique<AssignAST>(std::move(id), std::move(value));
+        return std::make_unique<AssignAST>(_rdp_pair(start), std::move(id), std::move(value));
     }
 
     // <func-call> ::= <identifier> '(' [<expr-list>] ')'
@@ -1072,6 +1108,7 @@ namespace cc0 {
         // <identifier>
         auto id = _analyse_id();
         if (!id) return nullptr;
+        pos_t start = id->get_range().first;
 
         // '('
         if (!_get() || _token.get_type() != TokenType::LPARENTHESIS) {
@@ -1085,7 +1122,7 @@ namespace cc0 {
         }
         // ')'
         if (_token.get_type() == TokenType::RPARENTHESIS)
-            return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+            return std::make_unique<FuncCallAST>(_rdp_pair(start), std::move(id), std::move(params));
         else
             _unget();
 
@@ -1093,7 +1130,7 @@ namespace cc0 {
         while (true) {
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+                return std::make_unique<FuncCallAST>(_rdp_pair(start), std::move(id), std::move(params));
             }
 
             _unget();
@@ -1103,7 +1140,7 @@ namespace cc0 {
             // {',' <expr>}
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+                return std::make_unique<FuncCallAST>(_rdp_pair(start), std::move(id), std::move(params));
             }
 
             if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
@@ -1112,12 +1149,12 @@ namespace cc0 {
                 continue;
             else {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+                return std::make_unique<FuncCallAST>(_rdp_pair(start), std::move(id), std::move(params));
             }
         }
 
         // already read ')'
-        return std::make_unique<FuncCallAST>(std::move(id), std::move(params));
+        return std::make_unique<FuncCallAST>(_rdp_pair(start), std::move(id), std::move(params));
     }
 
     // <identifier>
@@ -1130,7 +1167,7 @@ namespace cc0 {
             return nullptr;
         }
 
-        return std::make_unique<IdExprAST>(_token);
+        return std::make_unique<IdExprAST>(_rdp_pair(_token.get_start()), _token);
     }
 
     void RDP::analyse() {

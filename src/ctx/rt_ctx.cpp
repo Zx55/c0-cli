@@ -13,6 +13,8 @@ namespace cc0 {
 
     std::vector<Token> RuntimeContext::_tokens;
     std::unique_ptr<AST> RuntimeContext::_ast = nullptr;
+
+    SymTbl tbl;
     std::vector<Instruction> RuntimeContext::_inst;
 
     inline void RuntimeContext::clear_ctx() {
@@ -35,7 +37,7 @@ namespace cc0 {
             errs.insert(errs.end(), _wrns.begin(), _wrns.end());
 
         // FIXME: line ctx error.
-        std::sort(errs.begin(), errs.end(), cmp);
+        // std::sort(errs.begin(), errs.end(), cmp);
         return errs;
     }
 }

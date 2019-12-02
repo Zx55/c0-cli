@@ -13,6 +13,7 @@
 #include "lexer/token.h"
 #include "ast/ast.h"
 #include "instruction/instruction.h"
+#include "symtbl/symtbl.h"
 
 #include <algorithm>
 #include <vector>
@@ -41,6 +42,8 @@ namespace cc0 {
         friend class ast::UnaryExprAST;
         friend class ast::EmptyStmtAST;
         friend class ast::IfElseStmtAST;
+        friend class ast::LabelStmtAST;
+        friend class ast::SwitchStmtAST;
         friend class ast::WhileStmtAST;
         friend class ast::ForStmtAST;
         friend class ast::DoWhileStmtAST;
@@ -56,6 +59,8 @@ namespace cc0 {
 
         static std::vector<Token> _tokens;
         static std::unique_ptr<AST> _ast;
+
+        static SymTbl tbl;
         static std::vector<Instruction> _inst;
 
     public:
@@ -80,6 +85,7 @@ namespace cc0 {
 
         [[nodiscard]] inline static auto& get_tokens() { return _tokens; }
         [[nodiscard]] inline static auto& get_ast() { return _ast; }
+        [[nodiscard]] inline static auto& get_tbl() { return tbl; }
         [[nodiscard]] inline static auto& get_instructions() { return _inst; }
 
     private:

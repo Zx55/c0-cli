@@ -12,6 +12,8 @@
 namespace cc0::ast {
     class StmtAST: public AST {
     public:
+        explicit StmtAST(range_t range): AST(range) { }
+
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<stmt>\n";
         }
@@ -19,7 +21,7 @@ namespace cc0::ast {
 
     class EmptyStmtAST final: public StmtAST {
     public:
-        EmptyStmtAST(): StmtAST() { }
+        explicit EmptyStmtAST(range_t range): StmtAST(range) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<empty-stmt>\n";

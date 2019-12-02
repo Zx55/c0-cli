@@ -27,7 +27,7 @@ namespace cc0::ast {
         [[nodiscard]] inline static std::string _end(int t) {
             return std::string(4 * t, ' ') + "└── ";
         }
-        [[nodiscard]] inline static std::string type_str(Type type) {
+        [[nodiscard]] inline static std::string _type_str(Type type) {
             switch (type) {
                 case Type::VOID: return "void";
                 case Type::INT: return "int32";
@@ -37,7 +37,7 @@ namespace cc0::ast {
                 default: return "undefined";
             }
         }
-        [[nodiscard]] inline static std::string op_str(Op op) {
+        [[nodiscard]] inline static std::string _op_str(Op op) {
             switch (op) {
                 case Op::ADD: return "+";
                 case Op::SUB: return "-";
@@ -52,7 +52,7 @@ namespace cc0::ast {
                 default: return "undefined";
             }
         }
-        template <typename T> static void graphize_list(const _ptrs<T>& list, std::ostream& out, int tab, int child) {
+        template <typename T> static void _graphize_list(const _ptrs<T>& list, std::ostream& out, int tab, int child) {
             if (!list.empty()) {
                 for (auto it = list.cbegin(); it != list.cend() - 1; ++it) {
                     out << _mid(tab);
@@ -63,8 +63,13 @@ namespace cc0::ast {
             }
         }
 
+        range_t _range;
+
     public:
-        // TODO: the range of AST, for error in semantic parse.
+        explicit AST(range_t range): _range(std::move(range)) { }
+
+        [[nodiscard]] inline range_t get_range() const { return _range; }
+
         // TODO: what to return? and what to pass? make a Param struct and a Ret struct
         // virtual std::vector<C0Err> generate(int domain, int level) = 0;
         virtual void graphize(std::ostream& out, int t) = 0;

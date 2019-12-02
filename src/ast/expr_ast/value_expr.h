@@ -13,7 +13,7 @@
 namespace cc0::ast {
     class Int32ExprAST final: public ExprAST {
     public:
-        explicit Int32ExprAST(int32_t value): ExprAST(Type::INT, value) { }
+        explicit Int32ExprAST(range_t range, int32_t value): ExprAST(range, Type::INT, value) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<int32> [value] " << std::any_cast<int32_t>(_value) << "\n";
@@ -22,7 +22,7 @@ namespace cc0::ast {
 
     class Float64ExprAST final: public ExprAST {
     public:
-        explicit Float64ExprAST(double value): ExprAST(Type::DOUBLE, value) { }
+        explicit Float64ExprAST(range_t range, double value): ExprAST(range, Type::DOUBLE, value) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<float64> [value] " << std::any_cast<double>(_value) << "\n";
@@ -31,7 +31,7 @@ namespace cc0::ast {
 
     class CharExprAST final: public ExprAST {
     public:
-        explicit CharExprAST(char value): ExprAST(Type::INT, static_cast<int32_t>(value)) { }
+        explicit CharExprAST(range_t range, char value): ExprAST(range, Type::INT, static_cast<int32_t>(value)) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             int ch = static_cast<char>(std::any_cast<int32_t>(_value));
@@ -50,7 +50,7 @@ namespace cc0::ast {
 
     class StringExprAST final: public ExprAST {
     public:
-        explicit StringExprAST(std::string value): ExprAST(Type::STRING, value) { }
+        explicit StringExprAST(range_t range, std::string value): ExprAST(range, Type::STRING, value) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             auto str = std::any_cast<std::string>(_value);
@@ -66,7 +66,7 @@ namespace cc0::ast {
         Token _id;
 
     public:
-        explicit IdExprAST(Token id): ExprAST(), _id(std::move(id)) { }
+        explicit IdExprAST(range_t range, Token id): ExprAST(range), _id(std::move(id)) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<id> [name] " << _id.get_value_str() << "\n";

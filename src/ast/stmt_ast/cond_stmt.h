@@ -16,8 +16,8 @@ namespace cc0::ast {
         _ptr<StmtAST> _false;
 
     public:
-        explicit IfElseStmtAST(_ptr<CondExprAST> cond, _ptr<StmtAST> s_true, _ptr<StmtAST> s_false):
-            _cond(std::move(cond)), _true(std::move(s_true)), _false(std::move(s_false)) { }
+        explicit IfElseStmtAST(range_t range, _ptr<CondExprAST> cond, _ptr<StmtAST> s_true, _ptr<StmtAST> s_false):
+            StmtAST(range), _cond(std::move(cond)), _true(std::move(s_true)), _false(std::move(s_false)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<if-else-stmt>\n" << _mid(t);
@@ -38,8 +38,8 @@ namespace cc0::ast {
         _ptr<StmtAST> _stmt;
 
     public:
-        explicit LabelStmtAST(_ptr<ExprAST> e_case, _ptr<StmtAST> stmt):
-            _case(std::move(e_case)), _stmt(std::move(stmt)) { }
+        explicit LabelStmtAST(range_t range, _ptr<ExprAST> e_case, _ptr<StmtAST> stmt):
+            StmtAST(range), _case(std::move(e_case)), _stmt(std::move(stmt)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "[case] ";
@@ -56,8 +56,8 @@ namespace cc0::ast {
         _ptr<StmtAST> _default;
 
     public:
-        explicit SwitchStmtAST(_ptr<ExprAST> cond, _ptrs<LabelStmtAST> cases, _ptr<StmtAST> s_default):
-            _cond(std::move(cond)), _cases(std::move(cases)), _default(std::move(s_default)) { }
+        explicit SwitchStmtAST(range_t range, _ptr<ExprAST> cond, _ptrs<LabelStmtAST> cases, _ptr<StmtAST> s_default):
+            StmtAST(range), _cond(std::move(cond)), _cases(std::move(cases)), _default(std::move(s_default)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<switch-stmt>\n" << ((_cases.empty() && _default == nullptr) ? _end(t) : _mid(t)) << "[cond] ";

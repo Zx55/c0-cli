@@ -14,8 +14,11 @@ namespace cc0::ast {
         _ptr<ExprAST> _ret;
 
     public:
-        explicit ReturnStmtAST(_ptr<ExprAST> ret = std::make_unique<ExprAST>(Type::VOID)):
-            StmtAST(), _ret(std::move(ret)) { }
+        explicit ReturnStmtAST(range_t range): StmtAST(range) {
+            _ret = std::make_unique<ExprAST>(range, Type::VOID);
+        }
+        explicit ReturnStmtAST(range_t range, _ptr<ExprAST> ret):
+            StmtAST(range), _ret(std::move(ret)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<ret-stmt>\n";
@@ -28,7 +31,7 @@ namespace cc0::ast {
 
     class BreakStmtAST final: public StmtAST {
     public:
-        explicit BreakStmtAST(): StmtAST() { }
+        explicit BreakStmtAST(range_t range): StmtAST(range) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<break-stmt>\n";
@@ -37,7 +40,7 @@ namespace cc0::ast {
 
     class ContinueStmtAST final: public StmtAST {
     public:
-        explicit ContinueStmtAST(): StmtAST() { }
+        explicit ContinueStmtAST(range_t range): StmtAST(range) { }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<continue-stmt>\n";

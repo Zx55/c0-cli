@@ -15,8 +15,8 @@ namespace cc0::ast {
         std::any _value;
 
     public:
-        explicit ExprAST(Type type = Type::UNDEFINED, std::any value = std::any(0)):
-            _type(type), _value(std::move(value)) { }
+        explicit ExprAST(range_t range, Type type = Type::UNDEFINED, std::any value = 0):
+             AST(range), _type(type), _value(std::move(value)) { }
 
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<expr>\n";

@@ -17,8 +17,8 @@ namespace cc0::ast {
         _ptrs<FuncDefAST> _funcs;
 
     public:
-        explicit RootAST(_ptrs<VarDeclAST> vars, _ptrs<FuncDefAST> funcs):
-            _vars(std::move(vars)), _funcs(std::move(funcs)) { }
+        explicit RootAST(range_t range, _ptrs<VarDeclAST> vars, _ptrs<FuncDefAST> funcs):
+            AST(range), _vars(std::move(vars)), _funcs(std::move(funcs)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<c0-root>\n";
@@ -33,7 +33,7 @@ namespace cc0::ast {
                 (*(_vars.cend() - 1))->graphize(out, t + 1);
             }
 
-            graphize_list(_funcs, out, t, t + 1);
+            _graphize_list(_funcs, out, t, t + 1);
         }
     };
 }
