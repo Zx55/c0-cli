@@ -159,7 +159,7 @@ namespace cc0 {
         if (!id) return nullptr;
 
         // <params>
-        auto params = _analyse_params();
+        auto params = _analyse_params(id->get_id().get_value_str());
 
         // <block>
         auto block = _analyse_block();
@@ -170,7 +170,7 @@ namespace cc0 {
     }
 
     // <params> ::= '(' [<params-decl-list>] ')'
-    ast::_ptrs<ast::ParamAST> RDP::_analyse_params() {
+    ast::_ptrs<ast::ParamAST> RDP::_analyse_params(const std::string& func) {
         using namespace ast;
         using namespace utils;
 
@@ -220,7 +220,8 @@ namespace cc0 {
             // <identifier>
             auto id = _analyse_id();
             if (!id) return _rdp_ptrs(params);
-            params.push_back(std::make_unique<ParamAST>(_rdp_pair(start), type, std::move(id), f_const));
+            auto tmp = func;
+            params.push_back(std::make_unique<ParamAST>(_rdp_pair(start), tmp, type, std::move(id), f_const));
 
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));

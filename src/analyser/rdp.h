@@ -14,7 +14,7 @@ namespace cc0 {
         [[nodiscard]] ast::_ptr<ast::RootAST> _analyse_root();
         [[nodiscard]] ast::_ptrs<ast::VarDeclAST> _analyse_var_decl();
         [[nodiscard]] ast::_ptr<ast::FuncDefAST> _analyse_func_def();
-        [[nodiscard]] ast::_ptrs<ast::ParamAST> _analyse_params();
+        [[nodiscard]] ast::_ptrs<ast::ParamAST> _analyse_params(const std::string& func);
         [[nodiscard]] ast::_ptr<ast::BlockStmtAST> _analyse_block();
         [[nodiscard]] inline ast::Type _analyse_type_specifier();
         [[nodiscard]] ast::_ptr<ast::StmtAST> _analyse_stmt();

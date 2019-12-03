@@ -68,6 +68,8 @@ namespace cc0::ast {
     public:
         explicit IdExprAST(range_t range, Token id): ExprAST(range), _id(std::move(id)) { }
 
+        [[nodiscard]] inline Token get_id() const { return _id; }
+
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<id> [name] " << _id.get_value_str() << "\n";
         }

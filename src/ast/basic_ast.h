@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <optional>
 #include <any>
 #include <utility>
 
@@ -63,6 +64,24 @@ namespace cc0::ast {
             }
         }
 
+        struct _GenParam {
+            uint32_t _domain;
+            uint32_t _level;
+            uint32_t _slot;
+            Type _ret;
+
+            explicit _GenParam(uint32_t domain, uint32_t level, uint32_t slot, Type type = Type::UNDEFINED):
+                _domain(domain), _level(level), _slot(slot), _ret(type) { }
+        };
+
+        struct _GenResult {
+            uint32_t _offset;
+            uint32_t _len;
+
+            std::vector<uint32_t> _breaks;
+            std::vector<uint32_t> _continues;
+        };
+
         range_t _range;
 
     public:
@@ -70,8 +89,7 @@ namespace cc0::ast {
 
         [[nodiscard]] inline range_t get_range() const { return _range; }
 
-        // TODO: what to return? and what to pass? make a Param struct and a Ret struct
-        // virtual std::vector<C0Err> generate(int domain, int level) = 0;
+        // virtual _GenResult generate(_GenParam param) = 0;
         virtual void graphize(std::ostream& out, int t) = 0;
     };
 }

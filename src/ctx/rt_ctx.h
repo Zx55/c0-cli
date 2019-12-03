@@ -61,6 +61,7 @@ namespace cc0 {
         static std::unique_ptr<AST> _ast;
 
         static SymTbl tbl;
+        // FIXME: 循环了
         static std::vector<Instruction> _inst;
 
     public:

@@ -24,6 +24,8 @@ namespace cc0::ast {
         explicit CondExprAST(range_t range, _ptr<ExprAST> lhs, Op op, _ptr<ExprAST> rhs):
             ExprAST(range, Type::INT), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
 
+        [[nodiscard]] inline Op get_op() const { return _op; }
+
         void graphize(std::ostream& out, int t) override {
             out << "<cond-expr> [op] " << _op_str(_op) << "\n" << _mid(t);
             _lhs->graphize(out, t + 1);

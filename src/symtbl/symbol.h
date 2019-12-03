@@ -12,25 +12,23 @@
 #include <any>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 
 namespace cc0 {
-    class ConstSym final {
-        friend inline void swap(ConstSym& lhs, ConstSym& rhs) {
-            std::swap(lhs._index, rhs._index);
+    class ConsSym final {
+        friend inline void swap(ConsSym& lhs, ConsSym& rhs) {
             std::swap(lhs._type, rhs._type);
             std::swap(lhs._value, rhs._value);
         }
 
     private:
-        uint32_t _index;        // index in constants table
         Type _type;
         std::any _value;
 
     public:
-        struct _Hash {
-            std::size_t operator() (const ConstSym& sym) const {
+        struct _Hash final {
+            std::size_t operator() (const ConsSym& sym) const {
                 std::string str = std::to_string(static_cast<int32_t>(sym._type));
-
                 switch (sym._type) {
                     case Type::INT:
                         str += std::to_string(std::any_cast<int32_t>(sym._value));
@@ -41,56 +39,69 @@ namespace cc0 {
                     default:
                         str += "undefined";
                 }
-
                 return std::hash<std::string>{}(str);
             }
         };
 
-        ConstSym(uint32_t index, Type type, std::any value):
-            _index(index), _type(type), _value(std::move(value)) { }
-        ConstSym(const ConstSym&) = default;
-        ConstSym(ConstSym&&) = default;
-        ConstSym& operator=(ConstSym rhs) {
+        ConsSym(Type type, std::any value): _type(type), _value(std::move(value)) { }
+        ConsSym(const ConsSym&) = default;
+        ConsSym(ConsSym&&) = default;
+        ConsSym& operator=(ConsSym rhs) {
             swap(*this, rhs);
             return *this;
         }
-        bool operator==(const ConstSym& rhs) const {
+        bool operator==(const ConsSym& rhs) const {
             if (_type != rhs._type) return false;
 
-            switch (_type) {
-                case Type::INT:
-                    return std::any_cast<int32_t>(_value) == std::any_cast<int32_t>(rhs._value);
-                case Type::DOUBLE:
-                    return std::any_cast<double>(_value) == std::any_cast<double>(rhs._value);
-                case Type::STRING:
-                    return std::any_cast<std::string>(_value) == std::any_cast<std::string>(rhs._value);
-                default:
-                    return false;
+            try {
+                switch (_type) {
+                    case cc0::Type::INT:
+                        return std::any_cast<int32_t>(_value) == std::any_cast<int32_t>(rhs._value);
+                    case cc0::Type::DOUBLE:
+                        return std::any_cast<double>(_value) == std::any_cast<double>(rhs._value);
+                    case cc0::Type::STRING:
+                        return std::any_cast<std::string>(_value) == std::any_cast<std::string>(rhs._value);
+                    default:
+                        return false;
+                }
+            } catch (const std::bad_any_cast&) {
+                return false;
             }
         }
     };
 
     class FuncSym final {
-        friend inline void swap(FuncSym &lhs, FuncSym &rhs) {
+        friend inline void swap(FuncSym& lhs, FuncSym& rhs) {
             std::swap(lhs._index, rhs._index);
             std::swap(lhs._id, rhs._id);
             std::swap(lhs._ret, rhs._ret);
             std::swap(lhs._params, rhs._params);
-            std::swap(lhs._code_start, rhs._code_start);
+            std::swap(lhs._offset, rhs._offset);
+            std::swap(lhs._usage, rhs._usage);
         }
 
     private:
         uint32_t _index;        // index in functions table
+
+        /*
+         * function info
+         */
         std::string _id;
         Type _ret;
-        std::unordered_map<std::string, Type> _params;
-        
-        uint32_t _code_start;   // index in instructions
+        std::unordered_map<std::string, std::pair<Type, bool>> _params;
+
+        /*
+         * runtime info
+         * _offset - index of first assembly in instructions
+         */
+        uint32_t _offset;
+
         uint32_t _usage;
 
     public:
-        FuncSym(uint32_t index, std::string id, Type ret, uint32_t start):
-            _index(index), _id(std::move(id)), _ret(ret), _code_start(start), _usage(0) { }
+        // get offset in ast
+        FuncSym(uint32_t index, std::string id, Type ret, uint32_t offset):
+                _index(index), _id(std::move(id)), _ret(ret), _offset(offset), _usage(0) { }
         FuncSym(const FuncSym&) = default;
         FuncSym(FuncSym&&) = default;
         FuncSym& operator=(FuncSym rhs) {
@@ -99,10 +110,12 @@ namespace cc0 {
         }
         bool operator==(const FuncSym& rhs) { return _id == rhs._id && _params == rhs._params; }
 
-        [[nodiscard]] inline bool put_param(std::string param, Type type) {
+        [[nodiscard]] inline auto& get_params() const { return _params; }
+
+        [[nodiscard]] inline bool put_param(std::string param, Type type, bool f_const = false) {
             if (auto it = _params.find(param); it != _params.end())
                 return false;
-            _params.insert({ std::move(param), type });
+            _params.insert({ std::move(param), { type, f_const } });
             return true;
         }
     };
@@ -111,8 +124,12 @@ namespace cc0 {
         friend inline void swap(VarSym& lhs, VarSym& rhs) {
             std::swap(lhs._id, rhs._id);
             std::swap(lhs._type, rhs._type);
-            std::swap(lhs._value, rhs._value);
+            std::swap(lhs._init, rhs._init);
+            std::swap(lhs._const, rhs._const);
+            std::swap(lhs._offset, rhs._offset);
+            std::swap(lhs._domain, rhs._domain);
             std::swap(lhs._level, rhs._level);
+            std::swap(lhs._usage, rhs._usage);
         }
 
     private:
@@ -120,12 +137,12 @@ namespace cc0 {
          * variable info
          * _id    - identifier
          * _type  - variable type
-         * _value - variable value
-         * _const - if const?
+         * _init  - is init?
+         * _const - is const?
          */
         std::string _id;
         Type _type;
-        std::optional<std::any> _value;
+        bool _init;
         bool _const;
 
         /*
@@ -166,9 +183,9 @@ namespace cc0 {
         uint32_t _usage;
 
     public:
-        VarSym(std::string id, Type type, std::any value, bool f_const, uint32_t domain, uint32_t level):
-                _id(std::move(id)), _type(type), _value(std::move(value)), _const(f_const),
-                _offset(0), _domain(domain), _level(level), _usage(0) { }
+        VarSym(std::string id, Type type, bool init, bool f_const, uint32_t offset, uint32_t domain, uint32_t level):
+                _id(std::move(id)), _type(type), _init(init), _const(f_const),
+                _offset(offset), _domain(domain), _level(level), _usage(0) { }
         VarSym(const VarSym&) = default;
         VarSym(VarSym&&) = default;
         VarSym& operator=(VarSym rhs) {
@@ -179,15 +196,15 @@ namespace cc0 {
             return _id == rhs._id && _domain == rhs._domain && _level == rhs._level;
         }
 
-        [[nodiscard]] inline bool is_init() const { return _value == std::nullopt; }
+        [[nodiscard]] inline bool is_init() const { return _init; }
         [[nodiscard]] inline bool is_const() const { return _const; }
 
+        [[nodiscard]] inline std::string get_id() const { return _id; }
         [[nodiscard]] inline Type get_type() const { return _type; }
-        [[nodiscard]] inline std::pair<Type, std::any> get_value() const { return { _type, _value }; }
         [[nodiscard]] inline uint32_t get_offset() const { return _offset; }
         [[nodiscard]] inline std::pair<uint32_t, uint32_t> get_scope() const { return { _domain, _level }; }
 
-        inline void set_value(std::any value) { _value = std::move(value); }
+        inline void init() { _init = true; }
     };
 }
 

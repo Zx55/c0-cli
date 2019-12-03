@@ -14,13 +14,14 @@
 namespace cc0::ast {
     class ParamAST final: public AST {
     private:
+        std::string _func;
         Type _type;
         _ptr<IdExprAST> _id;
         bool _const;
 
     public:
-        explicit ParamAST(range_t range, Type type, _ptr<IdExprAST> id, bool f_const = false):
-            AST(range), _type(type), _id(std::move(id)), _const(f_const) { }
+        explicit ParamAST(range_t range, std::string func, Type type, _ptr<IdExprAST> id, bool f_const = false):
+            AST(range), _func(std::move(func)), _type(type), _id(std::move(id)), _const(f_const) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "[type] " << (_const ? "const " : "") << _type_str(_type) << " ";
