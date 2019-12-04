@@ -9,8 +9,10 @@
 #include "tools/alias.h"
 #include "tools/enums.h"
 
+#include <vector>
 #include <any>
 #include <optional>
+#include <map>
 #include <unordered_map>
 #include <utility>
 
@@ -32,10 +34,13 @@ namespace cc0::symbol {
                 switch (sym._type) {
                     case Type::INT:
                         str += std::to_string(std::any_cast<int32_t>(sym._value));
+                        break;
                     case Type::DOUBLE:
                         str += std::to_string(std::any_cast<double>(sym._value));
+                        break;
                     case Type::STRING:
                         str += std::any_cast<std::string>(sym._value);
+                        break;
                     default:
                         str += "undefined";
                 }
@@ -88,7 +93,7 @@ namespace cc0::symbol {
          */
         std::string _id;
         Type _ret;
-        std::unordered_map<std::string, std::pair<Type, bool>> _params;
+        std::map<std::string, std::pair<Type, bool>> _params;
 
         /*
          * runtime info

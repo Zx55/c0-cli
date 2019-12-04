@@ -120,6 +120,9 @@ namespace cc0 {
         bool operator==(const Instruction& rhs) const {
             return _op_type == rhs._op_type && _op1 == rhs._op1 && _op2 == rhs._op2;
         }
+
+        void set_op1(int32_t op1) { _op1 = op1; }
+        void set_op2(int32_t op2) { _op2 = op2; }
     };
 }
 

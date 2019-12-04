@@ -8,15 +8,12 @@
 
 #include "tools/alias.h"
 #include "ctx/rt_ctx.h"
-#include "symtbl/symtbl.h"
+#include "ctx/gen_ctx.h"
 
 namespace cc0 {
     class Generator {
     private:
         ast::_ptr<AST>& _root;
-        static SymTbl _tbl;
-
-        std::vector<Instruction> _ist;
 
     public:
         Generator(): _root(RuntimeContext::get_ast()) { }
@@ -24,14 +21,13 @@ namespace cc0 {
         Generator(Generator&&) = delete;
         Generator& operator=(const Generator&) = delete;
 
-        [[nodiscard]] inline static SymTbl& get_tbl() { return _tbl; }
-
         inline void generate() {
-            _ist.clear();
-            _ist = std::move(_root->generate({
-                0, 0, 0, Type::UNDEFINED
-            })._ist);
-            RuntimeContext::set_ist(_ist);
+            GeneratorContext::init_tbl();
+            (void) _root->generate({ 0, 0, 0, Type::UNDEFINED });
+
+            RuntimeContext::set_ist(std::move(GeneratorContext::get_ist()));
+            RuntimeContext::put_fatals(std::move(GeneratorContext::get_fatals()));
+            RuntimeContext::put_wrns(std::move(GeneratorContext::get_wrns()));
         }
     };
 }

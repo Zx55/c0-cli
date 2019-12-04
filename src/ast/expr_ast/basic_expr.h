@@ -18,12 +18,14 @@ namespace cc0::ast {
         explicit ExprAST(range_t range, Type type = Type::UNDEFINED, std::any value = 0):
              AST(range), _type(type), _value(std::move(value)) { }
 
+        [[nodiscard]] inline Type get_type() const { return _type; }
+
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<expr>\n";
         }
 
         _GenResult generate([[maybe_unused]] _GenParam param) override {
-            return { {}, {}, {} };
+            return { 0, {}, {} };
         }
     };
 }

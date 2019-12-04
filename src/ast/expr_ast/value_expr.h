@@ -19,8 +19,9 @@ namespace cc0::ast {
             out << "<int32> [value] " << std::any_cast<int32_t>(_value) << "\n";
         }
 
-        _GenResult generate(_GenParam param) override {
-
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
+            _gen_ist1(InstType::IPUSH, std::any_cast<int32_t>(_value));
+            return _gen_ret(1);
         }
     };
 
@@ -32,8 +33,13 @@ namespace cc0::ast {
             out << "<float64> [value] " << std::any_cast<double>(_value) << "\n";
         }
 
-        _GenResult generate(_GenParam param) override {
-
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
+            // store float in constant table
+            auto value = std::any_cast<double>(_value);
+            _symtbl.put_cons(Type::DOUBLE, value);
+            auto offset = _symtbl.get_cons_offset(Type::DOUBLE, value);
+            _gen_ist1(InstType::LOADC, offset);
+            return _gen_ret(1);
         }
     };
 
@@ -55,8 +61,9 @@ namespace cc0::ast {
             out << "<char> [value] \'" << output << "\' (" << ch << ")\n";
         }
 
-        _GenResult generate(_GenParam param) override {
-
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
+            _gen_ist1(InstType::BIPUSH, std::any_cast<int32_t>(_value));
+            return _gen_ret(1);
         }
     };
 
@@ -72,8 +79,13 @@ namespace cc0::ast {
             out << "<string> [value] \"" << str << "\"\n";
         }
 
-        _GenResult generate(_GenParam param) override {
-
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
+            // store string in constant table
+            auto str = std::any_cast<std::string>(_value);
+            _symtbl.put_cons(Type::STRING, str);
+            auto offset = _symtbl.get_cons_offset(Type::STRING, str);
+            _gen_ist1(InstType::LOADC, offset);
+            return _gen_ret(1);
         }
     };
 
@@ -85,6 +97,8 @@ namespace cc0::ast {
         explicit IdExprAST(range_t range, Token id): ExprAST(range), _id(std::move(id)) { }
 
         [[nodiscard]] inline Token get_id() const { return _id; }
+
+        [[nodiscard]] inline std::string get_id_str() const { return _id.get_value_str(); }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<id> [name] " << _id.get_value_str() << "\n";

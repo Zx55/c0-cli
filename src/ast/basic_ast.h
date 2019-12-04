@@ -9,6 +9,7 @@
 #include "tools/alias.h"
 #include "tools/enums.h"
 #include "tools/error.h"
+#include "ctx/gen_ctx.h"
 
 #include "lexer/token.h"
 #include "ist/instruction.h"
@@ -20,8 +21,17 @@
 #include <any>
 #include <utility>
 
-#define _gen_move_back(_src, _res) _src.insert(_src.end(), std::make_move_iterator(_res.begin()), \
-    std::make_move_iterator(_res.end()))
+#define _symtbl GeneratorContext::get_tbl()
+#define _gen_err(_code) GeneratorContext::put_fatal(C0Err(_code, _range.first, _range.second))
+#define _gen_wrn(_code) GeneratorContext::put_wrn(C0Err(_code, _range.first, _range.second))
+
+#define _gen_ist0(_type) GeneratorContext::put_ist(Instruction(_type))
+#define _gen_ist1(_type, _op1) GeneratorContext::put_ist(Instruction(_type, _op1))
+#define _gen_ist2(_type, _op1, _op2) GeneratorContext::put_ist(Instruction(_type, _op1, _op2))
+#define _gen_pop GeneratorContext::pop_ist()
+#define _gen_popn(n) GeneratorContext::pop_ist(n)
+
+#define _gen_ret(_len) { _len, {}, {} }
 
 namespace cc0::ast {
     class AST {
@@ -96,6 +106,7 @@ namespace cc0::ast {
              * _offset - offset in current function's instructions list
              *           we use this value to make jmp instruction
              *           in a new function, it will be 0
+             *           !! except <func-def> its offset is global offset
              * _slot   - offset in current frame in vm
              *           we use this value to fill symbol table
              *           in a new function, it will be slots(parameters)
@@ -116,9 +127,9 @@ namespace cc0::ast {
             /*
              * instructions info
              * it seems all ast will generate more than one instruction (; => nop)
-             * so _ist.size() == 0 means some errors occur
+             * so _len == 0 means some errors occur
              */
-            std::vector<Instruction> _ist;
+            uint32_t _len;
 
             /*
              * back-fill info
@@ -126,17 +137,21 @@ namespace cc0::ast {
              *
              *  instructions
              *  ------------
-             * | loada 0, 0 |   # function start (offset = 0)
+             * | loada 0, 0 |   # function start (func-offset = 0)
              * |    ....    |
-             * | jmp .Test  |   # loop offset (offset = a)
+             * | jmp .Test  |   # loop offset (func-offset = a)
              * |    ....    |
-             * |  jmp .End  |   # break offset (offset = b)
+             * |  jmp .End  |   # break offset (func-offset = b)
              * |    ....    |
              *
-             * we can get break offset in loop statement by (b - a) simply
+             * we can easily get global offset = func-offset + FuncSym._offset
              */
             std::vector<uint32_t> _breaks;
             std::vector<uint32_t> _continues;
+
+        public:
+            _GenResult(uint32_t len, std::vector<uint32_t> breaks, std::vector<uint32_t> continues):
+                    _len(len), _breaks(std::move(breaks)), _continues(std::move(continues)) { }
         };
 
         range_t _range;
@@ -146,8 +161,9 @@ namespace cc0::ast {
 
         [[nodiscard]] inline range_t get_range() const { return _range; }
 
-        virtual _GenResult generate(_GenParam param) = 0;
         virtual void graphize(std::ostream& out, int t) = 0;
+
+        [[nodiscard]] virtual _GenResult generate(_GenParam param) = 0;
     };
 }
 

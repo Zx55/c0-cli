@@ -19,7 +19,7 @@ namespace cc0::ast {
         }
 
         _GenResult generate([[maybe_unused]] _GenParam param) override {
-            return { {}, {}, {} };
+            return { 0, {}, {} };
         }
     };
 

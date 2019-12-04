@@ -36,24 +36,24 @@ namespace cc0::ast {
             _graphize_list(_funcs, out, t, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
-            auto ist = std::vector<Instruction>();
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
             auto slot = param._slot;
+            uint32_t len = 0;
 
             // global vars
             for (const auto& var: _vars) {
                 auto res = var->generate({ param._level, 0, slot, Type::UNDEFINED });
-                if (!res._ist.empty()) slot += _make_slot(var->get_type());
-                _gen_move_back(ist, res._ist);
+                if (res._len > 0) slot += _make_slot(var->get_type());
+                len += res._len;
             }
 
             // function define
             for (const auto& func: _funcs) {
-                auto res = func->generate({ param._level, 0, 0, func->get_ret() });
-                _gen_move_back(ist, res._ist);
+                auto res = func->generate({ param._level + 1, len, 0, func->get_ret() });
+                len += res._len;
             }
 
-            return { std::move(ist), {}, {} };
+            return { len, {}, {} };
         }
     };
 }

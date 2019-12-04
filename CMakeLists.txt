@@ -28,23 +28,25 @@ set(AST_SRC
         src/ast/stmt_ast/stmt.h src/ast/stmt_ast/basic_stmt.h src/ast/stmt_ast/cond_stmt.h
         src/ast/stmt_ast/loop_stmt.h src/ast/stmt_ast/io_stmt.h src/ast/stmt_ast/jmp_stmt.h)
 # Instruction
-set(IST_SRC src/ist/instruction.h src/ist/generator.h src/ist/generator.cpp)
+set(IST_SRC src/ist/instruction.h src/ist/generator.h)
 # Symbol Table
-set(TBL_SRC src/symtbl/symbol.h src/symtbl/symtbl.h src/symtbl/symtbl.cpp)
+set(TBL_SRC src/symtbl/symbol.h src/symtbl/symtbl.h)
 # Context
 set(CTX_SRC
-        src/ctx/src_ctx.cpp src/ctx/src_ctx.h src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h)
+        src/ctx/src_ctx.cpp src/ctx/src_ctx.h
+        src/ctx/rt_ctx.cpp src/ctx/rt_ctx.h
+        src/ctx/gen_ctx.cpp src/ctx/gen_ctx.h)
 # Tools
 set(TOOL_SRC
         src/tools/alias.h src/tools/enums.h src/tools/error.h src/tools/utils.h)
 
 set(LIB_SRC
+        ${CTX_SRC}
         ${LEXER_SRC}
         ${ANALYSER_SRC}
         ${AST_SRC}
         ${IST_SRC}
         ${TBL_SRC}
-        ${CTX_SRC}
         ${TOOL_SRC}
          src/core.h)
 add_library(${LIB} ${LIB_SRC})

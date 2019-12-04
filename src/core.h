@@ -8,6 +8,7 @@
 
 #include "ctx/rt_ctx.h"
 #include "ctx/src_ctx.h"
+#include "ctx/gen_ctx.h"
 
 #include "lexer/lexer.h"
 #include "analyser/rdp.h"
