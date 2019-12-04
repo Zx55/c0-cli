@@ -33,7 +33,7 @@ namespace cc0 {
 
             if (isconst(_token.get_type())) {
                 _unget();
-                auto res = _analyse_var_decl();
+                auto res = _analyse_var_decl(true);
                 _rdp_move_back(vars, res);
             } else if (istype(_token.get_type())) {
                 if (!_get()) {
@@ -60,7 +60,7 @@ namespace cc0 {
                 }
 
                 _unget(); _unget(); _unget();
-                auto res = _analyse_var_decl();
+                auto res = _analyse_var_decl(true);
                 _rdp_move_back(vars, res);
             }
         }
@@ -78,7 +78,7 @@ namespace cc0 {
     }
 
     // <var-decl> ::= [<const>]<type><init-decl-list>';'
-    ast::_ptrs<ast::VarDeclAST> RDP::_analyse_var_decl() {
+    ast::_ptrs<ast::VarDeclAST> RDP::_analyse_var_decl(bool glob) {
         using namespace ast;
         using namespace utils;
 
@@ -117,11 +117,11 @@ namespace cc0 {
             if (_token.get_type() == TokenType::ASSIGN) {
                 if (auto res = _analyse_expr(); res)
                     vars.push_back(std::make_unique<VarDeclAST>(_rdp_pair(start), type, std::move(id),
-                            std::move(res), f_const));
+                            std::move(res), f_const, glob));
             } else {
                 _unget();
                 vars.push_back(std::make_unique<VarDeclAST>(_rdp_pair(start), type, std::move(id),
-                        nullptr, f_const));
+                        nullptr, f_const, glob));
             }
 
             if (!_get()) {

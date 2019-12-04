@@ -17,6 +17,10 @@ namespace cc0::ast {
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<stmt>\n";
         }
+
+        _GenResult generate([[maybe_unused]] _GenParam param) override {
+            return { {}, {}, {} };
+        }
     };
 
     class EmptyStmtAST final: public StmtAST {
@@ -25,6 +29,10 @@ namespace cc0::ast {
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<empty-stmt>\n";
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

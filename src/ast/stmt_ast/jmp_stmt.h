@@ -27,6 +27,10 @@ namespace cc0::ast {
                 _ret->graphize(out, t + 1);
             }
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class BreakStmtAST final: public StmtAST {
@@ -36,6 +40,10 @@ namespace cc0::ast {
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<break-stmt>\n";
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class ContinueStmtAST final: public StmtAST {
@@ -44,6 +52,10 @@ namespace cc0::ast {
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<continue-stmt>\n";
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

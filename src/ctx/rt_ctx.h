@@ -12,8 +12,7 @@
 
 #include "lexer/token.h"
 #include "ast/ast.h"
-#include "instruction/instruction.h"
-#include "symtbl/symtbl.h"
+#include "ist/instruction.h"
 
 #include <algorithm>
 #include <vector>
@@ -24,34 +23,7 @@ namespace cc0 {
     class RuntimeContext final {
         friend class Lexer;
         friend class RDP;
-        friend class ast::RootAST;
-        friend class ast::VarDeclAST;
-        friend class ast::AssignAST;
-        friend class ast::FuncDefAST;
-        friend class ast::ParamAST;
-        friend class ast::BlockStmtAST;
-        friend class ast::FuncCallAST;
-        friend class ast::Int32ExprAST;
-        friend class ast::Float64ExprAST;
-        friend class ast::CharExprAST;
-        friend class ast::StringExprAST;
-        friend class ast::IdExprAST;
-        friend class ast::CondExprAST;
-        friend class ast::CastExprAST;
-        friend class ast::BinaryExprAST;
-        friend class ast::UnaryExprAST;
-        friend class ast::EmptyStmtAST;
-        friend class ast::IfElseStmtAST;
-        friend class ast::LabelStmtAST;
-        friend class ast::SwitchStmtAST;
-        friend class ast::WhileStmtAST;
-        friend class ast::ForStmtAST;
-        friend class ast::DoWhileStmtAST;
-        friend class ast::ReturnStmtAST;
-        friend class ast::BreakStmtAST;
-        friend class ast::ContinueStmtAST;
-        friend class ast::PrintStmtAST;
-        friend class ast::ScanStmtAST;
+        friend class Generator;
 
     private:
         static std::vector<C0Err> _fatal;
@@ -59,10 +31,7 @@ namespace cc0 {
 
         static std::vector<Token> _tokens;
         static std::unique_ptr<AST> _ast;
-
-        static SymTbl tbl;
-        // FIXME: 循环了
-        static std::vector<Instruction> _inst;
+        static std::vector<Instruction> _ist;
 
     public:
         RuntimeContext() = delete;
@@ -86,8 +55,7 @@ namespace cc0 {
 
         [[nodiscard]] inline static auto& get_tokens() { return _tokens; }
         [[nodiscard]] inline static auto& get_ast() { return _ast; }
-        [[nodiscard]] inline static auto& get_tbl() { return tbl; }
-        [[nodiscard]] inline static auto& get_instructions() { return _inst; }
+        [[nodiscard]] inline static auto& get_ist() { return _ist; }
 
     private:
         inline static void put_fatals(std::vector<C0Err>&& errs) {
@@ -104,7 +72,7 @@ namespace cc0 {
         inline static void set_tokens(std::vector<Token>&& tokens) { _tokens = std::move(tokens); }
         inline static void put_token(Token token) { _tokens.push_back(std::move(token)); }
         inline static void set_ast(ast::_ptr<AST> ast) { _ast.reset(nullptr); _ast = std::move(ast); }
-        inline static void put_inst(Instruction inst) { _inst.push_back(std::move(inst)); }
+        inline static void set_ist(std::vector<Instruction> inst) { _ist = std::move(inst); }
     };
 }
 

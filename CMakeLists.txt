@@ -28,7 +28,7 @@ set(AST_SRC
         src/ast/stmt_ast/stmt.h src/ast/stmt_ast/basic_stmt.h src/ast/stmt_ast/cond_stmt.h
         src/ast/stmt_ast/loop_stmt.h src/ast/stmt_ast/io_stmt.h src/ast/stmt_ast/jmp_stmt.h)
 # Instruction
-set(IST_SRC src/instruction/instruction.h)
+set(IST_SRC src/ist/instruction.h src/ist/generator.h src/ist/generator.cpp)
 # Symbol Table
 set(TBL_SRC src/symtbl/symbol.h src/symtbl/symtbl.h src/symtbl/symtbl.cpp)
 # Context

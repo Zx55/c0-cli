@@ -24,6 +24,10 @@ namespace cc0::ast {
             out << _end(t);
             _stmt->graphize(out, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class AssignAST final: public ExprAST, public StmtAST {
@@ -40,6 +44,10 @@ namespace cc0::ast {
             _id->graphize(out, t + 1);
             out << _end(t);
             _value->graphize(out, t + 1);
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 
@@ -78,6 +86,10 @@ namespace cc0::ast {
                 _stmt->graphize(out, t + 1);
             }
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class DoWhileStmtAST final: public StmtAST {
@@ -94,6 +106,10 @@ namespace cc0::ast {
             _cond->graphize(out, t + 1);
             out << _end(t);
             _stmt->graphize(out, t + 1);
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

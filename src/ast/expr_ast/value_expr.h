@@ -18,6 +18,10 @@ namespace cc0::ast {
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<int32> [value] " << std::any_cast<int32_t>(_value) << "\n";
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class Float64ExprAST final: public ExprAST {
@@ -26,6 +30,10 @@ namespace cc0::ast {
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<float64> [value] " << std::any_cast<double>(_value) << "\n";
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 
@@ -46,6 +54,10 @@ namespace cc0::ast {
 
             out << "<char> [value] \'" << output << "\' (" << ch << ")\n";
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class StringExprAST final: public ExprAST {
@@ -58,6 +70,10 @@ namespace cc0::ast {
             replace_all(str, "\n", "\\n");
             replace_all(str, "\t", "\\t");
             out << "<string> [value] \"" << str << "\"\n";
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 
@@ -72,6 +88,10 @@ namespace cc0::ast {
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<id> [name] " << _id.get_value_str() << "\n";
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

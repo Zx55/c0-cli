@@ -21,6 +21,10 @@ namespace cc0::ast {
             out << "<print-stmt>\n";
             _graphize_list(_printable, out, t, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class ScanStmtAST final: public StmtAST {
@@ -34,6 +38,10 @@ namespace cc0::ast {
         void graphize(std::ostream& out, int t) override {
             out << "<scan-stmt> ";
             _id->graphize(out, t + 1);
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

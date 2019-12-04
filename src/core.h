@@ -6,11 +6,12 @@
 #ifndef C0_CORE_H
 #define C0_CORE_H
 
-#include "lexer/lexer.h"
-#include "analyser/rdp.h"
-
 #include "ctx/rt_ctx.h"
 #include "ctx/src_ctx.h"
+
+#include "lexer/lexer.h"
+#include "analyser/rdp.h"
+#include "ist/generator.h"
 
 #include <fstream>
 
@@ -40,18 +41,16 @@ namespace cc0 {
         if (!RuntimeContext::get_fatal().empty()) {
             if (verbose)
                 _verbose();
-
             return;
         }
 
-        std::unique_ptr<Analyser> analyser = std::make_unique<RDP>();
+        ast::_ptr<Analyser> analyser = std::make_unique<RDP>();
         analyser->analyse();
         analyser.reset(nullptr);
 
-        auto& root = RuntimeContext::get_ast();
         if (output) {
             auto out = std::ofstream(SourceContext::get_out());
-            root->graphize(out, 0);
+            RuntimeContext::get_ast()->graphize(out, 0);
             out.close();
         }
 
@@ -59,8 +58,26 @@ namespace cc0 {
             _verbose();
     }
 
-    void compile([[maybe_unused]] bool output = true, [[maybe_unused]] bool verbose = true) {
+    void compile(bool output = true, bool verbose = true) {
+        analyse(false, false);
+        if (!RuntimeContext::get_fatal().empty()) {
+            if (verbose)
+                _verbose();
+            return;
+        }
 
+        auto gen = Generator();
+        gen.generate();
+
+        if (output) {
+            auto out = std::ofstream(SourceContext::get_out());
+            auto ist = RuntimeContext::get_ist();
+            // out << ist;
+            out.close();
+        }
+
+        if (verbose)
+            _verbose();
     }
 
     void assemble() {

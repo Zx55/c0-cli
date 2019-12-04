@@ -16,10 +16,14 @@ namespace cc0::ast {
         _ptr<IdExprAST> _id;
         _ptr<ExprAST> _init;
         bool _const;
+        bool _glob;
 
     public:
-        explicit VarDeclAST(range_t range, Type type, _ptr<IdExprAST> id, _ptr<ExprAST> init, bool f_const = false):
-            AST(range), _type(type), _id(std::move(id)), _init(std::move(init)), _const(f_const) { }
+        explicit VarDeclAST(range_t range, Type type, _ptr<IdExprAST> id, _ptr<ExprAST> init,
+                bool f_const = false, bool glob = false):
+            AST(range), _type(type), _id(std::move(id)), _init(std::move(init)), _const(f_const), _glob(glob) { }
+
+        [[nodiscard]] inline Type get_type() const { return _type; }
 
         void graphize(std::ostream& out, int t) override {
             out << "<var-decl> [type] " << (_const ? "const " : "") << _type_str(_type) << "\n";
@@ -28,6 +32,14 @@ namespace cc0::ast {
             if (_init != nullptr) {
                 out << _end(t);
                 _init->graphize(out, t + 1);
+            }
+        }
+
+        _GenResult generate(_GenParam param) override {
+            auto ist = std::vector<Instruction>();
+
+            if (_glob) {
+
             }
         }
     };

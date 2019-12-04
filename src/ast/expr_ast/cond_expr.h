@@ -32,6 +32,10 @@ namespace cc0::ast {
             out << _end(t);
             _rhs->graphize(out, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 }
 

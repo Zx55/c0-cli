@@ -14,8 +14,7 @@ namespace cc0 {
     std::vector<Token> RuntimeContext::_tokens;
     std::unique_ptr<AST> RuntimeContext::_ast = nullptr;
 
-    SymTbl tbl;
-    std::vector<Instruction> RuntimeContext::_inst;
+    std::vector<Instruction> RuntimeContext::_ist;
 
     inline void RuntimeContext::clear_ctx() {
         _fatal.clear();

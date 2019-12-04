@@ -8,9 +8,7 @@
 
 #include "symbol.h"
 
-#include <unordered_set>
-
-namespace cc0 {
+namespace cc0::symbol {
     class SymTbl final {
     private:
         std::unordered_map<ConsSym, uint32_t, ConsSym::_Hash> _cons;
@@ -26,8 +24,6 @@ namespace cc0 {
         std::unordered_map<std::string, VarSym> _globs;
         std::vector<VarSym> _local;
 
-        [[nodiscard]] auto _find_local(const std::string& id, uint32_t domain) const;
-
     public:
         SymTbl() = default;
         SymTbl(const SymTbl&) = delete;
@@ -35,33 +31,33 @@ namespace cc0 {
         SymTbl& operator=(SymTbl tbl) = delete;
 
         // when we use an identifier
-        [[nodiscard]] inline bool is_declared(const std::string& id, uint32_t domain) const;
+        [[nodiscard]] inline std::optional<VarSym> get_var(const std::string& id) const;
         // when we declare an identifier
-        [[nodiscard]] inline bool is_declared(const std::string& id, uint32_t domain, uint32_t level) const;
-        [[nodiscard]] inline bool is_const(const std::string& id, uint32_t domain) const;
-        [[nodiscard]] inline bool is_init(const std::string& id, uint32_t domain) const;
+        [[nodiscard]] inline std::optional<VarSym> get_var(const std::string& id, uint32_t level) const;
 
-        inline void init(const std::string& id, uint32_t domain);
+        inline void init(const std::string& id);
 
-        [[nodiscard]] inline Type get_type(const std::string& id, uint32_t domain) const;
         [[nodiscard]] inline auto& get_func_params(const std::string& id) const;
         [[nodiscard]] inline uint32_t get_cons_offset(Type type, const std::any& value) const;
-        [[nodiscard]] inline uint32_t get_var_offset(const std::string& id, uint32_t domain) const;
 
         inline void put_cons(Type type, const std::any& value);
-        inline void put_glob(const std::string& id, Type type, uint32_t offset, uint32_t domain, uint32_t level,
+        inline void put_glob(const std::string& id, Type type, uint32_t offset, uint32_t level,
                 bool init = false, bool f_const = false);
         inline void put_func(const std::string& id, Type ret, uint32_t offset);
         [[nodiscard]] inline bool put_param(const std::string& func, const std::string& param,
                 Type type, bool f_const = false);
-        inline void put_local(const std::string& id, Type type, uint32_t offset, uint32_t domain, uint32_t level,
+        inline void put_local(const std::string& id, Type type, uint32_t offset, uint32_t level,
                 bool init = false, bool f_const = false);
 
         // when level a block
-        inline void destroy_level(uint32_t domain, uint32_t level);
-        // when return from a function
-        inline void destroy_domain(uint32_t domain);
+        inline void destroy_level(uint32_t level);
+        // when a function end
+        inline void clear_local() { _local.clear(); }
     };
+}
+
+namespace cc0 {
+    using SymTbl = symbol::SymTbl;
 }
 
 #endif //C0_SYMTBL_H

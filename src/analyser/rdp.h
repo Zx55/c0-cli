@@ -12,7 +12,7 @@ namespace cc0 {
     class RDP final: public Analyser {
     private:
         [[nodiscard]] ast::_ptr<ast::RootAST> _analyse_root();
-        [[nodiscard]] ast::_ptrs<ast::VarDeclAST> _analyse_var_decl();
+        [[nodiscard]] ast::_ptrs<ast::VarDeclAST> _analyse_var_decl(bool glob = false);
         [[nodiscard]] ast::_ptr<ast::FuncDefAST> _analyse_func_def();
         [[nodiscard]] ast::_ptrs<ast::ParamAST> _analyse_params(const std::string& func);
         [[nodiscard]] ast::_ptr<ast::BlockStmtAST> _analyse_block();

@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace cc0 {
+namespace cc0::symbol {
     class ConsSym final {
         friend inline void swap(ConsSym& lhs, ConsSym& rhs) {
             std::swap(lhs._type, rhs._type);
@@ -127,7 +127,6 @@ namespace cc0 {
             std::swap(lhs._init, rhs._init);
             std::swap(lhs._const, rhs._const);
             std::swap(lhs._offset, rhs._offset);
-            std::swap(lhs._domain, rhs._domain);
             std::swap(lhs._level, rhs._level);
             std::swap(lhs._usage, rhs._usage);
         }
@@ -154,38 +153,32 @@ namespace cc0 {
 
         /*
          * scope info
-         * _domain - index in call chain
-         *           when a function return, we should pop vars of this function(_domain).
          * _level  - index of block
          *           when leaving a block, we should pop vars of this block(_level).
          *
          * for example
-         *      domain - 0 (global):
+         *      global:
          *          level - 0:
          *              var a ...
          *              var b ...
-         *      domain - 1 (main):
+         *      local:
          *          level - 0:
          *              var c ...
          *          level - 1:    // like a if-else-stmt block
-         *              var c ... // override definition in domain 1 level 0.
-         *      domain - 2 (fun): // may be call fun(a)
-         *          level - 0:
-         *              param a ...
+         *              var c ... // override definition in level 0.
          *          ...
          *
-         * when we return from fun, domain 2 will be destroyed.
-         * and we leave if-else-block, level 1 of domain 1 will be destroyed.
+         * we will destroy domain 1 when a function is end
+         * and we leave if-else-block, level 1 of domain 1 will be destroyed
          */
-        uint32_t _domain;
         uint32_t _level;
 
         uint32_t _usage;
 
     public:
-        VarSym(std::string id, Type type, bool init, bool f_const, uint32_t offset, uint32_t domain, uint32_t level):
+        VarSym(std::string id, Type type, bool init, bool f_const, uint32_t offset, uint32_t level):
                 _id(std::move(id)), _type(type), _init(init), _const(f_const),
-                _offset(offset), _domain(domain), _level(level), _usage(0) { }
+                _offset(offset), _level(level), _usage(0) { }
         VarSym(const VarSym&) = default;
         VarSym(VarSym&&) = default;
         VarSym& operator=(VarSym rhs) {
@@ -193,7 +186,7 @@ namespace cc0 {
             return *this;
         }
         bool operator==(const VarSym& rhs) const {
-            return _id == rhs._id && _domain == rhs._domain && _level == rhs._level;
+            return _id == rhs._id && _level == rhs._level;
         }
 
         [[nodiscard]] inline bool is_init() const { return _init; }
@@ -202,7 +195,7 @@ namespace cc0 {
         [[nodiscard]] inline std::string get_id() const { return _id; }
         [[nodiscard]] inline Type get_type() const { return _type; }
         [[nodiscard]] inline uint32_t get_offset() const { return _offset; }
-        [[nodiscard]] inline std::pair<uint32_t, uint32_t> get_scope() const { return { _domain, _level }; }
+        [[nodiscard]] inline uint32_t get_level() const { return _level; }
 
         inline void init() { _init = true; }
     };

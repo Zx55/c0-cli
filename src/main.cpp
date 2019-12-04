@@ -59,23 +59,24 @@ int main(int argc, char* argv[]) {
     }
 
     int cnt = 0;
+    (program["-l"] == true) ? ++cnt : cnt;
+    (program["-t"] == true) ? ++cnt : cnt;
     (program["-s"] == true) ? ++cnt : cnt;
     (program["-c"] == true) ? ++cnt : cnt;
-    (program["-l"] == true) ? ++cnt : cnt;
 
     if (cnt > 1) {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;
     }
 
-    if (program["-s"] == true) {
-        std::cout << "ssss" << std::endl;
-    } else if (program["-c"] == true) {
-        std::cout << "cccc" << std::endl;
-    } else if (program["-l"] == true)
+    if (program["-l"] == true)
         cc0::tokenize();
     else if (program["-t"] == true)
         cc0::analyse();
+    else if (program["-s"] == true)
+        cc0::compile();
+    else if (program["-c"] == true)
+        cc0::assemble();
     else {
         std::cerr << "Argument error: bad argument" << std::endl;
         return 1;

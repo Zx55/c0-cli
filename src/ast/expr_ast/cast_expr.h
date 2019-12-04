@@ -22,6 +22,10 @@ namespace cc0::ast {
             out << "<cast-expr> [type] " << _type_str(_cast) << "\n" << _end(t);
             _expr->graphize(out, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 }
 

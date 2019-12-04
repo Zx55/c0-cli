@@ -27,6 +27,10 @@ namespace cc0::ast {
             out << "[type] " << (_const ? "const " : "") << _type_str(_type) << " ";
             _id->graphize(out, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class BlockStmtAST final: public StmtAST {
@@ -53,6 +57,10 @@ namespace cc0::ast {
 
             _graphize_list(_stmts, out, t, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class FuncDefAST final: public AST {
@@ -67,6 +75,8 @@ namespace cc0::ast {
                 _ptrs<ParamAST> params, _ptr<BlockStmtAST> block):
             AST(range), _ret(ret), _id(std::move(id)), _params(std::move(params)), _block(std::move(block)) { }
 
+        [[nodiscard]] inline Type get_ret() const { return _ret; }
+
         void graphize(std::ostream &out, int t) override {
             out << "<func-def> [return] -> " << _type_str(_ret) << "\n" << _mid(t);
             _id->graphize(out, t + 1);
@@ -74,6 +84,10 @@ namespace cc0::ast {
             _graphize_list(_params, out, t + 1, t + 1);
             out << _end(t);
             _block->graphize(out, t + 1);
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 
@@ -97,6 +111,10 @@ namespace cc0::ast {
                 out << _end(t);
                 (*(_params.cend() - 1))->graphize(out, t + 1);
             }
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

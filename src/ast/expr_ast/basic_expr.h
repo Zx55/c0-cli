@@ -21,6 +21,10 @@ namespace cc0::ast {
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<expr>\n";
         }
+
+        _GenResult generate([[maybe_unused]] _GenParam param) override {
+            return { {}, {}, {} };
+        }
     };
 }
 

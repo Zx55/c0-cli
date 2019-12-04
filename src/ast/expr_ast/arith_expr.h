@@ -25,6 +25,10 @@ namespace cc0::ast {
             out << _end(t);
             _rhs->graphize(out, t + 1);
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class UnaryExprAST final: public ExprAST {
@@ -39,6 +43,10 @@ namespace cc0::ast {
         void graphize(std::ostream& out, int t) override {
             out << "<unary-expr> [sign] " << (_sign ? '+' : '-') << "\n" << _end(t);
             _expr->graphize(out, t + 1);
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }

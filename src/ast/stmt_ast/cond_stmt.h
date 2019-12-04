@@ -30,6 +30,10 @@ namespace cc0::ast {
                 _false->graphize(out, t + 1);
             }
         }
+
+        _GenResult generate(_GenParam param) override {
+
+        }
     };
 
     class LabelStmtAST final: public StmtAST {
@@ -46,6 +50,10 @@ namespace cc0::ast {
             _case->graphize(out, t + 1);
             out << _end(t);
             _stmt->graphize(out, t + 1);
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 
@@ -74,6 +82,10 @@ namespace cc0::ast {
                 out << _end(t) << "[default] ";
                 _default->graphize(out, t + 1);
             }
+        }
+
+        _GenResult generate(_GenParam param) override {
+
         }
     };
 }
