@@ -11,7 +11,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 31
+#define ERR_NUM 32
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -44,7 +44,8 @@ namespace cc0 {
         ErrUndeclaredIdentifier,
         ErrRedeclaredIdentifier,
         ErrAssignToConstant,
-        ErrVoidAssignment,
+        ErrVoidHasNoValue,
+        ErrIncomparable,
         ErrJmpInAcyclicStmt,
         ErrParameterUnMatch,
         WrnInt32Overflow            = 128,
@@ -150,7 +151,8 @@ namespace fmt {
                     "ErrUndeclaredVariable",
                     "ErrRedeclaredIdentifier",
                     "ErrAssignToConstant",
-                    "ErrVoidAssignment",
+                    "ErrVoidHasNoValue",
+                    "ErrIncomparable",
                     "ErrJmpInAcyclicStmt",
                     "ErrParameterUnMatch",
                     "WrnInt32Overflow",

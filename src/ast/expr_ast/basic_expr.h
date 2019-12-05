@@ -12,12 +12,14 @@ namespace cc0::ast {
     class ExprAST: public AST {
     protected:
         Type _type;
-        std::any _value;
 
     public:
-        explicit ExprAST(range_t range, Type type = Type::UNDEFINED, std::any value = 0):
-             AST(range), _type(type), _value(std::move(value)) { }
+        explicit ExprAST(range_t range, Type type = Type::UNDEFINED):
+             AST(range), _type(type) { }
 
+        // we have to get expr's type after generating inst (parse its children)
+        // like expression 1 + (2 * 3.0)
+        // we don't know the type of 2 * 3.0 when we parse addition of 1 and (2 * 3.0)
         [[nodiscard]] inline Type get_type() const { return _type; }
 
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {

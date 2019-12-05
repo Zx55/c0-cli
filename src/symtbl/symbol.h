@@ -116,6 +116,7 @@ namespace cc0::symbol {
         bool operator==(const FuncSym& rhs) { return _id == rhs._id && _params == rhs._params; }
 
         [[nodiscard]] inline auto& get_params() const { return _params; }
+        [[nodiscard]] inline Type get_ret_type() const { return _ret; }
 
         [[nodiscard]] inline bool put_param(std::string param, Type type, bool f_const = false) {
             if (auto it = _params.find(param); it != _params.end())
@@ -167,14 +168,16 @@ namespace cc0::symbol {
          *              var a ...
          *              var b ...
          *      local:
-         *          level - 0:
+         *          level - 1:
+         *              function name
+         *              params
          *              var c ...
-         *          level - 1:    // like a if-else-stmt block
+         *          level - 2:    // like a if-else-stmt block
          *              var c ... // override definition in level 0.
          *          ...
          *
-         * we will destroy domain 1 when a function is end
-         * and we leave if-else-block, level 1 of domain 1 will be destroyed
+         * we will destroy local symtbl when a function is end
+         * and we leave if-else-block, level 2 will be destroyed
          */
         uint32_t _level;
 
@@ -196,6 +199,7 @@ namespace cc0::symbol {
 
         [[nodiscard]] inline bool is_init() const { return _init; }
         [[nodiscard]] inline bool is_const() const { return _const; }
+        [[nodiscard]] inline bool is_glob() const { return _level == 0; }
 
         [[nodiscard]] inline std::string get_id() const { return _id; }
         [[nodiscard]] inline Type get_type() const { return _type; }

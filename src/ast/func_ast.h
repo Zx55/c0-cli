@@ -161,20 +161,62 @@ namespace cc0::ast {
                 return _gen_ret(0);
             }
 
+            ExprAST::_type = func->get_ret_type();
+
             // check param
             auto params = func->get_params();
             if (params.size() != _params.size()) {
                 _gen_err(ErrCode::ErrParameterUnMatch);
                 return _gen_ret(0);
             }
-            // push param
-            auto it1 = params.cbegin();
-            auto it2 = _params.cbegin();
-            for (; it1 != params.cend(); ++it1, ++it2) {
-                (*it2)->generate(param);
-                // type check
 
+            uint32_t len = 0;
+            auto it_formal = params.cbegin();
+            auto it_actual = _params.cbegin();
+            for (; it_formal != params.cend(); ++it_formal, ++it_actual) {
+                // push actual param
+                auto res = (*it_actual)->generate(param);
+                len += res._len;
+
+                // type check and trans
+                auto formal_type = it_formal->second.first, actual_type = (*it_actual)->get_type();
+                if (formal_type == actual_type)
+                    continue;
+
+                switch (actual_type) {
+                    case Type::VOID:
+                        _gen_err(ErrCode::ErrVoidHasNoValue);
+                        _gen_popn(len);
+                        return _gen_ret(0);
+                    case Type::DOUBLE:
+                        // foo(int), foo(1.0);     perform double => int
+                        _gen_ist0(InstType::D2I);
+                        ++len;
+                        break;
+                    case Type::INT:
+                        if (formal_type == Type::DOUBLE)
+                            // foo(double), foo(1); perform int => double
+                            _gen_ist0(InstType::I2D);
+                        else if (formal_type == Type::CHAR)
+                            // foo(char), foo(1);   perform int => char
+                            _gen_ist0(InstType::I2C);
+                        ++len;
+                        break;
+                    case Type::CHAR:
+                        if (formal_type == Type::DOUBLE) {
+                            // foo(double), foo('c'); perform char => double
+                            _gen_ist0(InstType::I2D);
+                            ++len;
+                        }
+                        break;
+                    default:
+                        _gen_popn(len);
+                        return _gen_ret(0);
+                }
             }
+
+            _gen_ist0(InstType::CALL);
+            return _gen_ret(len + 1);
         }
     };
 }

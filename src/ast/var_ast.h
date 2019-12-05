@@ -34,16 +34,16 @@ namespace cc0::ast {
 
             // initialized
             auto len = _init->generate(param)._len;
-            auto type = _init->get_type();
+            auto init_type = _init->get_type();
 
-            if (type == _type) {
+            if (init_type == _type) {
                 _put_tbl(true);
                 return _gen_ret(len);
             }
 
-            switch (type) {
+            switch (init_type) {
                 case Type::VOID: {
-                    _gen_err(ErrCode::ErrVoidAssignment);
+                    _gen_err(ErrCode::ErrVoidHasNoValue);
                     _gen_pop;
                     return _gen_ret(0);
                 }
@@ -95,7 +95,7 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
-            if (_type == Type::VOID || _type == Type::UNDEFINED) {
+            if (_type == Type::VOID) {
                 _gen_err(ErrCode::ErrInvalidTypeSpecifier);
                 return _gen_ret(0);
             }
