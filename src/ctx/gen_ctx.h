@@ -40,6 +40,4 @@ namespace cc0 {
     };
 }
 
-
-
 #endif //C0_GEN_CTX_H

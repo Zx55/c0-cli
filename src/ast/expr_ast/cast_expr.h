@@ -25,10 +25,11 @@ namespace cc0::ast {
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
             auto res = _expr->generate(param);
+            auto len = res._len;
+            if (len == 0)
+                return _gen_ret(0);
 
             auto src_type = _expr->get_type();
-            auto len = res._len;
-
             if (_cast == Type::VOID || src_type == Type::VOID) {
                 // we don't allow void => any and any => void
                 _gen_err(ErrCode::ErrVoidHasNoValue);

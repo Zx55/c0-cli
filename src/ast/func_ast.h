@@ -38,9 +38,9 @@ namespace cc0::ast {
 
             _symtbl.put_local(_id->get_id_str(), _type, param._slot, param._level, true, _const);
             if (_symtbl.put_param(_func, _id->get_id_str(), _type, _const))
-                return _gen_ret(0);
+                return _gen_ret(1);
             _gen_err(ErrCode::ErrRedeclaredIdentifier);
-            return _gen_ret(1);
+            return _gen_ret(0);
         }
     };
 
@@ -69,8 +69,27 @@ namespace cc0::ast {
             _graphize_list(_stmts, out, t, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto slot = param._slot;
+            uint32_t len = 0;
+            std::vector<uint32_t> breaks, continues;
 
+            for (const auto& var: _vars) {
+                auto res = var->generate({ param._level + 1, param._offset,
+                                           slot, param._ret });
+                if (res._len != 0) slot += _make_slot(var->get_type());
+                len += res._len;
+            }
+
+            for (const auto& stmt: _stmts) {
+                auto res = stmt->generate({ param._level + 1, param._offset + len,
+                                            slot, param._ret});
+                len += res._len;
+                _gen_move_back(breaks, res._breaks);
+                _gen_move_back(continues, res._continues);
+            }
+
+            return { len, std::move(breaks), std::move(continues) };
         }
     };
 
@@ -80,6 +99,29 @@ namespace cc0::ast {
         _ptr<IdExprAST> _id;
         _ptrs<ParamAST> _params;
         _ptr<BlockStmtAST> _block;
+
+        [[nodiscard]] inline uint32_t _make_default_ret() {
+            switch (_ret) {
+                case Type::INT:
+                    [[fallthrough]];
+                case Type::CHAR: {
+                    _gen_ist1(InstType::IPUSH, -1);
+                    _gen_ist0(InstType::IRET);
+                    return 2;
+                }
+                case Type::DOUBLE: {
+                    _symtbl.put_cons(Type::DOUBLE, -1.0);
+                    auto offset = _symtbl.get_cons_offset(Type::DOUBLE, -1.0);
+                    _gen_ist1(InstType::LOADC, offset);
+                    _gen_ist0(InstType::DRET);
+                    return 2;
+                }
+                default: {
+                    _gen_ist0(InstType::RET);
+                    return 1;
+                }
+            }
+        }
 
     public:
         explicit FuncDefAST(range_t range, Type ret, _ptr<IdExprAST> id,
@@ -107,25 +149,33 @@ namespace cc0::ast {
                 return _gen_ret(0);
             }
 
-            _symtbl.put_cons(Type::STRING, _id->get_id_str());
-            _symtbl.put_local(_id->get_id_str(), _ret, -1, param._level);
-            _symtbl.put_func(_id->get_id_str(), _ret, param._offset);
-
             // parameters
             uint32_t slot = 0;
             for (const auto &p: _params) {
-                if (auto res = p->generate({param._level, 0, 0, param._ret}); res._len == 0)
+                if (auto res = p->generate({ 1, 0, slot, param._ret}); res._len != 0)
                     slot += _make_slot(p->get_type());
             }
 
-            auto res = _block->generate({param._level, 0, slot, _ret});
+            // block will generate first code, so _offset must be 0
+            auto res = _block->generate({ 0, 0, slot, _ret });
+            if (res._len == 0)
+                return _gen_ret(0);
+
             // check breaks and continues
             if (!res._breaks.empty() || !res._continues.empty()) {
                 _gen_err(ErrCode::ErrJmpInAcyclicStmt);
                 _gen_popn(res._len);
                 return _gen_ret(0);
             }
-            return _gen_ret(res._len);
+
+            _symtbl.put_cons(Type::STRING, _id->get_id_str());
+            _symtbl.put_local(_id->get_id_str(), _ret, -1, param._level);
+            _symtbl.put_func(_id->get_id_str(), _ret, _gen_ist_off);
+
+            // for those branch lack of return
+            auto len = _make_default_ret();
+
+            return _gen_ret(res._len + len);
         }
     };
 
@@ -133,11 +183,10 @@ namespace cc0::ast {
     private:
         _ptr<IdExprAST> _id;
         _ptrs<ExprAST> _params;
-        range_t _range;
 
     public:
         explicit FuncCallAST(range_t range, _ptr<IdExprAST> id, _ptrs<ExprAST> params):
-            ExprAST(range), StmtAST(range), _id(std::move(id)), _params(std::move(params)), _range(range) { }
+            ExprAST(range), StmtAST(range), _id(std::move(id)), _params(std::move(params)) { }
 
         void graphize(std::ostream &out, int t) override {
             out << "<func-call> ";
@@ -157,7 +206,7 @@ namespace cc0::ast {
 
             // check undeclared
             if (!func.has_value()) {
-                _gen_err(ErrCode::ErrUndeclaredIdentifier);
+                _gen_err2(ErrCode::ErrUndeclaredIdentifier);
                 return _gen_ret(0);
             }
 
@@ -166,7 +215,7 @@ namespace cc0::ast {
             // check param
             auto params = func->get_params();
             if (params.size() != _params.size()) {
-                _gen_err(ErrCode::ErrParameterUnMatch);
+                _gen_err2(ErrCode::ErrParameterUnMatch);
                 return _gen_ret(0);
             }
 
@@ -176,6 +225,10 @@ namespace cc0::ast {
             for (; it_formal != params.cend(); ++it_formal, ++it_actual) {
                 // push actual param
                 auto res = (*it_actual)->generate(param);
+                if (res._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
                 len += res._len;
 
                 // type check and trans
@@ -185,7 +238,7 @@ namespace cc0::ast {
 
                 switch (actual_type) {
                     case Type::VOID:
-                        _gen_err(ErrCode::ErrVoidHasNoValue);
+                        _gen_err2(ErrCode::ErrVoidHasNoValue);
                         _gen_popn(len);
                         return _gen_ret(0);
                     case Type::DOUBLE:

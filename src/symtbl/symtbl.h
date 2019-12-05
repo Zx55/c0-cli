@@ -70,10 +70,6 @@ namespace cc0::symbol {
                 it->second.init();
         }
 
-        [[nodiscard]] inline auto& get_func_params(const std::string& id) const {
-            return _funcs.find(id)->second.get_params();
-        }
-
         [[nodiscard]] inline uint32_t get_cons_offset(Type type, const std::any& value) const {
             return _cons.find({ type, value })->second;
         }

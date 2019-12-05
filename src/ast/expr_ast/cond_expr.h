@@ -43,10 +43,12 @@ namespace cc0::ast {
             uint32_t len = 0;
 
             auto lres = _lhs->generate(param);
+            if (lres._len == 0)
+                return _gen_ret(0);
             len += lres._len;
-            auto ltype = _lhs->get_type();
 
-            if (ltype == Type::VOID || ltype == Type::STRING) {
+            auto ltype = _lhs->get_type();
+            if (ltype == Type::VOID) {
                 _gen_err(ErrCode::ErrIncomparable);
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -54,10 +56,12 @@ namespace cc0::ast {
 
             // generate inst first
             auto rres = _rhs->generate(param);
+            if (rres._len == 0)
+                return _gen_ret(0);
             len += rres._len;
-            auto rtype = _rhs->get_type();
 
-            if (rtype == Type::VOID || rtype == Type::STRING) {
+            auto rtype = _rhs->get_type();
+            if (rtype == Type::VOID) {
                 _gen_err(ErrCode::ErrIncomparable);
                 _gen_popn(len);
                 return _gen_ret(0);

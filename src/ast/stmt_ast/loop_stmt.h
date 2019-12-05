@@ -25,8 +25,45 @@ namespace cc0::ast {
             _stmt->graphize(out, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            /*
+             * `while (cond) stmt` will generate:
+             *
+             *     jmp .Test
+             *     ...stmt
+             * .Test
+             *     ...cond
+             *     j$(op) .Test
+             * .End
+             */
+            _gen_ist1(InstType::JMP, 0);
+            auto jmp_to_test = _gen_ist_off;
+            uint32_t len = 1;
 
+            auto stmt = _stmt->generate({ param._level, param._offset + len,
+                                          param._slot, param._ret });
+            if (stmt._len == 0) {
+                _gen_pop;
+                return _gen_ret(0);
+            }
+            len += stmt._len;
+            _gen_ist(jmp_to_test).set_op1(param._offset + len);
+
+            auto cond = _cond->generate(param);
+            if (cond._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            _gen_ist1(_make_jn(_cond->get_op()), param._offset + len);
+            len += cond._len + 1;
+
+            // handle breaks and continues
+            for (const auto jmp_to_end: stmt._breaks)
+                _gen_ist(jmp_to_end).set_op1(param._offset + len);
+            for (const auto jmp_to_head: stmt._continues)
+                _gen_ist(jmp_to_head).set_op1(param._offset);
+
+            return _gen_ret(len);
         }
     };
 
@@ -37,7 +74,7 @@ namespace cc0::ast {
 
     public:
         explicit AssignAST(range_t range, _ptr<IdExprAST> id, _ptr<ExprAST> value):
-            ExprAST(range), StmtAST(range), _id(std::move(id)), _value(std::move(value)) { }
+            ExprAST(range, Type::VOID), StmtAST(range), _id(std::move(id)), _value(std::move(value)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<assignment>\n" << _mid(t);
@@ -108,8 +145,34 @@ namespace cc0::ast {
             _stmt->graphize(out, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            /*
+             * .Loop
+             *     ...stmt
+             *     ...cond
+             *     j$(op) Loop
+             * .End
+             */
+            auto stmt = _stmt->generate(param);
+            if (stmt._len == 0)
+                return _gen_ret(0);
+            auto len = stmt._len;
 
+            auto cond = _cond->generate(param);
+            if (cond._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+
+            _gen_ist1(_make_jmp(_cond->get_op()), param._offset);
+            len += cond._len + 1;
+
+            for (const auto jmp_to_end: stmt._breaks)
+                _gen_ist(jmp_to_end).set_op1(param._offset + len);
+            for (const auto jmp_to_head: stmt._continues)
+                _gen_ist(jmp_to_head).set_op1(param._offset);
+
+            return _gen_ret(len);
         }
     };
 }

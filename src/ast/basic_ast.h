@@ -22,16 +22,25 @@
 #include <utility>
 
 #define _symtbl GeneratorContext::get_tbl()
-#define _gen_err(_code) GeneratorContext::put_fatal(C0Err(_code, _range.first, _range.second))
-#define _gen_wrn(_code) GeneratorContext::put_wrn(C0Err(_code, _range.first, _range.second))
+#define _gen_err(_code) GeneratorContext::put_fatal(C0Err(_code, AST::_range.first, AST::_range.second))
+#define _gen_wrn(_code) GeneratorContext::put_wrn(C0Err(_code, AST::_range.first, AST::_range.second))
+#define _gen_err2(_code) GeneratorContext::put_fatal(C0Err(_code, ExprAST::_range.first, ExprAST::_range.second))
+#define _gen_wrn2(_code) GeneratorContext::put_wrn(C0Err(_code, ExprAST::_range.first, ExprAST::_range.second))
 
 #define _gen_ist0(_type) GeneratorContext::put_ist(Instruction(_type))
 #define _gen_ist1(_type, _op1) GeneratorContext::put_ist(Instruction(_type, _op1))
 #define _gen_ist2(_type, _op1, _op2) GeneratorContext::put_ist(Instruction(_type, _op1, _op2))
 #define _gen_pop GeneratorContext::pop_ist()
 #define _gen_popn(n) GeneratorContext::pop_ist(n)
+// get instruction based on _off
+#define _gen_ist(_off) GeneratorContext::get_ist(_off)
+// global offset
+#define _gen_ist_off static_cast<uint32_t>(GeneratorContext::get_ist().size())
 
 #define _gen_ret(_len) { _len, {}, {} }
+
+#define _gen_move_back(_src, _res) _src.insert(_src.end(), std::make_move_iterator(_res.begin()), \
+    std::make_move_iterator(_res.end()))
 
 namespace cc0::ast {
     class AST {
@@ -46,41 +55,28 @@ namespace cc0::ast {
 
         [[nodiscard]] inline static std::string _type_str(Type type) {
             switch (type) {
-                case Type::VOID: return "void";
-                case Type::INT: return "int32";
-                case Type::CHAR: return "char";
-                case Type::STRING: return "string";
-                case Type::DOUBLE: return "float64";
-                default: return "undefined";
+                case Type::VOID:    return "void";
+                case Type::INT:     return "int32";
+                case Type::CHAR:    return "char";
+                case Type::STRING:  return "string";
+                case Type::DOUBLE:  return "float64";
+                default:            return "undefined";
             }
         }
 
         [[nodiscard]] inline static std::string _op_str(Op op) {
             switch (op) {
-                case Op::ADD: return "+";
-                case Op::SUB: return "-";
-                case Op::MUL: return "*";
-                case Op::DIV: return "/";
-                case Op::LT: return "<";
-                case Op::LE: return "<=";
-                case Op::GT: return ">";
-                case Op::GE: return ">=";
-                case Op::EQ: return "==";
-                case Op::NEQ: return "!=";
-                default: return "undefined";
-            }
-        }
-
-        [[nodiscard]] inline static uint32_t _make_slot(Type type) {
-            switch (type) {
-                case Type::INT:
-                    [[fallthrough]];
-                case Type::CHAR:
-                    return 1;
-                case Type::DOUBLE:
-                    return 2;
-                default:
-                    return -1;
+                case Op::ADD:   return "+";
+                case Op::SUB:   return "-";
+                case Op::MUL:   return "*";
+                case Op::DIV:   return "/";
+                case Op::LT:    return "<";
+                case Op::LE:    return "<=";
+                case Op::GT:    return ">";
+                case Op::GE:    return ">=";
+                case Op::EQ:    return "==";
+                case Op::NEQ:   return "!=";
+                default:        return "undefined";
             }
         }
 
@@ -95,6 +91,39 @@ namespace cc0::ast {
             }
         }
 
+        [[nodiscard]] inline static uint32_t _make_slot(Type type) {
+            switch (type) {
+                case Type::INT:     [[fallthrough]];
+                case Type::CHAR:    return 1;
+                case Type::DOUBLE:  return 2;
+                default:            return -1;
+            }
+        }
+
+        [[nodiscard]] inline static InstType _make_jmp(Op op) {
+            switch (op) {
+                case Op::GT:    return InstType::JG;
+                case Op::GE:    return InstType::JGE;
+                case Op::LT:    return InstType::JL;
+                case Op::LE:    return InstType::JLE;
+                case Op::EQ:    return InstType::JE;
+                case Op::NEQ:   return InstType::JNE;
+                default:        return InstType::NOP;
+            }
+        }
+
+        [[nodiscard]] inline static InstType _make_jn(Op op) {
+            switch (op) {
+                case Op::GT:    return InstType::JLE;
+                case Op::GE:    return InstType::JL;
+                case Op::LT:    return InstType::JGE;
+                case Op::LE:    return InstType::JG;
+                case Op::EQ:    return InstType::JNE;
+                case Op::NEQ:   return InstType::JE;
+                default:        return InstType::NOP;
+            }
+        }
+
         struct _GenParam final {
             /*
              * scope info
@@ -104,9 +133,8 @@ namespace cc0::ast {
             /*
              * position info
              * _offset - offset in current function's instructions list
-             *           we use this value to make jmp instruction
-             *           in a new function, it will be 0
-             *           !! except <func-def> its offset is global offset
+             *           we use this value to make jmp instruction (function offset)
+             *           in a new function block, it will be 0
              * _slot   - offset in current frame in vm
              *           we use this value to fill symbol table
              *           in a new function, it will be slots(parameters)
@@ -133,18 +161,8 @@ namespace cc0::ast {
 
             /*
              * back-fill info
-             * they store offset in current function
-             *
-             *  instructions
-             *  ------------
-             * | loada 0, 0 |   # function start (func-offset = 0)
-             * |    ....    |
-             * | jmp .Test  |   # loop offset (func-offset = a)
-             * |    ....    |
-             * |  jmp .End  |   # break offset (func-offset = b)
-             * |    ....    |
-             *
-             * we can easily get global offset = func-offset + FuncSym._offset
+             * they store offset in global instructions list
+             * we set backfill info base on global offset
              */
             std::vector<uint32_t> _breaks;
             std::vector<uint32_t> _continues;

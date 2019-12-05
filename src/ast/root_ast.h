@@ -43,13 +43,13 @@ namespace cc0::ast {
             // global vars
             for (const auto& var: _vars) {
                 auto res = var->generate({ param._level, 0, slot, Type::UNDEFINED });
-                if (res._len > 0) slot += _make_slot(var->get_type());
+                if (res._len != 0) slot += _make_slot(var->get_type());
                 len += res._len;
             }
 
             // function define
             for (const auto& func: _funcs) {
-                auto res = func->generate({ param._level + 1, len, 0, func->get_ret() });
+                auto res = func->generate({ param._level + 1, 0, 0, func->get_ret() });
                 len += res._len;
             }
 

@@ -6,6 +6,8 @@
 #ifndef C0_ERROR_H
 #define C0_ERROR_H
 
+#include <utility>
+
 #include "tools/alias.h"
 #include "ctx/src_ctx.h"
 
@@ -57,8 +59,7 @@ namespace cc0 {
     class C0Err final {
         friend inline void swap(C0Err& lhs, C0Err& rhs) {
             std::swap(lhs._code, rhs._code);
-            std::swap(lhs._ctx._line, rhs._ctx._line);
-            std::swap(lhs._ctx._range, rhs._ctx._range);
+            std::swap(lhs._range, rhs._range);
         }
 
         friend std::ostream& operator<<(std::ostream& out, const C0Err& err) {
@@ -76,39 +77,29 @@ namespace cc0 {
         }
 
     private:
-        class _ErrContext final {
-        public:
-            std::string& _line;
-            range_t _range;
-
-            _ErrContext(std::string& line, range_t range):
-                    _line(line), _range(std::move(range)) { }
-            bool operator==(const _ErrContext& ctx) const { return _range == ctx._range; }
-        };
-
         ErrCode _code;
-        _ErrContext _ctx;
+        range_t _range;
 
     public:
         explicit C0Err(ErrCode code, range_t range):
-            _code(code), _ctx(SourceContext::get_line(range.first.first), range) { }
+            _code(code), _range(std::move(range)) { }
         explicit C0Err(ErrCode code, pos_t start, pos_t end):
             C0Err(code, { start, end }) { }
         explicit C0Err(ErrCode code, int64_t start_row, int64_t start_col, int64_t end_row, int64_t end_col):
             C0Err(code, { start_row, start_col }, { end_row, end_col }) { }
         C0Err(const C0Err&) = default;
-        C0Err(C0Err&& err) noexcept: _code(err._code), _ctx(std::move(err._ctx)) {}
+        C0Err(C0Err&& err) noexcept: _code(err._code), _range(std::move(err._range)) {}
         C0Err& operator=(C0Err rhs) {
             swap(*this, rhs);
             return *this;
         }
-        bool operator==(const C0Err& err) { return _code == err._code && _ctx == err._ctx; }
+        bool operator==(const C0Err& err) { return _code == err._code && _range == err._range; }
 
         [[nodiscard]] inline bool is_fatal() const { return static_cast<int64_t>(_code) <= 127; }
         [[nodiscard]] inline ErrCode get_code() const { return _code; }
-        [[nodiscard]] inline std::string get_err_line() const { return _ctx._line; }
-        [[nodiscard]] inline pos_t get_start() const { return _ctx._range.first; }
-        [[nodiscard]] inline pos_t get_end() const { return _ctx._range.second; }
+        [[nodiscard]] inline std::string get_err_line() const { return SourceContext::get_line(get_start().first); }
+        [[nodiscard]] inline pos_t get_start() const { return _range.first; }
+        [[nodiscard]] inline pos_t get_end() const { return _range.second; }
         [[nodiscard]] inline int64_t get_len() const { return get_end().second - get_start().second; }
     };
 }

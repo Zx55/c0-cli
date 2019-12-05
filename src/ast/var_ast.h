@@ -34,8 +34,10 @@ namespace cc0::ast {
 
             // initialized
             auto len = _init->generate(param)._len;
-            auto init_type = _init->get_type();
+            if (len == 0)
+                return _gen_ret(0);
 
+            auto init_type = _init->get_type();
             if (init_type == _type) {
                 _put_tbl(true);
                 return _gen_ret(len);

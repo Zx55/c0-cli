@@ -25,7 +25,7 @@ namespace cc0 {
     }
 
     std::vector<C0Err> RuntimeContext::get_errs() {
-        auto cmp = [](const C0Err& lhs, const C0Err& rhs) {
+        [[maybe_unused]] auto cmp = [](const C0Err& lhs, const C0Err& rhs) {
             if (lhs.get_start().first == rhs.get_start().first)
                 return lhs.get_start().second <= rhs.get_start().second;
             return lhs.get_start().first <= rhs.get_start().first;
@@ -35,8 +35,7 @@ namespace cc0 {
         if (SourceContext::_f_wall)
             errs.insert(errs.end(), _wrns.begin(), _wrns.end());
 
-        // FIXME: line ctx error.
-        // std::sort(errs.begin(), errs.end(), cmp);
+        std::sort(errs.begin(), errs.end(), cmp);
         return errs;
     }
 }

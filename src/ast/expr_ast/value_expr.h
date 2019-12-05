@@ -107,12 +107,6 @@ namespace cc0::ast {
     private:
         Token _id;
 
-        [[nodiscard]] inline static InstType _make_load(Type type) {
-            if (type == Type::DOUBLE)
-                return InstType::DLOAD;
-            return InstType::ILOAD;
-        }
-
     public:
         explicit IdExprAST(range_t range, Token id): ExprAST(range), _id(std::move(id)) { }
 
@@ -125,21 +119,21 @@ namespace cc0::ast {
         }
 
         _GenResult generate([[maybe_unused]] _GenParam param) override {
-            // use variable identifier only
+            // get variable address only
             auto var = _symtbl.get_var(get_id_str());
             if (!var.has_value()) {
                 _gen_err(ErrCode::ErrUndeclaredIdentifier);
                 return _gen_ret(0);
             }
 
+            ExprAST::_type = var->get_type();
+
             if (var->is_glob())
                 _gen_ist2(InstType::LOADA, 1, var->get_offset());
             else
                 _gen_ist2(InstType::LOADA, 0, var->get_offset());
 
-            _gen_ist0(_make_load(var->get_type()));
-            ExprAST::_type = var->get_type();
-            return _gen_ret(2);
+            return _gen_ret(1);
         }
     };
 }

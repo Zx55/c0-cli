@@ -31,8 +31,9 @@ namespace cc0::ast {
             out << "<empty-stmt>\n";
         }
 
-        _GenResult generate(_GenParam param) override {
-
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
+            _gen_ist0(InstType::NOP);
+            return _gen_ret(1);
         }
     };
 }

@@ -31,8 +31,70 @@ namespace cc0::ast {
             }
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto cond = _cond->generate(param);
+            auto len = cond._len;
+            if (len == 0)
+                return _gen_ret(0);
 
+            auto jmp_to_false = _gen_ist_off;
+            _gen_ist1(_make_jn(_cond->get_op()), 0);
+            ++len;
+
+            auto true_stmt = _true->generate({ param._level, param._offset + len,
+                                               param._slot, param._ret });
+            if (true_stmt._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            len += true_stmt._len;
+
+            if (_false == nullptr) {
+                /*
+                 * `if (cond) stmt` will generate:
+                 *
+                 *     ...cond
+                 *     j$(!op) .End
+                 *     ...stmt
+                 * .End
+                 *
+                 * and the .End here is false offset
+                 */
+                _gen_ist(jmp_to_false).set_op1(param._offset + len);
+                return { len + 1, std::move(true_stmt._breaks), std::move(true_stmt._continues) };
+            }
+
+            /*
+             * `if (cond) stmt1 else stmt2` will generate:
+             *
+             *     ...cond
+             *     j$(!op) .False
+             *     ...stmt1
+             *     jmp .End
+             * .False
+             *     ...stmt2
+             * .End
+             */
+            auto jmp_to_end = _gen_ist_off;
+            _gen_ist1(InstType::JMP, 0);
+            ++len;
+            _gen_ist(jmp_to_false).set_op1(param._offset + len);
+
+            auto false_stmt = _false->generate({ param._level, param._offset + len,
+                                                 param._slot, param._ret });
+            if (false_stmt._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            len += false_stmt._len;
+
+            _gen_ist(jmp_to_end).set_op1(param._offset + len);
+
+            auto breaks = std::move(true_stmt._breaks);
+            auto continues = std::move(true_stmt._continues);
+            _gen_move_back(breaks, false_stmt._breaks);
+            _gen_move_back(continues, false_stmt._continues);
+            return { len + 1, std::move(breaks), std::move(continues) };
         }
     };
 

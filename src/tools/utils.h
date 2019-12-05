@@ -62,37 +62,13 @@ namespace cc0::utils {
 
     // 转义字符 \x特判
     inline bool ise_char(int ch) {
-        switch (ch) {
-            case 'r':
-                [[fallthrough]];
-            case 'n':
-                [[fallthrough]];
-            case 't':
-                [[fallthrough]];
-            case '\\':
-                [[fallthrough]];
-            case '\'':
-                [[fallthrough]];
-            case '\"':
-                return true;
-            default:
-                return false;
-        }
+        return ch == 'r' || ch == 'n' || ch == 't' || ch == '\\'
+                || ch == '\'' || ch == '\"';
     }
 
     inline bool istype(TokenType type) {
-        switch (type) {
-            case TokenType::VOID:
-                [[fallthrough]];
-            case TokenType::INT:
-                [[fallthrough]];
-            case TokenType::CHAR:
-                [[fallthrough]];
-            case TokenType::DOUBLE:
-                return true;
-            default:
-                return false;
-        }
+        return type == TokenType::VOID || type == TokenType::INT
+               || type == TokenType::CHAR || type == TokenType::DOUBLE;
     }
 
     inline bool isconst(TokenType type) {
@@ -100,60 +76,28 @@ namespace cc0::utils {
     }
 
     inline bool isre_op(TokenType type) {
-        switch (type) {
-            case TokenType::LESS:
-                [[fallthrough]];
-            case TokenType::LESS_EQUAL:
-                [[fallthrough]];
-            case TokenType::GREATER:
-                [[fallthrough]];
-            case TokenType::GREATER_EQUAL:
-                [[fallthrough]];
-            case TokenType::EQUAL:
-                [[fallthrough]];
-            case TokenType::NEQUAL:
-                return true;
-            default:
-                return false;
-        }
+        return type == TokenType::LESS || type == TokenType::LESS_EQUAL
+                || type == TokenType::GREATER || type == TokenType::GREATER_EQUAL
+                || type == TokenType::EQUAL || type == TokenType::NEQUAL;
     }
 
     inline bool isadd(TokenType type) {
-        switch (type) {
-            case TokenType::PLUS:
-                [[fallthrough]];
-            case TokenType::MINUS:
-                return true;
-            default:
-                return false;
-        }
+        return type == TokenType::PLUS || type == TokenType::MINUS;
     }
 
     inline bool ismul(TokenType type) {
-        switch (type) {
-            case TokenType::MULTIPLY:
-                [[fallthrough]];
-            case TokenType::DIVISION:
-                return true;
-            default:
-                return false;
-        }
+        return type == TokenType::MULTIPLY || type == TokenType::DIVISION;
     }
 
     inline ast::Type make_type(TokenType type) {
         using namespace ast;
 
         switch (type) {
-            case TokenType::VOID:
-                return Type::VOID;
-            case TokenType::INT:
-                return Type::INT;
-            case TokenType::CHAR:
-                return Type::CHAR;
-            case TokenType::DOUBLE:
-                return Type::DOUBLE;
-            default:
-                return Type::UNDEFINED;
+            case TokenType::VOID:   return Type::VOID;
+            case TokenType::INT:    return Type::INT;
+            case TokenType::CHAR:   return Type::CHAR;
+            case TokenType::DOUBLE: return Type::DOUBLE;
+            default:                return Type::UNDEFINED;
         }
     }
 
@@ -161,47 +105,29 @@ namespace cc0::utils {
         using namespace ast;
 
         switch (op) {
-            case TokenType::PLUS:
-                return Op::ADD;
-            case TokenType::MINUS:
-                return Op::SUB;
-            case TokenType::MULTIPLY:
-                return Op::MUL;
-            case TokenType::DIVISION:
-                return Op::DIV;
-            case TokenType::LESS:
-                return Op::LT;
-            case TokenType::LESS_EQUAL:
-                return Op::LE;
-            case TokenType::GREATER:
-                return Op::GT;
-            case TokenType::GREATER_EQUAL:
-                return Op::GE;
-            case TokenType::EQUAL:
-                return Op::EQ;
-            case TokenType::NEQUAL:
-                return Op::NEQ;
-            default:
-                return Op::UNDEFINED;
+            case TokenType::PLUS:           return Op::ADD;
+            case TokenType::MINUS:          return Op::SUB;
+            case TokenType::MULTIPLY:       return Op::MUL;
+            case TokenType::DIVISION:       return Op::DIV;
+            case TokenType::LESS:           return Op::LT;
+            case TokenType::LESS_EQUAL:     return Op::LE;
+            case TokenType::GREATER:        return Op::GT;
+            case TokenType::GREATER_EQUAL:  return Op::GE;
+            case TokenType::EQUAL:          return Op::EQ;
+            case TokenType::NEQUAL:         return Op::NEQ;
+            default:                        return Op::UNDEFINED;
         }
     }
 
     inline char make_escape(char ch) {
         switch (ch) {
-            case 'r':
-                return '\r';
-            case 'n':
-                return '\n';
-            case 't':
-                return '\t';
-            case '\\':
-                return '\\';
-            case '\'':
-                return '\'';
-            case '\"':
-                return '\"';
-            default:
-                return -1;
+            case 'r':   return '\r';
+            case 'n':   return '\n';
+            case 't':   return '\t';
+            case '\\':  return '\\';
+            case '\'':  return '\'';
+            case '\"':  return '\"';
+            default:    return -1;
         }
     }
 }
