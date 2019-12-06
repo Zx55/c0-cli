@@ -20,6 +20,13 @@ namespace cc0::ast {
         explicit RootAST(range_t range, _ptrs<VarDeclAST> vars, _ptrs<FuncDefAST> funcs):
             AST(range), _vars(std::move(vars)), _funcs(std::move(funcs)) { }
 
+        [[nodiscard]] inline std::vector<std::string> get_funcs() const {
+            auto ret = std::vector<std::string>();
+            for (const auto& func: _funcs)
+                ret.push_back(func->get_id_str());
+            return ret;
+        }
+
         void graphize(std::ostream& out, int t) override {
             out << "<c0-root>\n";
 

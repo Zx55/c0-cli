@@ -30,7 +30,7 @@ namespace cc0 {
         static std::vector<C0Err> _wrns;
 
         static std::vector<Token> _tokens;
-        static std::unique_ptr<AST> _ast;
+        static std::unique_ptr<ast::RootAST> _ast;
         static std::vector<Instruction> _ist;
 
     public:
@@ -71,7 +71,7 @@ namespace cc0 {
 
         inline static void set_tokens(std::vector<Token>&& tokens) { _tokens = std::move(tokens); }
         inline static void put_token(Token token) { _tokens.push_back(std::move(token)); }
-        inline static void set_ast(ast::_ptr<AST> ast) { _ast.reset(nullptr); _ast = std::move(ast); }
+        inline static void set_ast(ast::_ptr<ast::RootAST> ast) { _ast.reset(nullptr); _ast = std::move(ast); }
         inline static void set_ist(std::vector<Instruction> inst) { _ist = std::move(inst); }
     };
 }

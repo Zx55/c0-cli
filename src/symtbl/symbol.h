@@ -12,6 +12,7 @@
 #include <vector>
 #include <any>
 #include <optional>
+#include <set>
 #include <map>
 #include <unordered_map>
 #include <utility>
@@ -19,36 +20,54 @@
 namespace cc0::symbol {
     class ConsSym final {
         friend inline void swap(ConsSym& lhs, ConsSym& rhs) {
+            std::swap(lhs._index, rhs._index);
             std::swap(lhs._type, rhs._type);
             std::swap(lhs._value, rhs._value);
         }
 
+        friend inline bool operator<(const ConsSym& lhs, const ConsSym& rhs) {
+            if (lhs._type == rhs._type) {
+                switch (lhs._type) {
+                    case Type::INT:
+                        return std::any_cast<int32_t>(lhs._value) < std::any_cast<int32_t>(rhs._value);
+                    case cc0::Type::DOUBLE:
+                        return std::any_cast<double>(lhs._value) < std::any_cast<double>(rhs._value);
+                    case cc0::Type::STRING:
+                        return std::any_cast<std::string>(lhs._value) < std::any_cast<std::string>(rhs._value);
+                    default:
+                        return lhs._index < rhs._index;
+                }
+            }
+            return static_cast<uint32_t>(lhs._type) < static_cast<uint32_t>(rhs._type);
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const ConsSym& rhs) {
+            out << rhs._index << ' ';
+            switch (rhs._type) {
+                case Type::DOUBLE:
+                    out << "D " << std::any_cast<double>(rhs._value);
+                    break;
+                case ast::Type::INT:
+                    out << "I " << std::any_cast<int32_t>(rhs._value);
+                    break;
+                case ast::Type::STRING:
+                    out << "S " << std::any_cast<std::string>(rhs._value);
+                    break;
+                default:
+                    out << "U";
+            }
+
+            return out;
+        }
+
     private:
+        uint32_t _index;
         Type _type;
         std::any _value;
 
     public:
-        struct _Hash final {
-            std::size_t operator() (const ConsSym& sym) const {
-                std::string str = std::to_string(static_cast<int32_t>(sym._type));
-                switch (sym._type) {
-                    case Type::INT:
-                        str += std::to_string(std::any_cast<int32_t>(sym._value));
-                        break;
-                    case Type::DOUBLE:
-                        str += std::to_string(std::any_cast<double>(sym._value));
-                        break;
-                    case Type::STRING:
-                        str += std::any_cast<std::string>(sym._value);
-                        break;
-                    default:
-                        str += "undefined";
-                }
-                return std::hash<std::string>{}(str);
-            }
-        };
-
-        ConsSym(Type type, std::any value): _type(type), _value(std::move(value)) { }
+        ConsSym(uint32_t index, Type type, std::any value):
+            _index(index), _type(type), _value(std::move(value)) { }
         ConsSym(const ConsSym&) = default;
         ConsSym(ConsSym&&) = default;
         ConsSym& operator=(ConsSym rhs) {
@@ -73,6 +92,9 @@ namespace cc0::symbol {
                 return false;
             }
         }
+
+
+        [[nodiscard]] inline uint32_t get_index() const { return _index; }
     };
 
     class FuncSym final {
@@ -117,6 +139,7 @@ namespace cc0::symbol {
 
         [[nodiscard]] inline auto& get_params() const { return _params; }
         [[nodiscard]] inline Type get_ret_type() const { return _ret; }
+        [[nodiscard]] inline uint32_t get_offset() const { return _offset; }
 
         [[nodiscard]] inline bool put_param(std::string param, Type type, bool f_const = false) {
             if (auto it = _params.find(param); it != _params.end())

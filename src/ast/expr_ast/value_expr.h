@@ -20,6 +20,10 @@ namespace cc0::ast {
     public:
         explicit Int32ExprAST(range_t range, int32_t value): ExprAST(range, Type::INT), _value(value) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            return _type;
+        }
+
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<int32> [value] " << _value << "\n";
         }
@@ -36,6 +40,10 @@ namespace cc0::ast {
 
     public:
         explicit Float64ExprAST(range_t range, double value): ExprAST(range, Type::DOUBLE), _value(value) { }
+
+        [[nodiscard]] inline Type get_type() override {
+            return _type;
+        }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<float64> [value] " << _value << "\n";
@@ -57,6 +65,10 @@ namespace cc0::ast {
     public:
         explicit CharExprAST(range_t range, char value): ExprAST(range, Type::INT),
             _value(static_cast<int32_t>(value)) { }
+
+        [[nodiscard]] inline Type get_type() override {
+            return _type;
+        }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             int ch = static_cast<char>(_value);
@@ -86,6 +98,10 @@ namespace cc0::ast {
         explicit StringExprAST(range_t range, std::string value):
             ExprAST(range, Type::STRING), _value(std::move(value)) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            return _type;
+        }
+
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             auto str = _value;
             replace_all(str, "\r", "\\r");
@@ -114,6 +130,19 @@ namespace cc0::ast {
 
         [[nodiscard]] inline std::string get_id_str() const { return _id.get_value_str(); }
 
+        [[nodiscard]] inline Type get_type() override {
+            if (_type != Type::UNDEFINED) return _type;
+
+            auto var = _symtbl.get_var(get_id_str());
+            if (!var.has_value()) {
+                _gen_err(ErrCode::ErrUndeclaredIdentifier);
+                return _type;
+            }
+
+            ExprAST::_type = var->get_type();
+            return _type;
+        }
+
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<id> [name] " << _id.get_value_str() << "\n";
         }
@@ -121,12 +150,6 @@ namespace cc0::ast {
         _GenResult generate([[maybe_unused]] _GenParam param) override {
             // get variable address only
             auto var = _symtbl.get_var(get_id_str());
-            if (!var.has_value()) {
-                _gen_err(ErrCode::ErrUndeclaredIdentifier);
-                return _gen_ret(0);
-            }
-
-            ExprAST::_type = var->get_type();
 
             if (var->is_glob())
                 _gen_ist2(InstType::LOADA, 1, var->get_offset());

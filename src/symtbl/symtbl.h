@@ -11,7 +11,7 @@
 namespace cc0::symbol {
     class SymTbl final {
     private:
-        std::unordered_map<ConsSym, uint32_t, ConsSym::_Hash> _cons;
+        std::set<ConsSym> _cons;
         std::unordered_map<std::string, FuncSym> _funcs;
 
         /*
@@ -71,12 +71,20 @@ namespace cc0::symbol {
         }
 
         [[nodiscard]] inline uint32_t get_cons_offset(Type type, const std::any& value) const {
-            return _cons.find({ type, value })->second;
+            return _cons.find({ 0, type, value })->get_index();
+        }
+
+        [[nodiscard]] inline auto& get_cons_tbl() const {
+            return _cons;
+        }
+
+        [[nodiscard]] inline auto& get_func_tbl() const {
+            return _funcs;
         }
 
         inline void put_cons(Type type, const std::any& value) {
-            if (_cons.find({ type, value}) == _cons.end())
-                _cons[{ type, value }] = _cons.size();
+            if (_cons.find({ 0, type, value}) == _cons.end())
+                _cons.emplace(_cons.size(), type, value);
         }
 
         inline void put_glob(const std::string& id, Type type, uint32_t offset, uint32_t level,

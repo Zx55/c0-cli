@@ -70,10 +70,10 @@ namespace cc0 {
         auto gen = Generator();
         gen.generate();
 
-        if (output) {
+        if (output && RuntimeContext::get_fatal().empty()) {
             auto out = std::ofstream(SourceContext::get_out());
             auto ist = RuntimeContext::get_ist();
-            // out << ist;
+            gen.output_ist(out);
             out.close();
         }
 

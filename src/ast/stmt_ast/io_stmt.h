@@ -41,17 +41,16 @@ namespace cc0::ast {
             uint32_t len = 0;
 
             for (const auto& printable: _printable) {
-                auto res = printable->generate(param);
-
-                if (res._len == 0) continue;
-
                 auto type = printable->get_type();
+                if (type == Type::UNDEFINED)
+                    continue;
                 if (type == Type::VOID) {
                     _gen_err(ErrCode::ErrVoidHasNoValue);
-                    _gen_popn(res._len);
                     continue;
                 }
 
+                auto res = printable->generate(param);
+                if (res._len == 0) continue;
                 _gen_ist0(_make_print(type));
                 _gen_ist1(InstType::BIPUSH, 32);
                 len += res._len + 2;

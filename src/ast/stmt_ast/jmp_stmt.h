@@ -29,10 +29,7 @@ namespace cc0::ast {
         }
 
     public:
-        explicit ReturnStmtAST(range_t range): StmtAST(range) {
-            _ret = std::make_unique<ExprAST>(range, Type::VOID);
-        }
-        explicit ReturnStmtAST(range_t range, _ptr<ExprAST> ret):
+        explicit ReturnStmtAST(range_t range, _ptr<ExprAST> ret = nullptr):
             StmtAST(range), _ret(std::move(ret)) { }
 
         void graphize(std::ostream& out, int t) override {
@@ -44,29 +41,26 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
-            Type ret_type;
             uint32_t len = 0;
+            Type ret_type = (_ret == nullptr) ? Type::VOID : _ret->get_type();
+            if (ret_type == Type::UNDEFINED)
+                return _gen_ret(0);
 
-            if (_ret == nullptr)
-                ret_type = Type::VOID;
-            else {
-                // push return value on the top
-                auto res = _ret->generate(param);
-                if (res._len == 0)
-                    return _gen_ret(0);
-                len += res._len;
-                ret_type = _ret->get_type();
+            // type check
+            if (param._ret != ret_type && (param._ret == Type::VOID || ret_type == Type::VOID)) {
+                _gen_err(ErrCode::ErrVoidHasNoValue);
+                return _gen_ret(0);
             }
+
+            // push return value on the top
+            auto res = _ret->generate(param);
+            if (res._len == 0)
+                return _gen_ret(0);
+            len += res._len;
 
             if (param._ret == ret_type) {
                 _gen_ist0(_make_ret(ret_type));
                 return _gen_ret(len + 1);
-            }
-
-            if (param._ret == Type::VOID || ret_type == Type::VOID) {
-                _gen_err(ErrCode::ErrVoidHasNoValue);
-                _gen_popn(len);
-                return _gen_ret(0);
             }
 
             // type transform

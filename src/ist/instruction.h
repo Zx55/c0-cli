@@ -84,6 +84,15 @@ namespace cc0 {
             std::swap(lhs._op2, rhs._op2);
         }
 
+        friend inline std::ostream& operator<<(std::ostream& out, const Instruction& rhs) {
+            out << utils::make_instruction(rhs._op_type).first;
+            if (rhs._op1.has_value())
+                out << ' ' << rhs._op1.value();
+            if (rhs._op2.has_value())
+                out << ", " << rhs._op2.value();
+            return out;
+        }
+
     private:
         InstType _op_type;
         uint8_t _op_code;
@@ -122,7 +131,6 @@ namespace cc0 {
         }
 
         void set_op1(int32_t op1) { _op1 = op1; }
-        void set_op2(int32_t op2) { _op2 = op2; }
     };
 }
 

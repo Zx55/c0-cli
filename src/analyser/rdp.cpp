@@ -777,12 +777,12 @@ namespace cc0 {
 
         if (!_get()) {
             _errs.emplace_back(_rdp_err(ErrCode::ErrMissSemi));
-            return std::make_unique<ReturnStmtAST>(_rdp_pair(start), nullptr);
+            return std::make_unique<ReturnStmtAST>(_rdp_pair(start));
         }
 
         // ';'
         if (_token.get_type() == TokenType::SEMI)
-            return std::make_unique<ReturnStmtAST>(_rdp_pair(start), nullptr);
+            return std::make_unique<ReturnStmtAST>(_rdp_pair(start));
 
         _unget();
         // [<expr>]

@@ -33,22 +33,26 @@ namespace cc0::ast {
             }
 
             // initialized
+            // check type
+            auto init_type = _init->get_type();
+            if (init_type == Type::UNDEFINED)
+                return _gen_ret(0);
+            if (init_type == Type::VOID) {
+                _gen_err(ErrCode::ErrVoidHasNoValue);
+                return _gen_ret(0);
+            }
+
+            // generate code
             auto len = _init->generate(param)._len;
             if (len == 0)
                 return _gen_ret(0);
 
-            auto init_type = _init->get_type();
             if (init_type == _type) {
                 _put_tbl(true);
                 return _gen_ret(len);
             }
 
             switch (init_type) {
-                case Type::VOID: {
-                    _gen_err(ErrCode::ErrVoidHasNoValue);
-                    _gen_pop;
-                    return _gen_ret(0);
-                }
                 case Type::DOUBLE: {
                     // int a = 1.0;      perform double => int
                     _gen_ist0(InstType::D2I);

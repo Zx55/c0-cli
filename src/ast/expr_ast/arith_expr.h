@@ -19,6 +19,26 @@ namespace cc0::ast {
         explicit BinaryExprAST(range_t range, _ptr<ExprAST> lhs, Op op, _ptr<ExprAST> rhs):
             ExprAST(range), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            if (_type != Type::UNDEFINED) return _type;
+
+            auto ltype = _lhs->get_type(), rtype = _rhs->get_type();
+            // error
+            if (ltype == Type::UNDEFINED || rtype == Type::UNDEFINED) return _type;
+            if (ltype == Type::VOID || rtype == Type::VOID) {
+                _gen_err(ErrCode::ErrVoidHasNoValue);
+                return _type;
+            }
+
+            if (ltype == Type::DOUBLE || rtype == Type::DOUBLE)
+                _type = Type::DOUBLE;
+            else if (ltype == rtype)
+                _type = ltype;
+            else
+                _type = Type::INT;
+            return _type;
+        }
+
         void graphize(std::ostream& out, int t) override {
             out << "<binary-expr> [op] " << _op_str(_op) << "\n" << _mid(t);
             _lhs->graphize(out, t + 1);
@@ -46,22 +66,29 @@ namespace cc0::ast {
         explicit UnaryExprAST(range_t range, bool sign, _ptr<ExprAST> expr):
             ExprAST(range), _sign(sign), _expr(std::move(expr)) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            if (_type == Type::UNDEFINED)
+                ExprAST::_type = _expr->get_type();
+            return _type;
+        }
+
         void graphize(std::ostream& out, int t) override {
             out << "<unary-expr> [sign] " << (_sign ? '+' : '-') << "\n" << _end(t);
             _expr->graphize(out, t + 1);
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto type = _expr->get_type();
+            if (type == Type::UNDEFINED)
+                return _gen_ret(0);
+            if (type == Type::VOID) {
+                _gen_err(ErrCode::ErrVoidHasNoValue);
+                return _gen_ret(0);
+            }
+
             auto res = _expr->generate(param);
             if (res._len == 0)
                 return _gen_ret(0);
-
-            auto type = _expr->get_type();
-            if (type == Type::VOID) {
-                _gen_err(ErrCode::ErrVoidHasNoValue);
-                _gen_popn(res._len);
-                return _gen_ret(0);
-            }
 
             _gen_ist0(_make_neg(type));
             return _gen_ret(res._len + 1);

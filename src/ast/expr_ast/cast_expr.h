@@ -18,24 +18,29 @@ namespace cc0::ast {
         explicit CastExprAST(range_t range, Type cast, _ptr<ExprAST> expr):
             ExprAST(range), _cast(cast), _expr(std::move(expr)) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            return _cast;
+        }
+
         void graphize(std::ostream& out, int t) override {
             out << "<cast-expr> [type] " << _type_str(_cast) << "\n" << _end(t);
             _expr->graphize(out, t + 1);
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto src_type = _expr->get_type();
+            if (src_type == Type::UNDEFINED)
+                return _gen_ret(0);
+            if (_cast == Type::VOID || src_type == Type::VOID) {
+                // we don't allow void => any and any => void
+                _gen_err(ErrCode::ErrVoidHasNoValue);
+                return _gen_ret(0);
+            }
+
             auto res = _expr->generate(param);
             auto len = res._len;
             if (len == 0)
                 return _gen_ret(0);
-
-            auto src_type = _expr->get_type();
-            if (_cast == Type::VOID || src_type == Type::VOID) {
-                // we don't allow void => any and any => void
-                _gen_err(ErrCode::ErrVoidHasNoValue);
-                _gen_popn(len);
-                return _gen_ret(0);
-            }
 
             if (_cast == src_type) {
                 ExprAST::_type = _cast;
@@ -65,7 +70,6 @@ namespace cc0::ast {
                     return _gen_ret(0);
             }
 
-            ExprAST::_type = _cast;
             return _gen_ret(len);
         }
     };

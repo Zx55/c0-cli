@@ -76,6 +76,10 @@ namespace cc0::ast {
         explicit AssignAST(range_t range, _ptr<IdExprAST> id, _ptr<ExprAST> value):
             ExprAST(range, Type::VOID), StmtAST(range), _id(std::move(id)), _value(std::move(value)) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            return Type::VOID;
+        }
+
         void graphize(std::ostream& out, int t) override {
             out << "<assignment>\n" << _mid(t);
             _id->graphize(out, t + 1);

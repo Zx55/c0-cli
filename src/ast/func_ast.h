@@ -89,6 +89,7 @@ namespace cc0::ast {
                 _gen_move_back(continues, res._continues);
             }
 
+            _symtbl.destroy_level(param._level + 1);
             return { len, std::move(breaks), std::move(continues) };
         }
     };
@@ -130,6 +131,8 @@ namespace cc0::ast {
 
         [[nodiscard]] inline Type get_ret() const { return _ret; }
 
+        [[nodiscard]] inline std::string get_id_str() const { return _id->get_id_str(); }
+
         void graphize(std::ostream &out, int t) override {
             out << "<func-def> [return] -> " << _type_str(_ret) << "\n" << _mid(t);
             _id->graphize(out, t + 1);
@@ -149,6 +152,10 @@ namespace cc0::ast {
                 return _gen_ret(0);
             }
 
+            _symtbl.put_cons(Type::STRING, _id->get_id_str());
+            _symtbl.put_local(_id->get_id_str(), _ret, -1, param._level);
+            _symtbl.put_func(_id->get_id_str(), _ret, _gen_ist_off);
+
             // parameters
             uint32_t slot = 0;
             for (const auto &p: _params) {
@@ -163,14 +170,11 @@ namespace cc0::ast {
 
             // check breaks and continues
             if (!res._breaks.empty() || !res._continues.empty()) {
+                // FIXME: make correct error pos of break
                 _gen_err(ErrCode::ErrJmpInAcyclicStmt);
                 _gen_popn(res._len);
                 return _gen_ret(0);
             }
-
-            _symtbl.put_cons(Type::STRING, _id->get_id_str());
-            _symtbl.put_local(_id->get_id_str(), _ret, -1, param._level);
-            _symtbl.put_func(_id->get_id_str(), _ret, _gen_ist_off);
 
             // for those branch lack of return
             auto len = _make_default_ret();
@@ -188,6 +192,20 @@ namespace cc0::ast {
         explicit FuncCallAST(range_t range, _ptr<IdExprAST> id, _ptrs<ExprAST> params):
             ExprAST(range), StmtAST(range), _id(std::move(id)), _params(std::move(params)) { }
 
+        [[nodiscard]] inline Type get_type() override {
+            if (_type != Type::UNDEFINED) return _type;
+
+            // check undeclared
+            auto func = _symtbl.get_func(_id->get_id_str());
+            if (!func.has_value()) {
+                _gen_err2(ErrCode::ErrUndeclaredIdentifier);
+                return Type::UNDEFINED;
+            }
+
+            ExprAST::_type = func->get_ret_type();
+            return _type;
+        }
+
         void graphize(std::ostream &out, int t) override {
             out << "<func-call> ";
             _id->graphize(out, t + 1);
@@ -204,15 +222,7 @@ namespace cc0::ast {
         [[nodiscard]] _GenResult generate(_GenParam param) override {
             auto func = _symtbl.get_func(_id->get_id_str());
 
-            // check undeclared
-            if (!func.has_value()) {
-                _gen_err2(ErrCode::ErrUndeclaredIdentifier);
-                return _gen_ret(0);
-            }
-
-            ExprAST::_type = func->get_ret_type();
-
-            // check param
+            // we check func in get_type
             auto params = func->get_params();
             if (params.size() != _params.size()) {
                 _gen_err2(ErrCode::ErrParameterUnMatch);
@@ -223,6 +233,18 @@ namespace cc0::ast {
             auto it_formal = params.cbegin();
             auto it_actual = _params.cbegin();
             for (; it_formal != params.cend(); ++it_formal, ++it_actual) {
+                auto actual_type = (*it_actual)->get_type(), formal_type = it_formal->second.first;
+                // check type
+                if (actual_type == Type::UNDEFINED) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                if (actual_type == Type::VOID) {
+                    _gen_err2(ErrCode::ErrVoidHasNoValue);
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+
                 // push actual param
                 auto res = (*it_actual)->generate(param);
                 if (res._len == 0) {
@@ -231,16 +253,10 @@ namespace cc0::ast {
                 }
                 len += res._len;
 
-                // type check and trans
-                auto formal_type = it_formal->second.first, actual_type = (*it_actual)->get_type();
+                // type trans
                 if (formal_type == actual_type)
                     continue;
-
                 switch (actual_type) {
-                    case Type::VOID:
-                        _gen_err2(ErrCode::ErrVoidHasNoValue);
-                        _gen_popn(len);
-                        return _gen_ret(0);
                     case Type::DOUBLE:
                         // foo(int), foo(1.0);     perform double => int
                         _gen_ist0(InstType::D2I);

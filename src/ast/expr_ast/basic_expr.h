@@ -17,10 +17,9 @@ namespace cc0::ast {
         explicit ExprAST(range_t range, Type type = Type::UNDEFINED):
              AST(range), _type(type) { }
 
-        // we have to get expr's type after generating inst (parse its children)
-        // like expression 1 + (2 * 3.0)
-        // we don't know the type of 2 * 3.0 when we parse addition of 1 and (2 * 3.0)
-        [[nodiscard]] inline Type get_type() const { return _type; }
+        inline virtual Type get_type() {
+            return _type;
+        }
 
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<expr>\n";

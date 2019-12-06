@@ -32,6 +32,10 @@ namespace cc0::ast {
 
         [[nodiscard]] inline Op get_op() const { return _op; }
 
+        [[nodiscard]] inline Type get_type() override {
+            return _type;
+        }
+
         void graphize(std::ostream& out, int t) override {
             out << "<cond-expr> [op] " << _op_str(_op) << "\n" << _mid(t);
             _lhs->graphize(out, t + 1);
@@ -42,31 +46,33 @@ namespace cc0::ast {
         [[nodiscard]] _GenResult generate(_GenParam param) override {
             uint32_t len = 0;
 
+            auto ltype = _lhs->get_type(), rtype = _rhs->get_type();
+            if (ltype == Type::VOID || rtype == Type::VOID) {
+                _gen_err(ErrCode::ErrIncomparable);
+                return _gen_ret(0);
+            }
+
+            // generate lhs first
             auto lres = _lhs->generate(param);
             if (lres._len == 0)
                 return _gen_ret(0);
             len += lres._len;
 
-            auto ltype = _lhs->get_type();
-            if (ltype == Type::VOID) {
-                _gen_err(ErrCode::ErrIncomparable);
+            // int/char vs double
+            if (ltype != Type::DOUBLE && rtype == Type::DOUBLE) {
+                _gen_ist0(InstType::I2D);
+                ++len;
+            }
+
+            // then generate rhs
+            auto rres = _rhs->generate(param);
+            if (rres._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
             }
-
-            // generate inst first
-            auto rres = _rhs->generate(param);
-            if (rres._len == 0)
-                return _gen_ret(0);
             len += rres._len;
 
-            auto rtype = _rhs->get_type();
-            if (rtype == Type::VOID) {
-                _gen_err(ErrCode::ErrIncomparable);
-                _gen_popn(len);
-                return _gen_ret(0);
-            }
-
+            // type trans
             if (ltype == rtype) {
                 _gen_ist0(_make_cmp(ltype));
                 return _gen_ret(len + 1);
@@ -79,17 +85,8 @@ namespace cc0::ast {
                 return _gen_ret(len + 2);
             }
 
-            if (rtype == Type::DOUBLE) {
-                // regenerate rhs
-                _gen_popn(rres._len);
-                _gen_ist0(InstType::I2D);
-                (void) _rhs->generate(param);
-                _gen_ist0(_make_cmp(rtype));
-                return _gen_ret(len + 2);
-            }
-
-            // int vs char
-            _gen_ist0(InstType::ICMP);
+            // int vs char or int/char vs double
+            _gen_ist0(_make_cmp(rtype));
             return _gen_ret(len + 1);
         }
     };
