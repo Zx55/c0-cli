@@ -13,7 +13,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 32
+#define ERR_NUM 33
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -43,6 +43,7 @@ namespace cc0 {
         ErrMissWhile,
         ErrRepeatedDefault,
         ErrIncompleteComment,
+        ErrUninitailizedConstant,
         ErrUndeclaredIdentifier,
         ErrRedeclaredIdentifier,
         ErrAssignToConstant,
@@ -53,7 +54,8 @@ namespace cc0 {
         WrnInt32Overflow            = 128,
         WrnFloat64Overflow,
         WrnEmptyStatement,
-        WrnUninitailizedConstant,
+        WrnUnreachableCase,
+        WrnUninitailizedVariable,
     };
 
     class C0Err final {
@@ -139,6 +141,7 @@ namespace fmt {
                     "ErrMissWhile",
                     "ErrRepeatedDefault",
                     "ErrIncompleteComment",
+                    "ErrUninitailizedConstant",
                     "ErrUndeclaredVariable",
                     "ErrRedeclaredIdentifier",
                     "ErrAssignToConstant",
@@ -149,7 +152,8 @@ namespace fmt {
                     "WrnInt32Overflow",
                     "WrnFloat64Overflow",
                     "WrnEmptyStatement",
-                    "WrnUninitailizedConstant",
+                    "WrnUnreachableCase",
+                    "WrnUninitailizedVariable",
             };
 
             auto row = err.get_start().first + 1, col = err.get_start().second + 1;

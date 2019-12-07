@@ -50,6 +50,10 @@ namespace cc0::ast {
             switch (src_type) {
                 case Type::DOUBLE:
                     _gen_ist0(InstType::D2I);
+                    if (_cast == Type::CHAR) {
+                        _gen_ist0(InstType::I2C);
+                        ++len;
+                    }
                     ++len;
                     break;
                 case Type::INT:

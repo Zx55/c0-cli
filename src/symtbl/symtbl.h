@@ -11,15 +11,14 @@
 namespace cc0::symbol {
     class SymTbl final {
     private:
-        std::set<ConsSym> _cons;
-        std::unordered_map<std::string, FuncSym> _funcs;
+        LinkedHashMap<ConsSym, uint32_t, ConsSym::_Hash> _cons;
+        LinkedHashMap<std::string, FuncSym> _funcs;
 
         /*
          * variable table
          * _globs - store global vars (_domain = 0)
          *          storing vars in two table is to make finding global vars easy.
          * _local  - store local vars  (_domain > 0)
-         *          LinkedHashMap will be better here
          */
         std::unordered_map<std::string, VarSym> _globs;
         std::vector<VarSym> _local;
@@ -55,7 +54,7 @@ namespace cc0::symbol {
 
         [[nodiscard]] inline std::optional<FuncSym> get_func(const std::string& id) const {
             auto it = _funcs.find(id);
-            return it == _funcs.end() ? std::nullopt : std::make_optional(it->second);
+            return it == _funcs.find_end() ? std::nullopt : std::make_optional(it->second);
         }
 
         inline void var_init(const std::string& id) {
@@ -71,7 +70,7 @@ namespace cc0::symbol {
         }
 
         [[nodiscard]] inline uint32_t get_cons_offset(Type type, const std::any& value) const {
-            return _cons.find({ 0, type, value })->get_index();
+            return _cons.find({ type, value })->second;
         }
 
         [[nodiscard]] inline auto& get_cons_tbl() const {
@@ -83,8 +82,7 @@ namespace cc0::symbol {
         }
 
         inline void put_cons(Type type, const std::any& value) {
-            if (_cons.find({ 0, type, value}) == _cons.end())
-                _cons.emplace(_cons.size(), type, value);
+            _cons.insert({ type, value }, _cons.size());
         }
 
         inline void put_glob(const std::string& id, Type type, uint32_t offset, uint32_t level,
@@ -93,13 +91,19 @@ namespace cc0::symbol {
         }
 
         inline void put_func(const std::string& id, Type ret, uint32_t offset) {
-            _funcs.insert({ id, FuncSym(_funcs.size(), id, ret, offset) });
+            /*
+             * FIXME: why gcc use FuncSym's default constructor directly when I call _funcs.insert(id, FuncSym(...))
+             *        I think my linked-hashmap may have some bugs.
+             *        so I have to use STL's insert function.
+             */
+            _funcs.get_list().push_back(id);
+            _funcs.get_map().insert({ id, FuncSym(id, ret, offset) });
         }
 
         [[nodiscard]] inline bool put_param(const std::string& func, const std::string& param,
                 Type type, bool f_const = false) {
-            if (auto it = _funcs.find(func); it != _funcs.end())
-                return it->second.put_param(param, type, f_const);
+            if (auto it = _funcs.find(func); it != _funcs.find_end())
+                return const_cast<FuncSym&>(it->second).put_param(param, type, f_const);
             return false;
         }
 

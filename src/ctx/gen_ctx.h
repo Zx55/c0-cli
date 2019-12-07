@@ -37,6 +37,7 @@ namespace cc0 {
         [[nodiscard]] inline static Instruction& get_ist(uint32_t offset) { return _ist.at(offset); }
         inline static void pop_ist() { _ist.pop_back(); }
         inline static void pop_ist(uint32_t n) { _ist.erase(_ist.end() - n, _ist.end()); }
+        inline static void pop_wrn() { _wrns.pop_back(); }
     };
 }
 

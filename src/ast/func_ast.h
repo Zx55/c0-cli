@@ -74,6 +74,11 @@ namespace cc0::ast {
             uint32_t len = 0;
             std::vector<uint32_t> breaks, continues;
 
+            if (_vars.empty() && _stmts.empty()) {
+                _gen_ist0(InstType::NOP);
+                return _gen_ret(1);
+            }
+
             for (const auto& var: _vars) {
                 auto res = var->generate({ param._level + 1, param._offset,
                                            slot, param._ret });
@@ -183,6 +188,7 @@ namespace cc0::ast {
         }
     };
 
+    // TODO: pop call return value in some case.
     class FuncCallAST final: public ExprAST, public StmtAST {
     private:
         _ptr<IdExprAST> _id;
@@ -230,10 +236,10 @@ namespace cc0::ast {
             }
 
             uint32_t len = 0;
-            auto it_formal = params.cbegin();
+            auto it_formal = params.begin();
             auto it_actual = _params.cbegin();
-            for (; it_formal != params.cend(); ++it_formal, ++it_actual) {
-                auto actual_type = (*it_actual)->get_type(), formal_type = it_formal->second.first;
+            for (; it_actual != _params.cend(); ++it_formal, ++it_actual) {
+                auto actual_type = (*it_actual)->get_type(), formal_type = params.find(*it_formal)->second.first;
                 // check type
                 if (actual_type == Type::UNDEFINED) {
                     _gen_popn(len);
@@ -260,6 +266,10 @@ namespace cc0::ast {
                     case Type::DOUBLE:
                         // foo(int), foo(1.0);     perform double => int
                         _gen_ist0(InstType::D2I);
+                        if (formal_type == Type::CHAR) {
+                            _gen_ist0(InstType::I2C);
+                            ++len;
+                        }
                         ++len;
                         break;
                     case Type::INT:
@@ -284,7 +294,7 @@ namespace cc0::ast {
                 }
             }
 
-            _gen_ist0(InstType::CALL);
+            _gen_ist1(InstType::CALL, _symtbl.get_func_tbl().index(_id->get_id_str()));
             return _gen_ret(len + 1);
         }
     };

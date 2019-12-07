@@ -67,6 +67,10 @@ namespace cc0::ast {
             switch (ret_type) {
                 case Type::DOUBLE:
                     _gen_ist0(InstType::D2I);
+                    if (param._ret == Type::CHAR) {
+                        _gen_ist0(InstType::I2C);
+                        ++len;
+                    }
                     ++len;
                     break;
                 case Type::INT:
@@ -99,9 +103,9 @@ namespace cc0::ast {
             out << "<break-stmt>\n";
         }
 
-        [[nodiscard]] _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
             _gen_ist1(InstType::JMP, 0);
-            return { 1, { _gen_ist_off }, {} };
+            return { 1, { _gen_ist_off - 1 }, {} };
         }
     };
 
@@ -113,9 +117,9 @@ namespace cc0::ast {
             out << "<continue-stmt>\n";
         }
 
-        [[nodiscard]] _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
             _gen_ist1(InstType::JMP, 0);
-            return { 1, { _gen_ist_off }, {} };
+            return { 1, {}, { _gen_ist_off - 1 } };
         }
     };
 }

@@ -467,6 +467,7 @@ namespace cc0 {
 
         _ptrs<LabelStmtAST> cases;
         ast::_ptr<StmtAST> dft = nullptr;
+        int32_t reachable = 0, fin_reachable = -1;
 
         // 'switch'
         (void) _get();
@@ -500,12 +501,14 @@ namespace cc0 {
                 return nullptr;
             }
 
+            auto r = _token.get_range();
             switch (_token.get_type()) {
                 // '}'
                 case TokenType::RBRACE:
                 L_SWITCH_RET:
+                    if (fin_reachable < 0) fin_reachable = reachable;
                     return std::make_unique<SwitchStmtAST>(_rdp_pair(start),
-                            std::move(cond), std::move(cases), std::move(dft));
+                            std::move(cond), std::move(cases), fin_reachable, std::move(dft));
                 // 'case'
                 case TokenType::CASE: {
                     if (!_get()) {
@@ -532,6 +535,10 @@ namespace cc0 {
                         auto label = std::make_unique<LabelStmtAST>(_rdp_pair(start),
                                 std::move(this_case), std::move(stmt));
                         cases.push_back(std::move(label));
+                        if (fin_reachable > 0)
+                            _wrns.emplace_back(C0Err(ErrCode::WrnUnreachableCase, r));
+                        else
+                            ++reachable;
                         break;
                     } else {
                         _errs.emplace_back(_rdp_err(ErrCode::ErrInvalidCase));
@@ -554,6 +561,7 @@ namespace cc0 {
                     if (!stmt) goto L_SWITCH_RET;
 
                     dft = std::move(stmt);
+                    fin_reachable = reachable;
                     break;
                 }
                 default: {

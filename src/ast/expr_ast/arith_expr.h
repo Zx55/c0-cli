@@ -15,6 +15,33 @@ namespace cc0::ast {
         Op _op;
         _ptr<ExprAST> _rhs;
 
+        [[nodiscard]] inline static InstType _make_op(Type type, Op op) {
+            switch (op) {
+                case Op::ADD: {
+                    if (type == Type::DOUBLE)
+                        return InstType::DADD;
+                    return InstType::IADD;
+                }
+                case Op::SUB: {
+                    if (type == Type::DOUBLE)
+                        return InstType::DSUB;
+                    return InstType::ISUB;
+                }
+                case Op::MUL: {
+                    if (type == Type::DOUBLE)
+                        return InstType::DMUL;
+                    return InstType::IMUL;
+                }
+                case Op::DIV: {
+                    if (type == Type::DOUBLE)
+                        return InstType::DDIV;
+                    return InstType::IDIV;
+                }
+                default:
+                    return InstType::NOP;
+            }
+        }
+
     public:
         explicit BinaryExprAST(range_t range, _ptr<ExprAST> lhs, Op op, _ptr<ExprAST> rhs):
             ExprAST(range), _lhs(std::move(lhs)), _op(op), _rhs(std::move(rhs)) { }
@@ -46,8 +73,35 @@ namespace cc0::ast {
             _rhs->graphize(out, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            uint32_t len = 0;
+            // we check type in get_type() method
+            auto ltype = _lhs->get_type(), rtype = _rhs->get_type();
 
+            auto lhs = _lhs->generate(param);
+            if (lhs._len == 0)
+                return _gen_ret(0);
+            len += lhs._len;
+
+            if (_type == Type::DOUBLE && ltype != Type::DOUBLE) {
+                _gen_ist0(InstType::I2D);
+                ++len;
+            }
+
+            auto rhs = _rhs->generate(param);
+            if (rhs._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            len += rhs._len;
+
+            if (_type == Type::DOUBLE && rtype != Type::DOUBLE) {
+                _gen_ist0(InstType::I2D);
+                ++len;
+            }
+
+            _gen_ist0(_make_op(_type, _op));
+            return _gen_ret(len + 1);
         }
     };
 

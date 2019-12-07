@@ -67,7 +67,7 @@
             ...cond
             j$(!op) .False
             ...stmt1
-            j$(!op) .End
+            jmp .End
         .False:
             ...stmt2
         .End
@@ -87,6 +87,51 @@
 
 ## switch
 
+`switch '(' <expr> ')' '{' {<case>} [<default>] '}'`
+
+1. 代码生成
+
+    不带`default`
+    
+    ```
+        ...expr
+        ...cond1
+        icmp
+        je .Case1
+        ...expr
+        ...cond2
+        icmp
+        je .Case2
+        // ...
+        jmp .End
+    .Case1
+        ...stmt1
+        jmp .End
+    .Case2
+        ...stmt2
+        jmp .End
+        //...
+    .End
+    ```
+   
+    带`default`
+    
+    ```
+        ...expr
+        ...cond1
+        icmp
+        je .Case1
+        // ...
+        jmp .Default
+    .Case1
+        ...stmt1
+        jmp .End
+        // ...
+    .Default:
+        ...stmt
+    .End
+    ```
+
 ## while
 
 `'while' '(' <condition> ')' <statement>`
@@ -101,7 +146,7 @@
         ...stmt
     .Test
         ...cond
-        j$(op) .Test
+        j$(op) .Loop
     .End
     ```
 

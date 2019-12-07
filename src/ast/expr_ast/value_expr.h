@@ -123,6 +123,12 @@ namespace cc0::ast {
     private:
         Token _id;
 
+        [[nodiscard]] inline static InstType _make_load(Type type) {
+            if (type == Type::DOUBLE)
+                return InstType::DLOAD;
+            return InstType::ILOAD;
+        }
+
     public:
         explicit IdExprAST(range_t range, Token id): ExprAST(range), _id(std::move(id)) { }
 
@@ -147,7 +153,7 @@ namespace cc0::ast {
             out << "<id> [name] " << _id.get_value_str() << "\n";
         }
 
-        _GenResult generate([[maybe_unused]] _GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
             // get variable address only
             auto var = _symtbl.get_var(get_id_str());
 
@@ -155,6 +161,17 @@ namespace cc0::ast {
                 _gen_ist2(InstType::LOADA, 1, var->get_offset());
             else
                 _gen_ist2(InstType::LOADA, 0, var->get_offset());
+
+            // we use ret field to check whether storing or loading
+            // UNDEFINED => store, like scan and assignment
+            // otherwise => load, like print, add
+            if (param._ret != Type::UNDEFINED) {
+                if (!var->is_init())
+                    _gen_wrn(ErrCode::WrnUninitailizedVariable);
+
+                _gen_ist0(_make_load(var->get_type()));
+                return _gen_ret(2);
+            }
 
             return _gen_ret(1);
         }

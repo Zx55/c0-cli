@@ -61,7 +61,7 @@ namespace cc0::ast {
                  * and the .End here is false offset
                  */
                 _gen_ist(jmp_to_false).set_op1(param._offset + len);
-                return { len + 1, std::move(true_stmt._breaks), std::move(true_stmt._continues) };
+                return { len, std::move(true_stmt._breaks), std::move(true_stmt._continues) };
             }
 
             /*
@@ -94,7 +94,7 @@ namespace cc0::ast {
             auto continues = std::move(true_stmt._continues);
             _gen_move_back(breaks, false_stmt._breaks);
             _gen_move_back(continues, false_stmt._continues);
-            return { len + 1, std::move(breaks), std::move(continues) };
+            return { len, std::move(breaks), std::move(continues) };
         }
     };
 
@@ -107,6 +107,8 @@ namespace cc0::ast {
         explicit LabelStmtAST(range_t range, _ptr<ExprAST> e_case, _ptr<StmtAST> stmt):
             StmtAST(range), _case(std::move(e_case)), _stmt(std::move(stmt)) { }
 
+        [[nodiscard]] inline _ptr<ExprAST>& get_case() { return _case; }
+
         void graphize(std::ostream& out, int t) override {
             out << "[case] ";
             _case->graphize(out, t + 1);
@@ -114,8 +116,11 @@ namespace cc0::ast {
             _stmt->graphize(out, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
-
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto stmt = _stmt->generate(param);
+            if (stmt._len == 0)
+                return _gen_ret(0);
+            return { stmt._len, std::move(stmt._breaks), std::move(stmt._continues) };
         }
     };
 
@@ -123,22 +128,25 @@ namespace cc0::ast {
     private:
         _ptr<ExprAST> _cond;
         _ptrs<LabelStmtAST> _cases;
+        uint32_t _reachable_cases;
         _ptr<StmtAST> _default;
 
     public:
-        explicit SwitchStmtAST(range_t range, _ptr<ExprAST> cond, _ptrs<LabelStmtAST> cases, _ptr<StmtAST> s_default):
-            StmtAST(range), _cond(std::move(cond)), _cases(std::move(cases)), _default(std::move(s_default)) { }
+        explicit SwitchStmtAST(range_t range, _ptr<ExprAST> cond, _ptrs<LabelStmtAST> cases,
+                uint32_t reachable, _ptr<StmtAST> s_default):
+            StmtAST(range), _cond(std::move(cond)), _cases(std::move(cases)),
+            _reachable_cases(reachable), _default(std::move(s_default)) { }
 
         void graphize(std::ostream& out, int t) override {
             out << "<switch-stmt>\n" << ((_cases.empty() && _default == nullptr) ? _end(t) : _mid(t)) << "[cond] ";
             _cond->graphize(out, t + 1);
             if (!_cases.empty()) {
-                for (auto it = _cases.cbegin(); it != _cases.cend() - 1; ++it) {
+                for (auto it = _cases.cbegin(); it != _cases.cbegin() + _reachable_cases - 1; ++it) {
                     out << _mid(t);
                     (*it)->graphize(out, t + 1);
                 }
                 out << (_default == nullptr ? _end(t) : _mid(t));
-                (*(_cases.cend() - 1))->graphize(out, t + 1);
+                (*(_cases.cbegin() + _reachable_cases - 1))->graphize(out, t + 1);
             }
             if (_default != nullptr) {
                 out << _end(t) << "[default] ";
@@ -146,8 +154,115 @@ namespace cc0::ast {
             }
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            /*
+             * switch '(' expr ')' '{' {case} [default] '}'
+             *
+             * without default:
+             *
+             *     ...expr
+             *     ...cond1
+             *     icmp
+             *     je .Case1
+             *     ...expr
+             *     ...cond2
+             *     icmp
+             *     je .Case2
+             *     jmp .End
+             * .Case1:
+             *     ...stmt1
+             *     jmp .End
+             * .Case2:
+             *     ...stmt2
+             *     jmp .End
+             * .End
+             *
+             * with default:
+             *
+             *     ...expr
+             *     ...cond1
+             *     icmp
+             *     je .Case1
+             *     jmp .Default
+             * .Case1
+             *     ...stmt1
+             *     jmp .End
+             * .Default
+             *     ...stmt
+             * .End
+             *
+             */
+            uint32_t len = 0;
+            auto jmp_to_case = std::vector<uint32_t>();
+            auto breaks = std::vector<uint32_t>();
+            auto continues = std::vector<uint32_t>();
 
+            // generate jump of each case
+            for (auto it = _cases.begin(); it != _cases.begin() + _reachable_cases; ++it) {
+                if (auto cond = _cond->generate(param); cond._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                else
+                    len += cond._len;
+
+                auto& case_cond = (*it)->get_case();
+                if (auto res = case_cond->generate(param); res._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                else
+                    len += res._len;
+
+                _gen_ist0(InstType::ICMP);
+                jmp_to_case.push_back(_gen_ist_off);
+                _gen_ist1(InstType::JE, 0);
+                len += 2;
+            }
+
+            auto jmp_to_default_or_end = _gen_ist_off;
+            _gen_ist1(InstType::JMP, 0);
+            ++len;
+
+            // generate stmt of each case
+            for (auto it = _cases.begin(); it != _cases.begin() + _reachable_cases; ++it) {
+                _gen_ist(jmp_to_case[it - _cases.begin()]).set_op1(param._offset + len);
+
+                auto stmt = (*it)->generate({ param._level, param._offset + len,
+                                              param._slot, param._ret });
+                if (stmt._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                len += stmt._len;
+
+                _gen_move_back(breaks, stmt._breaks);
+                _gen_move_back(continues, stmt._continues);
+            }
+
+            if (_default != nullptr) {
+                _gen_ist(jmp_to_default_or_end).set_op1(param._offset + len);
+
+                auto res = _default->generate({ param._level, param._offset + len,
+                                                param._slot, param._ret });
+                if (res._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                len += res._len;
+
+                _gen_move_back(breaks, res._breaks);
+                _gen_move_back(continues, res._continues);
+            } else {
+                _gen_pop;
+                --len;
+                _gen_ist(jmp_to_default_or_end).set_op1(param._offset + len);
+            }
+
+            // handle break;
+            for (const auto jmp_to_end: breaks)
+                _gen_ist(jmp_to_end).set_op1(param._offset + len);
+            return { len, {}, std::move(continues) };
         }
     };
 }

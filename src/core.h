@@ -73,7 +73,7 @@ namespace cc0 {
         if (output && RuntimeContext::get_fatal().empty()) {
             auto out = std::ofstream(SourceContext::get_out());
             auto ist = RuntimeContext::get_ist();
-            gen.output_ist(out);
+            cc0::Generator::output_ist(out);
             out.close();
         }
 

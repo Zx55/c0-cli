@@ -102,7 +102,7 @@ namespace cc0::ast {
             }
 
             // load address
-            auto res = _id->generate(param);
+            auto res = _id->generate({ param._level, param._offset, param._slot, Type::UNDEFINED });
             if (res._len == 0)
                 return _gen_ret(0);
 

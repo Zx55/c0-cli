@@ -25,10 +25,13 @@ namespace cc0::ast {
         [[nodiscard]] _GenResult _gen_var_decl(const _GenParam& param) {
             // uninitialized
             if (_init == nullptr) {
+                if (_const) {
+                    _gen_err(ErrCode::ErrUninitailizedConstant);
+                    return _gen_ret(0);
+                }
+
                 _gen_ist1(InstType::SNEW, _make_slot(_type));
                 _put_tbl(false);
-
-                if (_const) _gen_wrn(ErrCode::WrnUninitailizedConstant);
                 return _gen_ret(1);
             }
 
@@ -56,6 +59,11 @@ namespace cc0::ast {
                 case Type::DOUBLE: {
                     // int a = 1.0;      perform double => int
                     _gen_ist0(InstType::D2I);
+                    if (_type == Type::CHAR) {
+                        _gen_ist0(InstType::I2C);
+                        ++len;
+                    }
+
                     _put_tbl(true);
                     return _gen_ret(len + 1);
                 }
@@ -74,7 +82,7 @@ namespace cc0::ast {
                     if (_type == Type::DOUBLE) {
                         // double 1 = 'c';
                         _gen_ist0(InstType::I2D);
-                        return _gen_ret(len + 1);
+                        ++len;
                     }
                     return _gen_ret(len);
                 }

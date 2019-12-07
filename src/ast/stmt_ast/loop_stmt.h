@@ -33,12 +33,13 @@ namespace cc0::ast {
              *     ...stmt
              * .Test
              *     ...cond
-             *     j$(op) .Test
+             *     j$(op) .Loop
              * .End
              */
-            _gen_ist1(InstType::JMP, 0);
             auto jmp_to_test = _gen_ist_off;
+            _gen_ist1(InstType::JMP, 0);
             uint32_t len = 1;
+            auto loop_label = param._offset + len;
 
             auto stmt = _stmt->generate({ param._level, param._offset + len,
                                           param._slot, param._ret });
@@ -54,7 +55,7 @@ namespace cc0::ast {
                 _gen_popn(len);
                 return _gen_ret(0);
             }
-            _gen_ist1(_make_jn(_cond->get_op()), param._offset + len);
+            _gen_ist1(_make_jmp(_cond->get_op()), loop_label);
             len += cond._len + 1;
 
             // handle breaks and continues
@@ -72,6 +73,12 @@ namespace cc0::ast {
         _ptr<IdExprAST> _id;
         _ptr<ExprAST> _value;
 
+        [[nodiscard]] inline static InstType _make_store(Type type) {
+            if (type == Type::DOUBLE)
+                return InstType::DSTORE;
+            return InstType::ISTORE;
+        }
+
     public:
         explicit AssignAST(range_t range, _ptr<IdExprAST> id, _ptr<ExprAST> value):
             ExprAST(range, Type::VOID), StmtAST(range), _id(std::move(id)), _value(std::move(value)) { }
@@ -87,8 +94,70 @@ namespace cc0::ast {
             _value->graphize(out, t + 1);
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto ltype = _id->get_type(), rtype = _value->get_type();
+            if (ltype == Type::UNDEFINED || rtype == Type::UNDEFINED)
+                return _gen_ret(0);
+            if (rtype == Type::VOID) {
+                _gen_err2(ErrCode::ErrVoidHasNoValue);
+                return _gen_ret(0);
+            }
 
+            auto var = _symtbl.get_var(_id->get_id_str());
+            if (var->is_const()) {
+                _gen_err2(ErrCode::ErrAssignToConstant);
+                return _gen_ret(0);
+            }
+
+            uint32_t len = 0;
+            auto lhs = _id->generate({ param._level, param._offset, param._slot, Type::UNDEFINED });
+            if (lhs._len == 0)
+                return _gen_ret(0);
+            len += lhs._len;
+
+            auto rhs = _value->generate(param);
+            if (rhs._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            len += rhs._len;
+
+            if (ltype == rtype) {
+                _gen_ist0(_make_store(ltype));
+                _symtbl.var_init(_id->get_id_str());
+                return _gen_ret(len + 1);
+            }
+
+            switch (rtype) {
+                case Type::DOUBLE:
+                    _gen_ist0(InstType::D2I);
+                    if (ltype == Type::CHAR) {
+                        _gen_ist0(InstType::I2C);
+                        ++len;
+                    }
+                    ++len;
+                    break;
+                case Type::INT:
+                    if (ltype == Type::DOUBLE)
+                        _gen_ist0(InstType::I2D);
+                    else if (ltype == Type::CHAR)
+                        _gen_ist0(InstType::I2C);
+                    ++len;
+                    break;
+                case Type::CHAR:
+                    if (ltype == Type::DOUBLE) {
+                        _gen_ist0(InstType::I2D);
+                        ++len;
+                    }
+                    break;
+                default:
+                    _gen_popn(len);
+                    return _gen_ret(0);
+            }
+
+            _gen_ist0(_make_store(ltype));
+            _symtbl.var_init(_id->get_id_str());
+            return _gen_ret(len);
         }
     };
 
@@ -128,8 +197,67 @@ namespace cc0::ast {
             }
         }
 
-        _GenResult generate(_GenParam param) override {
+        [[nodiscard]] _GenResult generate(_GenParam param) override {
+            /* for (init; cond; update) stmt
+             *
+             *     ...init
+             *     jmp .Test
+             * .Loop
+             *     ...stmt
+             * .Update
+             *     ...update
+             * .Test
+             *     ...cond
+             *     j$(op) .Loop
+             * .End
+             *
+             * !!we must make continue stmt jmp to .Update rather than .Head
+             */
+            uint32_t len = 0;
 
+            for (const auto& init: _init) {
+                if (auto res = init->generate(param); res._len == 0)
+                    continue;
+                else
+                    len += res._len;
+            }
+
+            auto jmp_to_test = _gen_ist_off;
+            _gen_ist1(InstType::JMP, 0);
+            ++len;
+
+            auto loop_label = param._offset + len;
+            auto stmt = _stmt->generate({ param._level, param._offset + len,
+                                          param._slot, param._ret });
+            if (stmt._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            len += stmt._len;
+
+            auto update_label = param._offset + len;
+            for (const auto& update: _update) {
+                if (auto res = update->generate(param); res._len == 0)
+                    continue;
+                else
+                    len += res._len;
+            }
+            _gen_ist(jmp_to_test).set_op1(param._offset + len);
+
+            auto cond = _cond->generate(param);
+            if (cond._len == 0) {
+                _gen_popn(len);
+                return _gen_ret(0);
+            }
+            _gen_ist1(_make_jmp(_cond->get_op()), loop_label);
+            len += cond._len + 1;
+
+            for (const auto jmp_to_end: stmt._breaks)
+                _gen_ist(jmp_to_end).set_op1(param._offset + len);
+            for (const auto jmp_to_update: stmt._continues)
+                _gen_ist(jmp_to_update).set_op1(update_label);
+
+            return _gen_ret(len);
         }
     };
 
