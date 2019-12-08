@@ -42,7 +42,7 @@ namespace cc0::ast {
             auto loop_label = param._offset + len;
 
             auto stmt = _stmt->generate({ param._level, param._offset + len,
-                                          param._slot, param._ret });
+                                          param._slot, param._ret, true });
             if (stmt._len == 0) {
                 _gen_pop;
                 return _gen_ret(0);
@@ -228,7 +228,7 @@ namespace cc0::ast {
 
             auto loop_label = param._offset + len;
             auto stmt = _stmt->generate({ param._level, param._offset + len,
-                                          param._slot, param._ret });
+                                          param._slot, param._ret, true });
             if (stmt._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -237,7 +237,8 @@ namespace cc0::ast {
 
             auto update_label = param._offset + len;
             for (const auto& update: _update) {
-                if (auto res = update->generate(param); res._len == 0)
+                if (auto res = update->generate({ param._level, param._offset, param._slot,
+                                                  param._ret, true }); res._len == 0)
                     continue;
                 else
                     len += res._len;
@@ -285,7 +286,8 @@ namespace cc0::ast {
              *     j$(op) Loop
              * .End
              */
-            auto stmt = _stmt->generate(param);
+            auto stmt = _stmt->generate({ param._level, param._offset, param._slot,
+                                          param._ret, true });
             if (stmt._len == 0)
                 return _gen_ret(0);
             auto len = stmt._len;

@@ -127,14 +127,15 @@ namespace cc0::ast {
         struct _GenParam final {
             /*
              * scope info
+             * global - 0, local - 1, 2, ...
              */
             uint32_t _level;
 
             /*
              * position info
              * _offset - offset in current function's instructions list
-             *           we use this value to make jmp instruction (function offset)
-             *           in a new function block, it will be 0
+             *           we use this value in <stmt> to make jmp instruction (function offset)
+             *              in a new function block, it will be 0
              * _slot   - offset in current frame in vm
              *           we use this value to fill symbol table
              *           in a new function, it will be slots(parameters)
@@ -143,18 +144,25 @@ namespace cc0::ast {
             uint32_t _slot;
 
             /*
-             * just for <return-stmt>'s type check
+             * 1. this field is for <return-stmt>'s type check
+             * 2. also we use this field to notify <id> to generate an address or a value
              */
             Type _ret;
 
-            _GenParam(uint32_t level, uint32_t offset, uint32_t slot, Type type = Type::UNDEFINED):
-                _level(level), _offset(offset), _slot(slot), _ret(type) { }
+            /*
+             * is stmt? we use this field to pop <function-call>'s return value in <stmt> and <for-update>
+             */
+            bool _stmt;
+
+            _GenParam(uint32_t level, uint32_t offset, uint32_t slot,
+                    Type type = Type::UNDEFINED, bool f_stmt = false):
+                _level(level), _offset(offset), _slot(slot), _ret(type), _stmt(f_stmt) { }
         };
 
         struct _GenResult final {
             /*
              * instructions info
-             * it seems all ast will generate more than one instruction (; => nop)
+             * it seems all ast will generate more than one instruction (empty-stmt => nop)
              * so _len == 0 means some errors occur
              */
             uint32_t _len;

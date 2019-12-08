@@ -88,7 +88,7 @@ namespace cc0::ast {
 
             for (const auto& stmt: _stmts) {
                 auto res = stmt->generate({ param._level + 1, param._offset + len,
-                                            slot, param._ret});
+                                            slot, param._ret, true });
                 len += res._len;
                 _gen_move_back(breaks, res._breaks);
                 _gen_move_back(continues, res._continues);
@@ -169,7 +169,7 @@ namespace cc0::ast {
             }
 
             // block will generate first code, so _offset must be 0
-            auto res = _block->generate({ 0, 0, slot, _ret });
+            auto res = _block->generate({ 0, 0, slot, _ret, true });
             if (res._len == 0)
                 return _gen_ret(0);
 
@@ -188,11 +188,16 @@ namespace cc0::ast {
         }
     };
 
-    // TODO: pop call return value in some case.
     class FuncCallAST final: public ExprAST, public StmtAST {
     private:
         _ptr<IdExprAST> _id;
         _ptrs<ExprAST> _params;
+
+        [[nodiscard]] inline static InstType _make_pop(Type type) {
+            if (type == Type::DOUBLE)
+                return InstType::POP2;
+            return InstType::POP;
+        }
 
     public:
         explicit FuncCallAST(range_t range, _ptr<IdExprAST> id, _ptrs<ExprAST> params):
@@ -295,7 +300,14 @@ namespace cc0::ast {
             }
 
             _gen_ist1(InstType::CALL, _symtbl.get_func_tbl().index(_id->get_id_str()));
-            return _gen_ret(len + 1);
+            ++len;
+
+            if (param._stmt && func->get_ret_type() != Type::VOID) {
+                _gen_ist0(_make_pop(func->get_ret_type()));
+                ++len;
+            }
+
+            return _gen_ret(len);
         }
     };
 }

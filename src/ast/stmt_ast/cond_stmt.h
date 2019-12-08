@@ -42,7 +42,7 @@ namespace cc0::ast {
             ++len;
 
             auto true_stmt = _true->generate({ param._level, param._offset + len,
-                                               param._slot, param._ret });
+                                               param._slot, param._ret, true });
             if (true_stmt._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -81,7 +81,7 @@ namespace cc0::ast {
             _gen_ist(jmp_to_false).set_op1(param._offset + len);
 
             auto false_stmt = _false->generate({ param._level, param._offset + len,
-                                                 param._slot, param._ret });
+                                                 param._slot, param._ret, true });
             if (false_stmt._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -229,7 +229,7 @@ namespace cc0::ast {
                 _gen_ist(jmp_to_case[it - _cases.begin()]).set_op1(param._offset + len);
 
                 auto stmt = (*it)->generate({ param._level, param._offset + len,
-                                              param._slot, param._ret });
+                                              param._slot, param._ret, true });
                 if (stmt._len == 0) {
                     _gen_popn(len);
                     return _gen_ret(0);
@@ -244,7 +244,7 @@ namespace cc0::ast {
                 _gen_ist(jmp_to_default_or_end).set_op1(param._offset + len);
 
                 auto res = _default->generate({ param._level, param._offset + len,
-                                                param._slot, param._ret });
+                                                param._slot, param._ret, true });
                 if (res._len == 0) {
                     _gen_popn(len);
                     return _gen_ret(0);

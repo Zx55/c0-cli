@@ -130,6 +130,7 @@ namespace cc0 {
             return _op_type == rhs._op_type && _op1 == rhs._op1 && _op2 == rhs._op2;
         }
 
+        [[nodiscard]] inline InstType get_type() const { return _op_type; }
         void set_op1(int32_t op1) { _op1 = op1; }
     };
 }
