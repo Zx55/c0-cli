@@ -94,18 +94,16 @@ namespace cc0 {
         POP, POP2, POPN,
         DUP, DUP2,
         LOADC, LOADA,
-        NEW, SNEW,
-        ILOAD, DLOAD, ALOAD,
-        /* iaload, daload, aaload */
-        ISTORE, DSTORE, ASTORE,
-        /* iastore, dastore, aastore */
+        SNEW,
+        ILOAD, DLOAD,
+        ISTORE, DSTORE,
         IADD, DADD, ISUB, DSUB,
         IMUL, DMUL, IDIV, DDIV,
         INEG, DNEG,
         ICMP, DCMP,
         I2D, D2I, I2C,
         JMP, JE, JNE, JGE, JG, JLE, JL,
-        CALL, RET, IRET, DRET, ARET,
+        CALL, RET, IRET, DRET,
         IPRINT, DPRINT, CPRINT, SPRINT, PRINTL,
         ISCAN, DSCAN, CSCAN
     };

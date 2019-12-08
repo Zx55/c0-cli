@@ -8,6 +8,7 @@
 
 #include "tools/alias.h"
 #include "tools/enums.h"
+#include "tools/utils.h"
 
 #include <vector>
 #include <any>
@@ -172,6 +173,48 @@ namespace cc0::symbol {
                 }
             } catch (const std::bad_any_cast&) {
                 return false;
+            }
+        }
+
+        inline void output_bin(std::ostream& out) const {
+            switch (_type) {
+                case Type::STRING: {
+                    auto str_value = std::any_cast<std::string>(_value);
+
+                    uint8_t type = utils::swap_endian(static_cast<uint8_t >(0x00));
+                    out.write(reinterpret_cast<char*>(&type), 1);
+
+                    uint16_t length = utils::swap_endian(static_cast<uint16_t>(str_value.size()));
+                    out.write(reinterpret_cast<char*>(&length), 2);
+
+                    for (const auto ch: str_value)
+                        out.write(&ch, 1);
+                    break;
+                }
+                case Type::INT: {
+                    uint8_t type = utils::swap_endian(static_cast<uint8_t >(0x01));
+                    out.write(reinterpret_cast<char*>(&type), 1);
+
+                    auto int_value = std::any_cast<int32_t>(_value);
+                    out.write(reinterpret_cast<char*>(&int_value), 4);
+
+                    break;
+                }
+                case Type::DOUBLE: {
+                    uint8_t type = utils::swap_endian(static_cast<uint8_t>(0x02));
+                    out.write(reinterpret_cast<char*>(&type), 1);
+
+                    auto float_value = std::any_cast<double>(_value);
+                    uint64_t bits = *reinterpret_cast<uint64_t*>(&float_value);
+                    uint32_t high = utils::swap_endian(static_cast<uint32_t>((bits & 0xffffffff00000000) >> 32u));
+                    uint32_t low = utils::swap_endian(static_cast<uint32_t>(bits & 0x00000000ffffffff));
+                    out.write(reinterpret_cast<char*>(&high), 4);
+                    out.write(reinterpret_cast<char*>(&low), 4);
+
+                    break;
+                }
+                default:
+                    return;
             }
         }
     };

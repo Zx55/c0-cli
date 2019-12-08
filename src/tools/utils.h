@@ -130,6 +130,20 @@ namespace cc0::utils {
             default:    return -1;
         }
     }
+
+    template <typename T>
+    T swap_endian(T u) {
+        union {
+            T u;
+            unsigned char u8[sizeof(T)];
+        } src{}, dest{};
+
+        src.u = u;
+        for (std::size_t i = 0; i < sizeof(T); ++i)
+            dest.u8[i] = src.u8[sizeof(T) - i - 1];
+
+        return dest.u;
+    }
 }
 
 #endif //C0_UTILS_H

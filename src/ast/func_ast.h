@@ -111,13 +111,13 @@ namespace cc0::ast {
                 case Type::INT:
                     [[fallthrough]];
                 case Type::CHAR: {
-                    _gen_ist1(InstType::IPUSH, -1);
+                    _gen_ist1(InstType::IPUSH, 0);
                     _gen_ist0(InstType::IRET);
                     return 2;
                 }
                 case Type::DOUBLE: {
-                    _symtbl.put_cons(Type::DOUBLE, -1.0);
-                    auto offset = _symtbl.get_cons_offset(Type::DOUBLE, -1.0);
+                    _symtbl.put_cons(Type::DOUBLE, 0.0);
+                    auto offset = _symtbl.get_cons_offset(Type::DOUBLE, 0.0);
                     _gen_ist1(InstType::LOADC, offset);
                     _gen_ist0(InstType::DRET);
                     return 2;

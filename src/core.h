@@ -72,7 +72,6 @@ namespace cc0 {
 
         if (output && RuntimeContext::get_fatal().empty()) {
             auto out = std::ofstream(SourceContext::get_out());
-            auto ist = RuntimeContext::get_ist();
             cc0::Generator::output_ist(out);
             out.close();
         }
@@ -82,7 +81,17 @@ namespace cc0 {
     }
 
     void assemble() {
+        compile(false, false);
+        if (!RuntimeContext::get_fatal().empty()) {
+            _verbose();
+            return;
+        }
 
+        auto out = std::ofstream(SourceContext::get_out(), std::ios::out | std::ios::binary | std::ios::trunc);
+        cc0::Generator::output_bin(out);
+        out.close();
+
+        _verbose();
     }
 }
 
