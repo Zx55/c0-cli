@@ -53,6 +53,7 @@ add_library(${LIB} ${LIB_SRC})
 target_include_directories(${LIB} PRIVATE
         ./src
         ./3rd_party/fmt/include)
+target_link_libraries(${LIB} PUBLIC stdc++fs)
 
 # Build executable
 set(EXE ${PROJECT_NAME})
