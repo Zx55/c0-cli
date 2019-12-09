@@ -136,7 +136,7 @@ namespace cc0 {
 
             out.write(reinterpret_cast<char*>(&res.code), 1);
 
-            if (res.op_size1 > 4) {
+            if (res.op_size1 <= 4) {
                 switch (res.op_size1) {
                     case 1: {
                         auto op1 = static_cast<uint8_t>(_op1.value());
@@ -156,7 +156,7 @@ namespace cc0 {
                 }
             }
 
-            if (res.op_size2 > 4) {
+            if (res.op_size2 <= 4) {
                 switch (res.op_size2) {
                     case 1: {
                         auto op2 = static_cast<uint8_t>(_op2.value());
