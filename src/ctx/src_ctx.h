@@ -48,7 +48,10 @@ namespace cc0 {
             return std::filesystem::absolute(_out).string();
         }
         [[nodiscard]] inline static auto& get_source() { return _source; }
-        [[nodiscard]] inline static auto& get_line(int64_t row) { return _source.at(row); }
+        [[nodiscard]] inline static auto& get_line(int64_t row) {
+            static std::string empty_line = "        ";
+            return _source.empty() ? empty_line : _source.at(row);
+        }
     };
 }
 

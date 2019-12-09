@@ -94,6 +94,10 @@ namespace cc0::ast {
                 _gen_move_back(continues, res._continues);
             }
 
+            /*
+             * FIXME: pop variable in destroyed level on vm
+             *        make destroy_level method return slots
+             */
             _symtbl.destroy_level(param._level + 1);
             return { len, std::move(breaks), std::move(continues) };
         }

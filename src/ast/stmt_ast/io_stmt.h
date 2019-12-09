@@ -49,16 +49,18 @@ namespace cc0::ast {
                     continue;
                 }
 
-                auto res = printable->generate(param);
+                auto res = printable->generate({ param._level, param._offset, param._slot,
+                                                 param._ret, false });
                 if (res._len == 0) continue;
                 _gen_ist0(_make_print(type));
                 _gen_ist1(InstType::BIPUSH, 32);
-                len += res._len + 2;
+                _gen_ist0(InstType::CPRINT);
+                len += res._len + 3;
             }
 
-            _gen_pop;
+            _gen_popn(2);
             _gen_ist0(InstType::PRINTL);
-            return _gen_ret(len);
+            return _gen_ret(len - 1);
         }
     };
 

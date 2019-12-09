@@ -13,7 +13,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 33
+#define ERR_NUM 34
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -51,6 +51,7 @@ namespace cc0 {
         ErrIncomparable,
         ErrJmpInAcyclicStmt,
         ErrParameterUnMatch,
+        ErrMissMainEntry,
         WrnInt32Overflow            = 128,
         WrnFloat64Overflow,
         WrnEmptyStatement,
@@ -149,6 +150,7 @@ namespace fmt {
                     "ErrIncomparable",
                     "ErrJmpInAcyclicStmt",
                     "ErrParameterUnMatch",
+                    "ErrMissMainEntry",
                     "WrnInt32Overflow",
                     "WrnFloat64Overflow",
                     "WrnEmptyStatement",

@@ -35,7 +35,15 @@ namespace cc0 {
             _token = _ptr <= 0 ? _tokens.at(0) : _tokens.at(_ptr - 1);
         }
 
-        Analyser(): _tokens(RuntimeContext::get_tokens()), _ptr(0), _token(_tokens.at(_ptr)) { }
+        Analyser(): _tokens(RuntimeContext::get_tokens()), _ptr(0) {
+            if (!_tokens.empty())
+                _token = _tokens.at(_ptr);
+            else {
+                RuntimeContext::put_fatal(C0Err(ErrCode::ErrMissMainEntry,
+                                                { 0, 0 }, { 0, 0 }));
+                RuntimeContext::set_ast(nullptr);
+            }
+        }
 
     public:
         virtual void analyse() = 0;

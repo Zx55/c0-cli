@@ -54,7 +54,8 @@ namespace cc0::ast {
 
             // push return value on the top
             if (_ret != nullptr) {
-                auto res = _ret->generate(param);
+                auto res = _ret->generate({ param._level, param._offset, param._slot,
+                                            param._ret, false });
                 if (res._len == 0)
                     return _gen_ret(0);
                 len += res._len;

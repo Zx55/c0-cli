@@ -50,7 +50,8 @@ namespace cc0::ast {
             len += stmt._len;
             _gen_ist(jmp_to_test).set_op1(param._offset + len);
 
-            auto cond = _cond->generate(param);
+            auto cond = _cond->generate({ param._level, param._offset, param._slot,
+                                          param._ret, false });
             if (cond._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -245,13 +246,20 @@ namespace cc0::ast {
             }
             _gen_ist(jmp_to_test).set_op1(param._offset + len);
 
-            auto cond = _cond->generate(param);
-            if (cond._len == 0) {
-                _gen_popn(len);
-                return _gen_ret(0);
+            if (_cond == nullptr) {
+                // always true
+                _gen_ist1(InstType::JMP, loop_label);
+                ++len;
+            } else {
+                auto cond = _cond->generate({param._level, param._offset, param._slot,
+                                             param._ret, false});
+                if (cond._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                _gen_ist1(_make_jmp(_cond->get_op()), loop_label);
+                len += cond._len + 1;
             }
-            _gen_ist1(_make_jmp(_cond->get_op()), loop_label);
-            len += cond._len + 1;
 
             for (const auto jmp_to_end: stmt._breaks)
                 _gen_ist(jmp_to_end).set_op1(param._offset + len);
@@ -282,17 +290,19 @@ namespace cc0::ast {
             /*
              * .Loop
              *     ...stmt
+             * .Test
              *     ...cond
              *     j$(op) Loop
              * .End
              */
-            auto stmt = _stmt->generate({ param._level, param._offset, param._slot,
-                                          param._ret, true });
+            auto stmt = _stmt->generate(param);
             if (stmt._len == 0)
                 return _gen_ret(0);
             auto len = stmt._len;
+            auto test_label = param._offset + len;
 
-            auto cond = _cond->generate(param);
+            auto cond = _cond->generate({ param._level, param._offset, param._slot,
+                                          param._ret, false });
             if (cond._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -304,7 +314,7 @@ namespace cc0::ast {
             for (const auto jmp_to_end: stmt._breaks)
                 _gen_ist(jmp_to_end).set_op1(param._offset + len);
             for (const auto jmp_to_head: stmt._continues)
-                _gen_ist(jmp_to_head).set_op1(param._offset);
+                _gen_ist(jmp_to_head).set_op1(test_label);
 
             return _gen_ret(len);
         }

@@ -495,6 +495,7 @@ namespace cc0 {
             return nullptr;
         }
 
+        // FIXME: Repeated Case (use set)
         while (true) {
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));
@@ -1182,8 +1183,10 @@ namespace cc0 {
         using namespace ast;
         using namespace utils;
 
-        RuntimeContext::set_ast(_analyse_root());
-        RuntimeContext::put_fatals(std::move(_errs));
-        RuntimeContext::put_wrns(std::move(_wrns));
+        if (!_tokens.empty()) {
+            RuntimeContext::set_ast(_analyse_root());
+            RuntimeContext::put_fatals(std::move(_errs));
+            RuntimeContext::put_wrns(std::move(_wrns));
+        }
     }
 }

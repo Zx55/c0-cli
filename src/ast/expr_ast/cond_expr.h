@@ -47,6 +47,9 @@ namespace cc0::ast {
             uint32_t len = 0;
 
             auto ltype = _lhs->get_type(), rtype = _rhs->get_type();
+            if (ltype == Type::UNDEFINED || rtype == Type::UNDEFINED)
+                return _gen_ret(0);
+
             if (ltype == Type::VOID || rtype == Type::VOID) {
                 _gen_err(ErrCode::ErrIncomparable);
                 return _gen_ret(0);

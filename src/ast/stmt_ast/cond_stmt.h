@@ -32,7 +32,8 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
-            auto cond = _cond->generate(param);
+            auto cond = _cond->generate({ param._level, param._offset, param._slot,
+                                          param._ret, false });
             auto len = cond._len;
             if (len == 0)
                 return _gen_ret(0);
@@ -199,7 +200,8 @@ namespace cc0::ast {
 
             // generate jump of each case
             for (auto it = _cases.begin(); it != _cases.begin() + _reachable_cases; ++it) {
-                if (auto cond = _cond->generate(param); cond._len == 0) {
+                if (auto cond = _cond->generate({ param._level, param._offset, param._slot,
+                                                  param._ret, false }); cond._len == 0) {
                     _gen_popn(len);
                     return _gen_ret(0);
                 }
@@ -207,7 +209,8 @@ namespace cc0::ast {
                     len += cond._len;
 
                 auto& case_cond = (*it)->get_case();
-                if (auto res = case_cond->generate(param); res._len == 0) {
+                if (auto res = case_cond->generate({ param._level, param._offset, param._slot,
+                                                     param._ret, false }); res._len == 0) {
                     _gen_popn(len);
                     return _gen_ret(0);
                 }

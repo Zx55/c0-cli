@@ -22,6 +22,7 @@
 namespace cc0 {
     class RuntimeContext final {
         friend class Lexer;
+        friend class Analyser;
         friend class RDP;
         friend class Generator;
 

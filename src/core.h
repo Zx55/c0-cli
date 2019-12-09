@@ -49,10 +49,9 @@ namespace cc0 {
         analyser->analyse();
         analyser.reset(nullptr);
 
-        if (output) {
+        if (output && RuntimeContext::get_fatal().empty()) {
             auto out = std::ofstream(SourceContext::get_out());
-            auto& root = RuntimeContext::get_ast();
-            root->graphize(out, 0);
+            RuntimeContext::get_ast()->graphize(out, 0);
             out.close();
         }
 

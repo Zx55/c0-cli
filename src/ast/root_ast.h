@@ -37,6 +37,7 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
+            auto main_flag = false;
             auto slot = param._slot;
             uint32_t len = 0;
 
@@ -49,8 +50,17 @@ namespace cc0::ast {
 
             // function define
             for (const auto& func: _funcs) {
+                if (auto func_id = func->get_id_str(); func_id == "main")
+                    main_flag = true;
                 auto res = func->generate({ param._level + 1, 0, 0, func->get_ret() });
                 len += res._len;
+            }
+
+            if (!main_flag) {
+                _gen_popn(len);
+                GeneratorContext::put_fatal(C0Err(ErrCode::ErrMissMainEntry,
+                        { 0, 0 }, { 0, 0 }));
+                len = 0;
             }
 
             return { len, {}, {} };
