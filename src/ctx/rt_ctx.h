@@ -45,7 +45,14 @@ namespace cc0 {
             }
         }
 
-        inline static void clear_ctx();
+        inline static void clear_ctx() {
+            _fatal.clear();
+            _wrns.clear();
+
+            _tokens.clear();
+            _ast.reset(nullptr);
+            _ist.clear();
+        }
 
         [[nodiscard]] inline static std::vector<C0Err> get_fatal() {
             return SourceContext::_f_werror ? get_errs() : _fatal;

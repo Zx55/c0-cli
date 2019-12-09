@@ -51,7 +51,8 @@ namespace cc0 {
 
         if (output) {
             auto out = std::ofstream(SourceContext::get_out());
-            RuntimeContext::get_ast()->graphize(out, 0);
+            auto& root = RuntimeContext::get_ast();
+            root->graphize(out, 0);
             out.close();
         }
 

@@ -82,5 +82,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    cc0::RuntimeContext::clear_ctx();
     return 0;
 }

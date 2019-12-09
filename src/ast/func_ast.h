@@ -233,7 +233,13 @@ namespace cc0::ast {
         [[nodiscard]] _GenResult generate(_GenParam param) override {
             auto func = _symtbl.get_func(_id->get_id_str());
 
-            // we check func in get_type
+            // we only check existence of func when <func-call> is an expression
+            // check it when it is a statement or <for-update>
+            if (param._stmt && !func.has_value()) {
+                _gen_err2(ErrCode::ErrUndeclaredIdentifier);
+                return _gen_ret(0);
+            }
+
             auto params = func->get_params();
             if (params.size() != _params.size()) {
                 _gen_err2(ErrCode::ErrParameterUnMatch);

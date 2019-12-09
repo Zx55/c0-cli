@@ -49,15 +49,10 @@ namespace cc0::symbol {
         inline auto end() const { return _list.end(); }
 
         void insert(const _Key& key, const _Value& value) {
-            if (auto it = _map.find(key); it == _map.end())
+            if (auto it = _map.find(key); it == _map.end()) {
                 _list.push_back(key);
-            _map[key] = value;
-        }
-
-        inline void insert(const std::pair<_Key, _Value>& p) {
-            if (auto it = _map.find(p.first); it == _map.end())
-                _list.push_back(p.first);
-            _map[p.first] = p.second;
+                _map[key] = value;
+            }
         }
 
         inline auto find(_Key key) const {

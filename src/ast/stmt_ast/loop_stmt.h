@@ -110,12 +110,12 @@ namespace cc0::ast {
             }
 
             uint32_t len = 0;
-            auto lhs = _id->generate({ param._level, param._offset, param._slot, Type::UNDEFINED });
+            auto lhs = _id->generate({ param._level, param._offset, param._slot, Type::UNDEFINED, false });
             if (lhs._len == 0)
                 return _gen_ret(0);
             len += lhs._len;
 
-            auto rhs = _value->generate(param);
+            auto rhs = _value->generate({ param._level, param._offset, param._slot, param._ret, false });
             if (rhs._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);

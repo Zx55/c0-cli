@@ -53,10 +53,12 @@ namespace cc0::ast {
             }
 
             // push return value on the top
-            auto res = _ret->generate(param);
-            if (res._len == 0)
-                return _gen_ret(0);
-            len += res._len;
+            if (_ret != nullptr) {
+                auto res = _ret->generate(param);
+                if (res._len == 0)
+                    return _gen_ret(0);
+                len += res._len;
+            }
 
             if (param._ret == ret_type) {
                 _gen_ist0(_make_ret(ret_type));

@@ -14,6 +14,8 @@ namespace cc0::ast {
     public:
         explicit StmtAST(range_t range): AST(range) { }
 
+        virtual ~StmtAST() = default;
+
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {
             out << "<stmt>\n";
         }

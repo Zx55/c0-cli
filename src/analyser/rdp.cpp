@@ -825,39 +825,38 @@ namespace cc0 {
             return nullptr;
         }
         // ')'
-        if (_token.get_type() == TokenType::RPARENTHESIS)
-            return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
-        else
+        if (_token.get_type() != TokenType::RPARENTHESIS) {
             _unget();
 
-        // [<print-list>]
-        while (true) {
-            if (!_get()) {
-                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
-            }
+            // [<print-list>]
+            while (true) {
+                if (!_get()) {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                    return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
+                }
 
-            // <printable> ::= <expr> | <string>
-            if (_token.get_type() == TokenType::STRING_LITERAL)
-                printable.push_back(std::make_unique<StringExprAST>(_rdp_pair(start), _token.get_value_str()));
-            else {
-                _unget();
-                if (auto res = _analyse_expr(); res)
-                    printable.push_back(std::move(res));
-            }
+                // <printable> ::= <expr> | <string>
+                if (_token.get_type() == TokenType::STRING_LITERAL)
+                    printable.push_back(std::make_unique<StringExprAST>(_rdp_pair(start), _token.get_value_str()));
+                else {
+                    _unget();
+                    if (auto res = _analyse_expr(); res)
+                        printable.push_back(std::move(res));
+                }
 
-            // {',' <printable>}
-            if (!_get()) {
-                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
-            }
-            if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
-                break;
-            else if (type == TokenType::COMMA)
-                continue;
-            else {
-                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
-                return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
+                // {',' <printable>}
+                if (!_get()) {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                    return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
+                }
+                if (auto type = _token.get_type(); type == TokenType::RPARENTHESIS)
+                    break;
+                else if (type == TokenType::COMMA)
+                    continue;
+                else {
+                    _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
+                    return std::make_unique<PrintStmtAST>(_rdp_pair(start), std::move(printable));
+                }
             }
         }
 

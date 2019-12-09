@@ -16,14 +16,6 @@ namespace cc0 {
 
     std::vector<Instruction> RuntimeContext::_ist;
 
-    inline void RuntimeContext::clear_ctx() {
-        _fatal.clear();
-        _wrns.clear();
-
-        _tokens.clear();
-        _ast.reset(nullptr);
-    }
-
     std::vector<C0Err> RuntimeContext::get_errs() {
         [[maybe_unused]] auto cmp = [](const C0Err& lhs, const C0Err& rhs) {
             if (lhs.get_start().first == rhs.get_start().first)

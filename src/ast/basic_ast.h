@@ -184,6 +184,7 @@ namespace cc0::ast {
 
     public:
         explicit AST(range_t range): _range(std::move(range)) { }
+        virtual ~AST() = default;
 
         [[nodiscard]] inline range_t get_range() const { return _range; }
 

@@ -17,6 +17,8 @@ namespace cc0::ast {
         explicit ExprAST(range_t range, Type type = Type::UNDEFINED):
              AST(range), _type(type) { }
 
+        virtual ~ExprAST() = default;
+
         inline virtual Type get_type() {
             return _type;
         }
