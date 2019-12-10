@@ -24,6 +24,10 @@ namespace cc0::ast {
             return _type;
         }
 
+        [[nodiscard]] inline int32_t get_value() const override {
+            return _value;
+        }
+
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             out << "<int32> [value] " << _value << "\n";
         }
@@ -68,6 +72,10 @@ namespace cc0::ast {
 
         [[nodiscard]] inline Type get_type() override {
             return _type;
+        }
+
+        [[nodiscard]] inline int32_t get_value() const override {
+            return _value;
         }
 
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {

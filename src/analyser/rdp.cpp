@@ -495,7 +495,6 @@ namespace cc0 {
             return nullptr;
         }
 
-        // FIXME: Repeated Case (use set)
         while (true) {
             if (!_get()) {
                 _errs.emplace_back(_rdp_err(ErrCode::ErrMissBrace));

@@ -72,7 +72,7 @@ namespace cc0::ast {
         [[nodiscard]] _GenResult generate(_GenParam param) override {
             auto slot = param._slot;
             uint32_t len = 0;
-            std::vector<uint32_t> breaks, continues;
+            std::vector<_JmpInfo> breaks, continues;
 
             if (_vars.empty() && _stmts.empty()) {
                 _gen_ist0(InstType::NOP);
@@ -95,10 +95,27 @@ namespace cc0::ast {
             }
 
             /*
-             * FIXME: pop variable in destroyed level on vm
-             *        make destroy_level method return slots
+             * FIXME: handle continue
              */
-            _symtbl.destroy_level(param._level + 1);
+            slot = _symtbl.destroy_level(param._level + 1);
+            switch (slot) {
+                case 1:
+                    _gen_ist0(InstType::POP);
+                    ++len;
+                    break;
+                case 2:
+                    _gen_ist0(InstType::POP2);
+                    ++len;
+                    break;
+                case 0:
+                    break;
+                default:
+                    _gen_ist1(InstType::IPUSH, slot);
+                    _gen_ist0(InstType::POPN);
+                    len += 2;
+                    break;
+            }
+
             return { len, std::move(breaks), std::move(continues) };
         }
     };
@@ -162,7 +179,7 @@ namespace cc0::ast {
             }
 
             _symtbl.put_cons(Type::STRING, _id->get_id_str());
-            _symtbl.put_local(_id->get_id_str(), _ret, -1, param._level);
+            _symtbl.put_local(_id->get_id_str(), _ret, -1, param._level, false, false, true);
             _symtbl.put_func(_id->get_id_str(), _ret, _gen_ist_off);
 
             // parameters
@@ -179,8 +196,11 @@ namespace cc0::ast {
 
             // check breaks and continues
             if (!res._breaks.empty() || !res._continues.empty()) {
-                // FIXME: make correct error pos of break
-                _gen_err(ErrCode::ErrJmpInAcyclicStmt);
+                for (const auto& jmp_info: res._breaks)
+                    GeneratorContext::put_fatal(C0Err(ErrCode::ErrJmpInAcyclicStmt, jmp_info.range));
+                for (const auto& jmp_info: res._continues)
+                    GeneratorContext::put_fatal(C0Err(ErrCode::ErrJmpInAcyclicStmt, jmp_info.range));
+
                 _gen_popn(res._len);
                 return _gen_ret(0);
             }

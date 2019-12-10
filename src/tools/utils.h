@@ -131,6 +131,15 @@ namespace cc0::utils {
         }
     }
 
+    [[nodiscard]] inline uint32_t make_slot(Type type) {
+        switch (type) {
+            case Type::INT:     [[fallthrough]];
+            case Type::CHAR:    return 1;
+            case Type::DOUBLE:  return 2;
+            default:            return -1;
+        }
+    }
+
     template <typename T>
     T swap_endian(T u) {
         union {

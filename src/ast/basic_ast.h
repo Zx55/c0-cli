@@ -25,7 +25,6 @@
 #define _gen_err(_code) GeneratorContext::put_fatal(C0Err(_code, AST::_range.first, AST::_range.second))
 #define _gen_wrn(_code) GeneratorContext::put_wrn(C0Err(_code, AST::_range.first, AST::_range.second))
 #define _gen_err2(_code) GeneratorContext::put_fatal(C0Err(_code, ExprAST::_range.first, ExprAST::_range.second))
-#define _gen_wrn2(_code) GeneratorContext::put_wrn(C0Err(_code, ExprAST::_range.first, ExprAST::_range.second))
 
 #define _gen_ist0(_type) GeneratorContext::put_ist(Instruction(_type))
 #define _gen_ist1(_type, _op1) GeneratorContext::put_ist(Instruction(_type, _op1))
@@ -159,6 +158,12 @@ namespace cc0::ast {
                 _level(level), _offset(offset), _slot(slot), _ret(type), _stmt(f_stmt) { }
         };
 
+        struct _JmpInfo final {
+            uint32_t ist_off;
+            uint32_t slot;
+            range_t range;
+        };
+
         struct _GenResult final {
             /*
              * instructions info
@@ -172,11 +177,11 @@ namespace cc0::ast {
              * they store offset in global instructions list
              * we set backfill info base on global offset
              */
-            std::vector<uint32_t> _breaks;
-            std::vector<uint32_t> _continues;
+            std::vector<_JmpInfo> _breaks;
+            std::vector<_JmpInfo> _continues;
 
         public:
-            _GenResult(uint32_t len, std::vector<uint32_t> breaks, std::vector<uint32_t> continues):
+            _GenResult(uint32_t len, std::vector<_JmpInfo> breaks, std::vector<_JmpInfo> continues):
                     _len(len), _breaks(std::move(breaks)), _continues(std::move(continues)) { }
         };
 

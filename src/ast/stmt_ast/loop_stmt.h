@@ -60,10 +60,16 @@ namespace cc0::ast {
             len += cond._len + 1;
 
             // handle breaks and continues
-            for (const auto jmp_to_end: stmt._breaks)
-                _gen_ist(jmp_to_end).set_op1(param._offset + len);
-            for (const auto jmp_to_head: stmt._continues)
-                _gen_ist(jmp_to_head).set_op1(param._offset);
+            auto slot = _symtbl.get_slot_by_level();
+            for (const auto jmp_to_end: stmt._breaks) {
+                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
+            }
+
+            for (const auto jmp_to_head: stmt._continues) {
+                _gen_ist(jmp_to_head.ist_off - 2).set_op1(jmp_to_head.slot - slot);
+                _gen_ist(jmp_to_head.ist_off).set_op1(param._offset);
+            }
 
             return _gen_ret(len);
         }
@@ -111,12 +117,14 @@ namespace cc0::ast {
             }
 
             uint32_t len = 0;
-            auto lhs = _id->generate({ param._level, param._offset, param._slot, Type::UNDEFINED, false });
+            auto lhs = _id->generate({ param._level, param._offset, param._slot,
+                                       Type::UNDEFINED, false });
             if (lhs._len == 0)
                 return _gen_ret(0);
             len += lhs._len;
 
-            auto rhs = _value->generate({ param._level, param._offset, param._slot, param._ret, false });
+            auto rhs = _value->generate({ param._level, param._offset, param._slot,
+                                          param._ret, false });
             if (rhs._len == 0) {
                 _gen_popn(len);
                 return _gen_ret(0);
@@ -261,10 +269,15 @@ namespace cc0::ast {
                 len += cond._len + 1;
             }
 
-            for (const auto jmp_to_end: stmt._breaks)
-                _gen_ist(jmp_to_end).set_op1(param._offset + len);
-            for (const auto jmp_to_update: stmt._continues)
-                _gen_ist(jmp_to_update).set_op1(update_label);
+            auto slot = _symtbl.get_slot_by_level();
+            for (const auto jmp_to_end: stmt._breaks) {
+                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
+            }
+            for (const auto jmp_to_update: stmt._continues) {
+                _gen_ist(jmp_to_update.ist_off - 2).set_op1(jmp_to_update.slot - slot);
+                _gen_ist(jmp_to_update.ist_off).set_op1(update_label);
+            }
 
             return _gen_ret(len);
         }
@@ -311,10 +324,15 @@ namespace cc0::ast {
             _gen_ist1(_make_jmp(_cond->get_op()), param._offset);
             len += cond._len + 1;
 
-            for (const auto jmp_to_end: stmt._breaks)
-                _gen_ist(jmp_to_end).set_op1(param._offset + len);
-            for (const auto jmp_to_head: stmt._continues)
-                _gen_ist(jmp_to_head).set_op1(test_label);
+            auto slot = _symtbl.get_slot_by_level();
+            for (const auto jmp_to_end: stmt._breaks) {
+                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
+            }
+            for (const auto jmp_to_head: stmt._continues) {
+                _gen_ist(jmp_to_head.ist_off - 2).set_op1(jmp_to_head.slot - slot);
+                _gen_ist(jmp_to_head.ist_off).set_op1(test_label);
+            }
 
             return _gen_ret(len);
         }

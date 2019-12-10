@@ -87,7 +87,7 @@ namespace cc0::symbol {
 
         inline void put_glob(const std::string& id, Type type, uint32_t offset, uint32_t level,
                 bool init = false, bool f_const = false) {
-            _globs.insert({ id, VarSym(id, type, init, f_const, offset, level) });
+            _globs.insert({ id, VarSym(id, type, init, f_const, false, offset, level) });
         }
 
         inline void put_func(const std::string& id, Type ret, uint32_t offset) {
@@ -108,17 +108,30 @@ namespace cc0::symbol {
         }
 
         inline void put_local(const std::string& id, Type type, uint32_t offset, uint32_t level,
-                bool init = false, bool f_const = false) {
-            _local.emplace_back(id, type, init, f_const, offset, level);
+                bool init = false, bool f_const = false, bool f_func = false) {
+            _local.emplace_back(id, type, init, f_const, f_func, offset, level);
+        }
+
+        [[nodiscard]] inline uint32_t get_slot_by_level() {
+            uint32_t slot = 0;
+            for (auto it = _local.crbegin(); it != _local.crend(); ++it)
+                slot += utils::make_slot(it->get_type());
+            return slot;
         }
 
         // when level a block
-        inline void destroy_level(uint32_t level) {
-            auto cnt = 0;
-            for (auto it = _local.crbegin(); it != _local.crend() && it->get_level() == level; ++it)
+        [[nodiscard]] inline uint32_t destroy_level(uint32_t level) {
+            uint32_t cnt = 0, slot = 0;
+            for (auto it = _local.crbegin(); it != _local.crend() && it->get_level() >= level; ++it) {
                 ++cnt;
+                // slot doesn't contain function name
+                if (!it->is_func_var())
+                    slot += utils::make_slot(it->get_type());
+            }
+
             // why stl not support erase on reserve iterator :(
             _local.erase(_local.end() - cnt, _local.end());
+            return slot;
         }
 
         // when a function end

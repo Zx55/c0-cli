@@ -17,10 +17,14 @@ namespace cc0::ast {
         explicit ExprAST(range_t range, Type type = Type::UNDEFINED):
              AST(range), _type(type) { }
 
-        virtual ~ExprAST() = default;
+        ~ExprAST() override = default;
 
         inline virtual Type get_type() {
             return _type;
+        }
+
+        [[nodiscard]] inline virtual int32_t get_value() const {
+            return 0;
         }
 
         void graphize([[maybe_unused]] std::ostream& out, [[maybe_unused]] int t) override {

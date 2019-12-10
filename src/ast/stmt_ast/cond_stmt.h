@@ -8,6 +8,8 @@
 
 #include "basic_stmt.h"
 
+#include <unordered_set>
+
 namespace cc0::ast {
     class IfElseStmtAST final: public StmtAST {
     private:
@@ -195,20 +197,30 @@ namespace cc0::ast {
              */
             uint32_t len = 0;
             auto jmp_to_case = std::vector<uint32_t>();
-            auto breaks = std::vector<uint32_t>();
-            auto continues = std::vector<uint32_t>();
+            auto breaks = std::vector<_JmpInfo>();
+            auto continues = std::vector<_JmpInfo>();
+            auto case_set = std::unordered_set<int32_t>();
 
             // generate jump of each case
             for (auto it = _cases.begin(); it != _cases.begin() + _reachable_cases; ++it) {
-                if (auto cond = _cond->generate({ param._level, param._offset, param._slot,
-                                                  param._ret, false }); cond._len == 0) {
+                auto& case_cond = (*it)->get_case();
+                auto case_value = case_cond->get_value();
+                if (case_set.find(case_value) != case_set.end()) {
+                    // repeated case
+                    GeneratorContext::put_fatal(C0Err(ErrCode::ErrRepeatedCase, case_cond->get_range()));
                     _gen_popn(len);
                     return _gen_ret(0);
                 }
-                else
-                    len += cond._len;
+                case_set.insert(case_value);
 
-                auto& case_cond = (*it)->get_case();
+                auto cond = _cond->generate({ param._level, param._offset, param._slot,
+                                              param._ret, false });
+                if (cond._len == 0) {
+                    _gen_popn(len);
+                    return _gen_ret(0);
+                }
+                len += cond._len;
+
                 if (auto res = case_cond->generate({ param._level, param._offset, param._slot,
                                                      param._ret, false }); res._len == 0) {
                     _gen_popn(len);
@@ -263,8 +275,11 @@ namespace cc0::ast {
             }
 
             // handle break;
-            for (const auto jmp_to_end: breaks)
-                _gen_ist(jmp_to_end).set_op1(param._offset + len);
+            for (const auto jmp_to_end: breaks) {
+                auto slot = _symtbl.get_slot_by_level();
+                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
+            }
             return { len, {}, std::move(continues) };
         }
     };

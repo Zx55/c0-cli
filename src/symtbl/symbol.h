@@ -292,11 +292,13 @@ namespace cc0::symbol {
          * _type  - variable type
          * _init  - is init?
          * _const - is const?
+         * _func  - is func name or func param?
          */
         std::string _id;
         Type _type;
         bool _init;
         bool _const;
+        bool _func;
 
         /*
          * runtime info
@@ -332,9 +334,10 @@ namespace cc0::symbol {
         uint32_t _usage;
 
     public:
-        VarSym(std::string id, Type type, bool init, bool f_const, uint32_t offset, uint32_t level):
+        VarSym(std::string id, Type type, bool init, bool f_const, bool func,
+                uint32_t offset, uint32_t level):
                 _id(std::move(id)), _type(type), _init(init), _const(f_const),
-                _offset(offset), _level(level), _usage(0) { }
+                _func(func), _offset(offset), _level(level), _usage(0) { }
         VarSym(const VarSym&) = default;
         VarSym(VarSym&&) = default;
         VarSym& operator=(VarSym rhs) {
@@ -348,6 +351,7 @@ namespace cc0::symbol {
         [[nodiscard]] inline bool is_init() const { return _init; }
         [[nodiscard]] inline bool is_const() const { return _const; }
         [[nodiscard]] inline bool is_glob() const { return _level == 0; }
+        [[nodiscard]] inline bool is_func_var() const { return _func; }
 
         [[nodiscard]] inline std::string get_id() const { return _id; }
         [[nodiscard]] inline Type get_type() const { return _type; }
