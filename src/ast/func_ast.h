@@ -110,9 +110,8 @@ namespace cc0::ast {
                 case 0:
                     break;
                 default:
-                    _gen_ist1(InstType::IPUSH, slot);
-                    _gen_ist0(InstType::POPN);
-                    len += 2;
+                    _gen_ist1(InstType::POPN, slot);
+                    ++len;
                     break;
             }
 

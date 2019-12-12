@@ -109,8 +109,9 @@ namespace cc0::ast {
                 return _gen_ret(0);
 
             _gen_ist0(_make_scan(_id->get_type()));
+            _gen_ist0(_make_store(_id->get_type()));
             _symtbl.var_init(_id->get_id_str());
-            return _gen_ret(res._len + 1);
+            return _gen_ret(res._len + 2);
         }
     };
 }

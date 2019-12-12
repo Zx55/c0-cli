@@ -277,7 +277,7 @@ namespace cc0::ast {
             // handle break;
             for (const auto jmp_to_end: breaks) {
                 auto slot = _symtbl.get_slot_by_level();
-                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off - 1).set_op1(jmp_to_end.slot - slot);
                 _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
             }
             return { len, {}, std::move(continues) };

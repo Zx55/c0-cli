@@ -107,10 +107,9 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
-            _gen_ist1(InstType::IPUSH, 0);
-            _gen_ist0(InstType::POPN);
+            _gen_ist1(InstType::POPN, 0);
             _gen_ist1(InstType::JMP, 0);
-            return { 3, { {_gen_ist_off - 1,
+            return { 2, { {_gen_ist_off - 1,
                            _symtbl.get_slot_by_level(), get_range() } }, {} };
         }
     };
@@ -124,10 +123,9 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate([[maybe_unused]] _GenParam param) override {
-            _gen_ist1(InstType::IPUSH, 0);
-            _gen_ist0(InstType::POPN);
+            _gen_ist1(InstType::POPN, 0);
             _gen_ist1(InstType::JMP, 0);
-            return { 3, {}, { { _gen_ist_off - 1,
+            return { 2, {}, { { _gen_ist_off - 1,
                                 _symtbl.get_slot_by_level(), get_range() } } };
         }
     };

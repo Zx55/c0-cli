@@ -62,12 +62,12 @@ namespace cc0::ast {
             // handle breaks and continues
             auto slot = _symtbl.get_slot_by_level();
             for (const auto jmp_to_end: stmt._breaks) {
-                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off - 1).set_op1(jmp_to_end.slot - slot);
                 _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
             }
 
             for (const auto jmp_to_head: stmt._continues) {
-                _gen_ist(jmp_to_head.ist_off - 2).set_op1(jmp_to_head.slot - slot);
+                _gen_ist(jmp_to_head.ist_off - 1).set_op1(jmp_to_head.slot - slot);
                 _gen_ist(jmp_to_head.ist_off).set_op1(param._offset);
             }
 
@@ -166,7 +166,7 @@ namespace cc0::ast {
 
             _gen_ist0(_make_store(ltype));
             _symtbl.var_init(_id->get_id_str());
-            return _gen_ret(len);
+            return _gen_ret(len + 1);
         }
     };
 
@@ -271,11 +271,11 @@ namespace cc0::ast {
 
             auto slot = _symtbl.get_slot_by_level();
             for (const auto jmp_to_end: stmt._breaks) {
-                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off - 1).set_op1(jmp_to_end.slot - slot);
                 _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
             }
             for (const auto jmp_to_update: stmt._continues) {
-                _gen_ist(jmp_to_update.ist_off - 2).set_op1(jmp_to_update.slot - slot);
+                _gen_ist(jmp_to_update.ist_off - 1).set_op1(jmp_to_update.slot - slot);
                 _gen_ist(jmp_to_update.ist_off).set_op1(update_label);
             }
 
@@ -326,11 +326,11 @@ namespace cc0::ast {
 
             auto slot = _symtbl.get_slot_by_level();
             for (const auto jmp_to_end: stmt._breaks) {
-                _gen_ist(jmp_to_end.ist_off - 2).set_op1(jmp_to_end.slot - slot);
+                _gen_ist(jmp_to_end.ist_off - 1).set_op1(jmp_to_end.slot - slot);
                 _gen_ist(jmp_to_end.ist_off).set_op1(param._offset + len);
             }
             for (const auto jmp_to_head: stmt._continues) {
-                _gen_ist(jmp_to_head.ist_off - 2).set_op1(jmp_to_head.slot - slot);
+                _gen_ist(jmp_to_head.ist_off - 1).set_op1(jmp_to_head.slot - slot);
                 _gen_ist(jmp_to_head.ist_off).set_op1(test_label);
             }
 
