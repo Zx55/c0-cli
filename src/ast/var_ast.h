@@ -26,7 +26,7 @@ namespace cc0::ast {
             // uninitialized
             if (_init == nullptr) {
                 if (_const) {
-                    _gen_err(ErrCode::ErrUninitailizedConstant);
+                    _gen_err(ErrCode::ErrUninitializedConstant);
                     return _gen_ret(0);
                 }
 

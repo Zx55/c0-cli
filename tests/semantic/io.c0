@@ -1,0 +1,8 @@
+const int i = 1;
+
+void foo() { return; }
+int main() {
+    // scan(i);
+    // print(foo());
+    print(1, 2, 3, 4);
+}

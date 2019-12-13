@@ -147,6 +147,11 @@ namespace cc0::ast {
         [[nodiscard]] inline Type get_type() override {
             if (_type != Type::UNDEFINED) return _type;
 
+            if (auto func = _symtbl.get_func(get_id_str()); func.has_value()) {
+                _gen_err(ErrCode::ErrFuncIdHasNoValue);
+                return _type;
+            }
+
             auto var = _symtbl.get_var(get_id_str());
             if (!var.has_value()) {
                 _gen_err(ErrCode::ErrUndeclaredIdentifier);
@@ -175,7 +180,7 @@ namespace cc0::ast {
             // otherwise => load, like print, add
             if (param._ret != Type::UNDEFINED) {
                 if (!var->is_init())
-                    _gen_wrn(ErrCode::WrnUninitailizedVariable);
+                    _gen_wrn(ErrCode::WrnUninitializedVariable);
 
                 _gen_ist0(_make_load(var->get_type()));
                 return _gen_ret(2);

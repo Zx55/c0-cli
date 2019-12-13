@@ -1,0 +1,13 @@
+int a = 1;
+
+int func() { return 1; }
+
+int main() {
+    func = 1;
+
+    if (a < func())
+        print("Yes");
+    else
+        print("No");
+    return 0;
+}

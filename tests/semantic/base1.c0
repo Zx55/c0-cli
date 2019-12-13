@@ -1,0 +1,58 @@
+int a = 3;
+const double b = 1.0;
+
+int func() {
+    return a * b;
+}
+
+int main(int argc, const char v) {
+    int i = 1, a, b, c = 4;
+    const int d = 9;
+    double k = (double)+i;
+
+    /*
+    <loop-statement> ::=
+        'while' '(' <condition> ')' <statement>
+        |'do' <statement> 'while' '(' <condition> ')' ';'
+        |'for' '('<for-init-statement> [<condition>]';' [<for-update-expression>]')' <statement>
+    */
+    while (c >= d) {
+        {}
+    }
+    do {
+        ; // do nothing
+        c = c + 1;
+    } while (c < 5);
+    for (i = 3; i < 4; i = i + 1) {
+        int c = func();
+        print(c);
+        if (i == 4) continue;
+    }
+
+    /*
+    <condition-statement> ::=
+        'if' '(' <condition> ')' <statement> ['else' <statement>]
+        |'switch' '(' <expression> ')' '{' {<labeled-statement>} '}'
+    */
+    scan(a);
+    scan(b);
+    if (a != 3)
+        print(a * 3.0);
+
+    if (a != 5)
+        print(a * func());
+    else {
+        print(b + c * d);
+    }
+
+    switch(i) {
+        case 0:{  // no return
+            scan(i);
+            break;
+        }
+        case 3: print(i + 4, 5, 6, 7);
+        case 5: func();
+        default:
+            return 0;
+    }
+}

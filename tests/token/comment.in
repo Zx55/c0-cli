@@ -1,0 +1,35 @@
+// this is a comment.
+not comment
+
+//////
+
+single line comment // this is another comment.
+
+/* multi-line comment in one line */ test 0
+
+test1 /* another multi-line comment in one line */ after
+
+/* in multi line
+second
+last */
+
+test 2 /* another in multi line
+second
+last */ test 3
+
+(/*aaa*/)
+
+/****/
+
+/ *
+
+/* * / */
+
+/*//*/
+
+/* bad comment
+
+/* C0:)      f  main        
+         �    �    
+       �      Dq    �    �  ��    �
+*/

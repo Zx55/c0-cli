@@ -70,28 +70,3 @@ else()
     target_compile_options(${EXE} PRIVATE -Wall -Wextra -pedantic)
     target_compile_options(${LIB} PRIVATE -Wall -Wextra -pedantic)
 endif()
-
-
-# Test
-add_subdirectory(3rd_party/catch2)
-enable_testing()
-
-set(TEST "test${PROJECT_NAME}")
-set(TEST_SRC
-        tests/test_all.cpp tests/test_lexer.cpp tests/test_analyser.cpp)
-add_executable(${TEST} ${TEST_SRC})
-target_include_directories(${TEST} PRIVATE ./src)
-target_link_libraries(${TEST} Catch2 ${LIB} fmt::fmt)
-add_test(all_test ${TEST})
-find_program(OPEN_CPP_COVERAGE OpenCppCoverage.exe)
-
-if (MSVC AND OPEN_CPP_COVERAGE)
-    string(REPLACE "/" "\\" MY_SOURCE_DIR "${CMAKE_SOURCE_DIR}")
-    add_custom_command(TARGET ${TEST}
-            POST_BUILD
-            COMMAND ${OPEN_CPP_COVERAGE}
-            --sources ${MY_SOURCE_DIR}
-            --excluded_sources ${MY_SOURCE_DIR}\\3rd_party
-            "$<TARGET_FILE:testc0>")
-else()
-endif()

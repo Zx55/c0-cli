@@ -1,0 +1,46 @@
+const int a;
+const int b = 1;
+
+int add(const int a, const int b, void c) {
+    a = a + 1;
+    return a + b - z;
+}
+
+void foo() {
+    b = b + 1;
+    return;
+}
+
+int bar(int c, double d) {
+    char bar = 'c';
+    int c = 1;
+    int d = 1;
+    int f = 1;
+    double f = 1.0;
+
+    void g;
+    const void h = 1;
+
+    int z = (void) foo();
+    int y = (int) foo();
+    int x = (void) bar(3, 3.0);
+
+    b = 1;
+    scan(b);
+
+    f = foo();
+    if (foo()) {
+        print(foo());
+    }
+
+    {
+        char main = '1';
+        int c = 1;
+        int d = 1;
+        int e = 1;
+    }
+
+    // print(e);
+
+    return foo();
+}

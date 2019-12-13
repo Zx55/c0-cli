@@ -201,6 +201,11 @@ namespace cc0::ast {
             auto continues = std::vector<_JmpInfo>();
             auto case_set = std::unordered_set<int32_t>();
 
+            if (auto type = _cond->get_type(); type != Type::INT && type != Type::CHAR) {
+                GeneratorContext::put_fatal(C0Err(ErrCode::ErrInvalidSwitchCond, _cond->get_range()));
+                return _gen_ret(0);
+            }
+
             // generate jump of each case
             for (auto it = _cases.begin(); it != _cases.begin() + _reachable_cases; ++it) {
                 auto& case_cond = (*it)->get_case();

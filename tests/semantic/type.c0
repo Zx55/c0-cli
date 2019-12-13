@@ -1,0 +1,30 @@
+double a = 1;
+double b = 'c';
+int c = 1.0;
+int d = 'd';
+char e = 1.0;
+char f = 1;
+
+double foo(int a) {
+    return 'c';
+    return 1;
+}
+
+char bar(double b) {
+    return 1;
+    return 1.0;
+}
+
+int hello(char c) {
+    return c;
+    return 'd';
+}
+
+int main() {
+    c = (char) foo(e) + 1.0;
+    print(c);
+    a = bar(b) + 'c';
+    print(a);
+    f = hello(d) + 1.0;
+    print(f);
+}

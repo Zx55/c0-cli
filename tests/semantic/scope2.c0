@@ -1,0 +1,39 @@
+int main(int a, double b) {
+    for (a = 1; a < 3; a = a + 1) {
+        int i = 0;
+        for (b = 1.0; b < 3.0; b = b + 1) {
+            int c;
+            scan(c);
+            print("before, c =", c);
+            {
+                int d = 2;
+                print("before, d =", d);
+                {
+                    if (c == 1) {
+                        int d = 1;
+                        print("in if-else, d =", d);
+                        {
+                            int d = 2;
+                            print("in level 6, d =", d);
+                            {
+                                if (d == 2) {
+                                    break;
+                                    d = d + 1;
+                                } else {
+                                    int d = 3;
+                                    continue;
+                                }
+                            }
+                        }
+
+                    }
+                }
+                print("after, d =", d);
+            }
+            print("after, c =", c);
+        }
+        print("inner loop break, i =", i);
+    }
+
+    print("outer loop break");
+}

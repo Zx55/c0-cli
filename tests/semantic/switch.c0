@@ -1,0 +1,38 @@
+int main() {
+    char a;
+    // double a;
+    scan(a);
+
+    // break;
+    // continue;
+
+    switch (a) {
+        case 'a':
+            break;
+        case 'b': {
+            print(a);
+            // fallthrough
+        }
+        /*
+        case 'b': {
+            print(a + 1);
+            break;
+        }
+        */
+        case 'c': {
+            int a = 1;
+
+            // continue;
+            print(a);
+            return 1;
+        }
+        default:
+            print(2);
+        case 'z': {
+            print("bad entry");
+            return -1;
+        }
+        default:
+            print(3);
+    }
+}

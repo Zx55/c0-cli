@@ -97,6 +97,9 @@ namespace cc0::ast {
         }
 
         [[nodiscard]] _GenResult generate(_GenParam param) override {
+            if (_id->get_type() == Type::UNDEFINED)
+                return _gen_ret(0);
+
             auto var = _symtbl.get_var(_id->get_id_str());
             if (var->is_const()) {
                 _gen_err(ErrCode::ErrAssignToConstant);

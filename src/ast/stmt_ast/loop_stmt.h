@@ -110,6 +110,12 @@ namespace cc0::ast {
                 return _gen_ret(0);
             }
 
+            // assign to function id
+            if (auto func = _symtbl.get_func(_id->get_id_str()); func.has_value()) {
+                _gen_err2(ErrCode::ErrAssignToFunction);
+                return _gen_ret(0);
+            }
+
             auto var = _symtbl.get_var(_id->get_id_str());
             if (var->is_const()) {
                 _gen_err2(ErrCode::ErrAssignToConstant);

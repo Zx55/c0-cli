@@ -968,8 +968,15 @@ namespace cc0 {
         // {'(' <type> ')'}
         while (_token.get_type() == TokenType::LPARENTHESIS) {
             if (!_get()) {
-                _errs.emplace_back(_rdp_err(ErrCode::ErrMissTypeSpecifier));
+                _errs.emplace_back(_rdp_err(ErrCode::ErrMissParenthesis));
                 return nullptr;
+            }
+
+            TokenType next_token = _token.get_type();
+            if (next_token != TokenType::VOID && next_token != TokenType::INT
+                    && next_token != TokenType::CHAR && next_token != TokenType::DOUBLE) {
+                _unget();
+                break;
             }
 
             auto type = _analyse_type_specifier();

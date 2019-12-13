@@ -1,0 +1,37 @@
+
+int foo() {
+    return 1;
+}
+
+int bar(int a) {
+    // a = 1;
+    print("in bar(), a =", a);
+    return a;
+}
+
+/*
+int hello() {
+    return;
+}
+
+void world() {
+    return 1;
+}
+*/
+
+int main() {
+    int a = 2;
+    // int b = main;
+    int c = 4 * (main + (double) 2 * 8);
+
+    // print(res());
+    // print(hello(a));
+
+    print(bar(a));
+    print("outside bar(), a =", a);
+
+    main = 1;
+    a = 1 + (b * 2.0);
+    scan(main);
+    print(main);
+}

@@ -1,0 +1,18 @@
+int a = 5;
+const double b = 1.0;
+
+int add(int a, int b) {
+    return a;
+}
+
+int main(int argc, const double argv) {
+    int in;
+    scan(in);
+    print(add(in, a));
+    {
+        int a = 1;
+        print(a);
+    }
+    print(a);
+    return 0;
+}

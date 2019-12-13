@@ -13,7 +13,7 @@
 
 #include "fmt/format.h"
 
-#define ERR_NUM 35
+#define ERR_NUM 38
 #define _wrn_offset(_code) ((_code) - 128 + ERR_NUM)
 
 namespace cc0 {
@@ -30,6 +30,7 @@ namespace cc0 {
         ErrInvalidExpression,
         ErrInvalidStatement,
         ErrInvalidCase,
+        ErrInvalidSwitchCond,
         ErrInvalidForUpdate,
         ErrMissEqOp,
         ErrMissAssignOp,
@@ -44,11 +45,13 @@ namespace cc0 {
         ErrRepeatedCase,
         ErrRepeatedDefault,
         ErrIncompleteComment,
-        ErrUninitailizedConstant,
+        ErrUninitializedConstant,
         ErrUndeclaredIdentifier,
         ErrRedeclaredIdentifier,
         ErrAssignToConstant,
+        ErrAssignToFunction,
         ErrVoidHasNoValue,
+        ErrFuncIdHasNoValue,
         ErrIncomparable,
         ErrJmpInAcyclicStmt,
         ErrParameterUnMatch,
@@ -57,7 +60,7 @@ namespace cc0 {
         WrnFloat64Overflow,
         WrnEmptyStatement,
         WrnUnreachableCase,
-        WrnUninitailizedVariable,
+        WrnUninitializedVariable,
     };
 
     class C0Err final {
@@ -130,6 +133,7 @@ namespace fmt {
                     "ErrInvalidExpression",
                     "ErrInvalidStatement",
                     "ErrInvalidCase",
+                    "ErrInvalidSwitchCond",
                     "ErrInvalidForUpdate",
                     "ErrMissEqOp",
                     "ErrMissAssignOp",
@@ -144,11 +148,13 @@ namespace fmt {
                     "ErrRepeatedCase",
                     "ErrRepeatedDefault",
                     "ErrIncompleteComment",
-                    "ErrUninitailizedConstant",
+                    "ErrUninitializedConstant",
                     "ErrUndeclaredVariable",
                     "ErrRedeclaredIdentifier",
                     "ErrAssignToConstant",
+                    "ErrAssignToFunction",
                     "ErrVoidHasNoValue",
+                    "ErrFuncIdHasNoValue",
                     "ErrIncomparable",
                     "ErrJmpInAcyclicStmt",
                     "ErrParameterUnMatch",
@@ -157,7 +163,7 @@ namespace fmt {
                     "WrnFloat64Overflow",
                     "WrnEmptyStatement",
                     "WrnUnreachableCase",
-                    "WrnUninitailizedVariable",
+                    "WrnUninitializedVariable",
             };
 
             auto row = err.get_start().first + 1, col = err.get_start().second + 1;
