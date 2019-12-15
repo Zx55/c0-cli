@@ -5,3 +5,5 @@ build
 tmp
 
 toolchain/out
+toolchain/c0
+toolchain/in.c0
