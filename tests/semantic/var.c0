@@ -1,7 +1,8 @@
-const int a;
+// const int a;
 const int b = 1;
+const int c = b;
 
-int add(const int a, const int b, void c) {
+/* int add(const int a, const int b, void c) {
     a = a + 1;
     return a + b - z;
 }
@@ -43,4 +44,12 @@ int bar(int c, double d) {
     // print(e);
 
     return foo();
+} */
+
+int main() {
+    const int a = 10;
+    int v = a;
+    print(b);
+    print(c);
+    print(v);
 }

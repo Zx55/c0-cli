@@ -45,6 +45,10 @@ namespace cc0::ast {
             Type ret_type = (_ret == nullptr) ? Type::VOID : _ret->get_type();
             if (ret_type == Type::UNDEFINED)
                 return _gen_ret(0);
+            if (_ret && ret_type == Type::VOID) {
+                _gen_err(ErrCode::ErrVoidHasNoValue);
+                return _gen_ret(0);
+            }
 
             // type check
             if (param._ret != ret_type && (param._ret == Type::VOID || ret_type == Type::VOID)) {

@@ -1,4 +1,4 @@
-
+/*
 int foo() {
     return 1;
 }
@@ -7,9 +7,8 @@ int bar(int a) {
     // a = 1;
     print("in bar(), a =", a);
     return a;
-}
+} */
 
-/*
 int hello() {
     return;
 }
@@ -17,7 +16,14 @@ int hello() {
 void world() {
     return 1;
 }
-*/
+
+void aaaa() {
+    return;
+}
+
+void bbbb() {
+    return aaaa();
+}
 
 int main() {
     int a = 2;
@@ -34,4 +40,8 @@ int main() {
     a = 1 + (b * 2.0);
     scan(main);
     print(main);
+
+    bbbb();
+
+    print(a);
 }

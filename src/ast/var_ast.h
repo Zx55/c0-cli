@@ -46,7 +46,7 @@ namespace cc0::ast {
             }
 
             // generate code
-            auto len = _init->generate(param)._len;
+            auto len = _init->generate({ param._level, param._offset, param._slot, Type::VOID, param._stmt })._len;
             if (len == 0)
                 return _gen_ret(0);
 
