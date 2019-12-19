@@ -66,7 +66,7 @@ namespace cc0 {
             auto res = std::stod(_ss.str());
             return { Token(TokenType::FLOAT, res, pos, _pos_end), {}, {} };
         } catch (const std::out_of_range &) {
-            return _lex_wrn(Token(TokenType::FLOAT, 0., pos, _pos_end), ErrCode::WrnFloat64Overflow);
+            return _lex_wrn(Token(TokenType::FLOAT, 1./0., pos, _pos_end), ErrCode::WrnFloat64Overflow);
         }
     }
 
