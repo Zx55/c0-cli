@@ -1,3 +1,13 @@
 int main() {
-
+    int i = 0, p = 1;
+    for (; i < 10; i = i + 1) {
+        if (i > 8) continue;
+        print(i);
+        for (; ;) {
+            p = p * 2;
+            if (p > 16)
+                break;
+        }
+        continue;
+    }
 }

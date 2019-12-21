@@ -274,8 +274,11 @@ namespace cc0 {
                 }
                 case DFAState::FLOAT_EXP: {
                     // <float-literal> ::= ... ('e'|'E')[('+'|'-')]<digit-seq>
-                    if (_ch == '+' || _ch == '-')
+                    if (_ch == '+' || _ch == '-') {
                         _ss << _ch;
+                        _get();
+                    }
+
                     while (isdigit(_ch)) {
                         _ss << _ch;
                         _get();

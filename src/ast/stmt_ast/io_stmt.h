@@ -40,8 +40,17 @@ namespace cc0::ast {
         [[nodiscard]] _GenResult generate(_GenParam param) override {
             uint32_t len = 0;
 
+            if (_printable.empty()) {
+                _gen_ist0(InstType::PRINTL);
+                return _gen_ret(1);
+            }
+
             for (const auto& printable: _printable) {
-                auto type = printable->get_type();
+                Type type = printable->get_type();
+                if (type == Type::INT) {
+                    if (printable->get_real_type() == Type::CHAR)
+                        type = Type::CHAR;
+                }
                 if (type == Type::UNDEFINED)
                     continue;
                 if (type == Type::VOID) {

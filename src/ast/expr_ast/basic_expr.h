@@ -23,6 +23,10 @@ namespace cc0::ast {
             return _type;
         }
 
+        inline virtual Type get_real_type() {
+            return _type;
+        }
+
         [[nodiscard]] inline virtual int32_t get_value() const {
             return 0;
         }

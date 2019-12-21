@@ -169,7 +169,9 @@ namespace fmt {
             auto row = err.get_start().first + 1, col = err.get_start().second + 1;
             auto code = static_cast<int64_t>(err.get_code());
             code = err.is_fatal() ? code : _wrn_offset(code);
-            auto arrow = std::string(err.get_start().second + 8, ' ') + std::string(err.get_len(), '^');
+            auto len = err.get_len() < 0 ? 1 : err.get_len();
+            auto start_second = err.get_start().second;
+            auto arrow = std::string(start_second + 8, ' ') + std::string(len, '^');
 
             return format_to(ctx.out(), "{:s} In file {}:{:d}:{:d}: {:s}\n {:4d} | {:s}{:s}",
                     err.is_fatal() ? "!!Error!!" : "!Warning!", cc0::SourceContext::get_in_absolute(),

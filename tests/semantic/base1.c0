@@ -23,11 +23,11 @@ int main(int argc, const char v) {
         ; // do nothing
         c = c + 1;
     } while (c < 5);
-    for (i = 3; i < 4; i = i + 1) {
+    for (i = 3; i < 4; i = i + 1) /*{
         int c = func();
         print(c);
         if (i == 4) continue;
-    }
+    }*/
 
     /*
     <condition-statement> ::=

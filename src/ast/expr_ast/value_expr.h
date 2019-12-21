@@ -78,6 +78,10 @@ namespace cc0::ast {
             return _value;
         }
 
+        [[nodiscard]] inline Type get_real_type() override {
+            return Type::CHAR;
+        }
+
         void graphize(std::ostream& out, [[maybe_unused]] int t) override {
             int ch = static_cast<char>(_value);
             std::string output;
